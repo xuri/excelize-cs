@@ -1,0 +1,68 @@
+<Project>
+  <ItemGroup>
+    <!-- Windows x64 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.amd64.windows.dll"
+      Condition="'$(RuntimeIdentifier)' == 'win-x64' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'X64' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Windows x86 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.386.windows.dll"
+      Condition="'$(RuntimeIdentifier)' == 'win-x86' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'X86' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Windows ARM64 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.arm64.windows.dll"
+      Condition="'$(RuntimeIdentifier)' == 'win-arm64' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'ARM64' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Linux x64 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.amd64.linux.so"
+      Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'X64' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Linux x86 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.386.linux.so"
+      Condition="'$(RuntimeIdentifier)' == 'linux-x86' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'X86' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Linux ARM64 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.arm64.linux.so"
+      Condition="'$(RuntimeIdentifier)' == 'linux-arm64' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'ARM64' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- macOS x64 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.amd64.darwin.dylib"
+      Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'X64' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- macOS ARM64 -->
+    <Content
+      Include="$(MSBuildThisFileDirectory)libexcelize.arm64.darwin.dylib"
+      Condition="'$(RuntimeIdentifier)' == 'osx-arm64' OR ('$(RuntimeIdentifier)' == '' AND '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' == 'ARM64' AND '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true')"
+    >
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

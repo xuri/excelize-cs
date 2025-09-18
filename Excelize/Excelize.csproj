@@ -1,0 +1,86 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Authors>xuri</Authors>
+    <Copyright>Copyright © 2025 The Excelize Authors</Copyright>
+    <Description>Excelize is a C# port of Go Excelize library that allow you to write to and read from XLAM / XLSM / XLSX / XLTM / XLTX files.</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageId>ExcelizeCs</PackageId>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+    <PackageOutputPath>bin</PackageOutputPath>
+    <PackageProjectUrl>https://xuri.me/excelize</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>agent;ai;analytics;chart;ecma-376excel;excelize;formula;go;mcp;microsoft;office;ooxml;spreadsheet;statistics;table;vba;xlsx;xml;visualization</PackageTags>
+    <PackageType>Dependency</PackageType>
+    <Product>Excelize</Product>
+    <RepositoryBranch>main</RepositoryBranch>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/xuri/excelize-cs.git</RepositoryUrl>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <Title>Excelize</Title>
+    <Version>0.0.1</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Include="../logo.png" Pack="true" PackagePath="/" />
+    <None Include="../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="libexcelize.arm64.linux.so" Condition="Exists('libexcelize.arm64.linux.so')">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libexcelize.amd64.linux.so" Condition="Exists('libexcelize.amd64.linux.so')">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libexcelize.386.linux.so" Condition="Exists('libexcelize.386.linux.so')">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None
+      Include="libexcelize.arm64.windows.dll"
+      Condition="Exists('libexcelize.arm64.windows.dll')"
+    >
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None
+      Include="libexcelize.amd64.windows.dll"
+      Condition="Exists('libexcelize.amd64.windows.dll')"
+    >
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="libexcelize.386.windows.dll" Condition="Exists('libexcelize.386.windows.dll')">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None
+      Include="libexcelize.arm64.darwin.dylib"
+      Condition="Exists('libexcelize.arm64.darwin.dylib')"
+    >
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None
+      Include="libexcelize.amd64.darwin.dylib"
+      Condition="Exists('libexcelize.amd64.darwin.dylib')"
+    >
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ExcelizeCs.targets">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+    </None>
+  </ItemGroup>
+</Project>
