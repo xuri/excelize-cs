@@ -2,8 +2,13 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Authors>xuri</Authors>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Copyright>Copyright © 2025 The Excelize Authors</Copyright>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
     <Description>Excelize is a C# port of Go Excelize library that allow you to write to and read from XLAM / XLSM / XLSX / XLTM / XLTX files.</Description>
+    <Deterministic>true</Deterministic>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NeutralLanguage>en-US</NeutralLanguage>
     <PackageIcon>logo.png</PackageIcon>
@@ -15,6 +20,7 @@
     <PackageTags>agent;ai;analytics;chart;ecma-376excel;excelize;formula;go;mcp;microsoft;office;ooxml;spreadsheet;statistics;table;vba;xlsx;xml;visualization</PackageTags>
     <PackageType>Dependency</PackageType>
     <Product>Excelize</Product>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryBranch>main</RepositoryBranch>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/xuri/excelize-cs.git</RepositoryUrl>
@@ -23,6 +29,7 @@
     <Version>0.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <None Include="../README.md" Pack="true" PackagePath="/" />
     <None Include="../logo.png" Pack="true" PackagePath="/" />
     <None Include="../LICENSE" Pack="true" PackagePath="/" />
