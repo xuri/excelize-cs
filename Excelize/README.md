@@ -3,7 +3,7 @@
 !["excelize-cs logo"](https://github.com/xuri/excelize-cs/raw/main/Excelize/excelize-cs.png)
 
 [!["NuGet version"](https://img.shields.io/nuget/v/ExcelizeCs.svg)](https://www.nuget.org/packages/ExcelizeCs)
-[!["Build Status"](https://github.com/xuri/excelize-cs/actions/workflows/build.yml/badge.svg)"](https://github.com/xuri/excelize-cs/actions/workflows/build.yml)
+[!["Build Status"](https://github.com/xuri/excelize-cs/actions/workflows/build.yml/badge.svg)](https://github.com/xuri/excelize-cs/actions/workflows/build.yml)
 [!["Code Coverage"](https://codecov.io/gh/xuri/excelize-cs/branch/main/graph/badge.svg)](https://codecov.io/gh/xuri/excelize-cs)
 [!["Licenses"](https://img.shields.io/badge/license-bsd-orange.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [!["Donate"](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/xuri)
@@ -260,4 +260,4 @@ This program is under the terms of the BSD 3-Clause License. See [https://openso
 
 The Excel logo is a trademark of [Microsoft Corporation](https://aka.ms/trademarks-usage). This artwork is an adaptation.
 
-gopher.{ai,svg,png} was created by [Takuya Ueda](https://twitter.com/tenntenn). Licensed under the [Creative Commons 3.0 Attributions license](http://creativecommons.org/licenses/by/3.0/).
+gopher.{ai,svg,png} was created by [Takuya Ueda](https://x.com/tenntenn). Licensed under the [Creative Commons 3.0 Attributions license](http://creativecommons.org/licenses/by/3.0/).
