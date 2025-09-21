@@ -135,6 +135,18 @@ namespace ExcelizeCs
             CallingConvention = CallingConvention.Cdecl,
             CharSet = CharSet.Ansi
         )]
+        internal static extern IntPtr AddPictureFromBytes(
+            long fileIdx,
+            string sheet,
+            string cell,
+            ref TypesC.Picture pic
+        );
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
         internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
 
         [DllImport(
@@ -1305,6 +1317,75 @@ namespace ExcelizeCs
             var opts = (TypesC.GraphicOptions)
                 Lib.CsToC(options ?? new GraphicOptions(), new TypesC.GraphicOptions());
             var err = Marshal.PtrToStringAnsi(Lib.AddPicture(FileIdx, sheet, cell, name, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Add picture in a sheet by given picture format set (such as offset,
+        /// scale, aspect ratio setting and print settings), file base name,
+        /// extension name and file bytes. Supported image types:  GIF, JPEG,
+        /// JPG, PNG, TIF and TIFF. Note that this function only supports adding
+        /// pictures placed over the cells currently, and doesn't support adding
+        /// pictures placed in cells or creating the Kingsoft WPS Office
+        /// embedded image cells.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="picture">The picture options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        /// <example>
+        /// For example, insert a picture from bytes read from an image file:
+        /// <code>
+        /// using ExcelizeCs;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         var f = Excelize.NewFile();
+        ///         try
+        ///         {
+        ///             f.AddPictureFromBytes(
+        ///                 "Sheet1",
+        ///                 "A2",
+        ///                 new Picture
+        ///                 {
+        ///                     Extension = ".jpg",
+        ///                     File = System.IO.File.ReadAllBytes("image.jpg"),
+        ///                     Format = new GraphicOptions
+        ///                     {
+        ///                         PrintObject = true,
+        ///                         ScaleX = 0.1,
+        ///                         ScaleY = 0.1,
+        ///                         Locked = false,
+        ///                     },
+        ///                     InsertType = PictureInsertType.PictureInsertTypePlaceOverCells,
+        ///                 }
+        ///             );
+        ///             f.SaveAs("Book1.xlsx");
+        ///         }
+        ///         catch (RuntimeError err)
+        ///         {
+        ///             Console.WriteLine(err.Message);
+        ///         }
+        ///         finally
+        ///         {
+        ///             var err = f.Close();
+        ///             if (!string.IsNullOrEmpty(err))
+        ///                 Console.WriteLine(err);
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        public void AddPictureFromBytes(string sheet, string cell, Picture picture)
+        {
+            var pic = (TypesC.Picture)Lib.CsToC(picture, new TypesC.Picture());
+            var err = Marshal.PtrToStringAnsi(
+                Lib.AddPictureFromBytes(FileIdx, sheet, cell, ref pic)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

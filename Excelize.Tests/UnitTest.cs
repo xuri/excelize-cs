@@ -177,6 +177,10 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.AddComment("Sheet1", new Comment()));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.AddPictureFromBytes("Sheet1", "A1", new Picture())
+        );
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.AddVBAProject(Array.Empty<byte>()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
@@ -314,6 +318,7 @@ public class UnitTest
     {
         var f = Excelize.NewFile();
         string filePath = Path.GetFullPath(Path.Combine("..", "..", "..", "..", "chart.png"));
+        var pic = System.IO.File.ReadAllBytes(filePath);
         Assert.Null(
             Record.Exception(() =>
             {
@@ -328,6 +333,23 @@ public class UnitTest
                         ScaleX = 0.1,
                         ScaleY = 0.1,
                         Locked = false,
+                    }
+                );
+                f.AddPictureFromBytes(
+                    "Sheet1",
+                    "A3",
+                    new Picture
+                    {
+                        Extension = ".png",
+                        File = pic,
+                        Format = new GraphicOptions
+                        {
+                            PrintObject = true,
+                            ScaleX = 0.1,
+                            ScaleY = 0.1,
+                            Locked = false,
+                        },
+                        InsertType = PictureInsertType.PictureInsertTypePlaceOverCells,
                     }
                 );
                 f.SaveAs("TestAddPicture.xlsx");

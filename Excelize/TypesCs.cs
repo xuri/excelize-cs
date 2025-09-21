@@ -328,6 +328,17 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// Picture maps the format settings of the picture.
+    /// </summary>
+    public struct Picture
+    {
+        public string Extension;
+        public byte[]? File;
+        public GraphicOptions? Format;
+        public PictureInsertType InsertType;
+    }
+
+    /// <summary>
     /// RichTextRun directly maps the settings of the rich text run.
     /// </summary>
     public struct RichTextRun
