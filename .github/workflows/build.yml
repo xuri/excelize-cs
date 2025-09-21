@@ -189,4 +189,4 @@ jobs:
           cd Excelize
           dotnet build -c Release && dotnet pack -c Release
           dotnet nuget push ./bin/ExcelizeCs*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
-          dotnet nuget push ./bin/ExcelizeCs*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/xuri/index.json" --skip-duplicate
+          dotnet nuget push ./bin/ExcelizeCs*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
