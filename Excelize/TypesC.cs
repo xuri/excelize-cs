@@ -160,6 +160,16 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct Picture
+    {
+        public sbyte* Extension;
+        public int FileLen;
+        public byte* File;
+        public GraphicOptions* Format;
+        public byte InsertType;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct RichTextRun
     {
         public Font* Font;
