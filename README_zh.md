@@ -3,7 +3,7 @@
 <p align="center"><img width="500" src="https://github.com/xuri/excelize-cs/raw/main/excelize-cs.svg" alt="excelize-cs logo"></p>
 
 <p align="center">
-    <a href="https://www.nuget.org/packages/ExcelizeCs"><img src="https://img.shields.io/nuget/v/ExcelizeCs.svg" alt="NuGet version"></a>
+    <a href="https://www.nuget.org/packages/ExcelizeCs"><img src="https://img.shields.io/nuget/v/ExcelizeCs.svg?color=%23007ec6" alt="NuGet version"></a>
     <a href="https://github.com/xuri/excelize-cs/actions/workflows/build.yml"><img src="https://github.com/xuri/excelize-cs/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
     <a href="https://codecov.io/gh/xuri/excelize-cs"><img src="https://codecov.io/gh/xuri/excelize-cs/branch/main/graph/badge.svg" alt="Code Coverage"></a>
     <a href="https://opensource.org/licenses/BSD-3-Clause"><img src="https://img.shields.io/badge/license-bsd-orange.svg" alt="Licenses"></a>
@@ -17,7 +17,7 @@ excelize-cs 是 Go 语言 [Excelize](https://github.com/xuri/excelize) 基础库
 ### 安装
 
 ```bash
-dotnet add package ExcelizeCs --version 0.0.1
+dotnet add package ExcelizeCs --version 0.0.2
 ```
 
 ### 创建 Excel 文档
@@ -262,4 +262,4 @@ class Program
 
 Excel 徽标是 [Microsoft Corporation](https://aka.ms/trademarks-usage) 的商标，项目的图片是一种改编。
 
-gopher.{ai,svg,png} 由 [Takuya Ueda](https://x.com/tenntenn) 创作，遵循 [Creative Commons 3.0 Attributions license](http://creativecommons.org/licenses/by/3.0/) 创作共用授权条款。
+Go gopher 由 [Renee French](https://go.dev/doc/gopher/README) 创作，遵循 [Creative Commons 4.0 Attributions license](http://creativecommons.org/licenses/by/4.0/) 创作共用授权条款。

@@ -3,7 +3,7 @@
 <p align="center"><img width="500" src="https://github.com/xuri/excelize-cs/raw/main/excelize-cs.svg" alt="excelize-cs logo"></p>
 
 <p align="center">
-    <a href="https://www.nuget.org/packages/ExcelizeCs"><img src="https://img.shields.io/nuget/v/ExcelizeCs.svg" alt="NuGet version"></a>
+    <a href="https://www.nuget.org/packages/ExcelizeCs"><img src="https://img.shields.io/nuget/v/ExcelizeCs.svg?color=%23007ec6" alt="NuGet version"></a>
     <a href="https://github.com/xuri/excelize-cs/actions/workflows/build.yml"><img src="https://github.com/xuri/excelize-cs/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
     <a href="https://codecov.io/gh/xuri/excelize-cs"><img src="https://codecov.io/gh/xuri/excelize-cs/branch/main/graph/badge.svg" alt="Code Coverage"></a>
     <a href="https://opensource.org/licenses/BSD-3-Clause"><img src="https://img.shields.io/badge/license-bsd-orange.svg" alt="Licenses"></a>
@@ -17,7 +17,7 @@ Package excelize-cs is a C# port of Go [Excelize](https://github.com/xuri/exceli
 ### Installation
 
 ```bash
-dotnet add package ExcelizeCs --version 0.0.1
+dotnet add package ExcelizeCs --version 0.0.2
 ```
 
 ### Create spreadsheet
@@ -262,4 +262,4 @@ This program is under the terms of the BSD 3-Clause License. See [https://openso
 
 The Excel logo is a trademark of [Microsoft Corporation](https://aka.ms/trademarks-usage). This artwork is an adaptation.
 
-gopher.{ai,svg,png} was created by [Takuya Ueda](https://x.com/tenntenn). Licensed under the [Creative Commons 3.0 Attributions license](http://creativecommons.org/licenses/by/3.0/).
+The Go gopher was created by [Renee French](https://go.dev/doc/gopher/README). Licensed under the [Creative Commons 4.0 Attributions license](http://creativecommons.org/licenses/by/4.0/).
