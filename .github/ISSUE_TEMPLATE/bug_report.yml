@@ -56,7 +56,7 @@ body:
       label: Excelize version or commit ID
       description: |
         Which version of Excelize are you using?
-      placeholder: e.g. 0.0.2
+      placeholder: e.g. 0.0.3
     validations:
       required: true
 

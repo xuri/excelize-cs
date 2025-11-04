@@ -215,6 +215,48 @@ public class UnitTest
     }
 
     [Fact]
+    public void TesttreamWriter()
+    {
+        var f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                StreamWriter sw = f.NewStreamWriter("Sheet1");
+                sw.SetRow("A1", null);
+                sw.SetRow("A1", new List<object>());
+                for (int r = 4; r < 11; r++)
+                {
+                    Random random = new Random();
+                    List<object> row = new List<object>();
+                    for (int i = 1; i < 4; i++)
+                    {
+                        row.Add(random.Next(640000));
+                    }
+                    string cell = Excelize.CoordinatesToCellName(1, r, false);
+                    sw.SetRow(cell, row);
+                }
+                sw.Flush();
+            })
+        );
+        var err = Assert.Throws<RuntimeError>(() => f.NewStreamWriter("SheetN"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestStreamWriter.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+
+        const string errStreamWriterPtr = "can not find stream writer pointer";
+        StreamWriter sw = new StreamWriter(0);
+        err = Assert.Throws<RuntimeError>(() => sw.SetRow("A1", new List<object> { 1 }));
+        Assert.Equal(errStreamWriterPtr, err.Message);
+        err = Assert.Throws<RuntimeError>(sw.Flush);
+        Assert.Equal(errStreamWriterPtr, err.Message);
+    }
+
+    [Fact]
     public void TestAddChart()
     {
         var f = Excelize.NewFile();

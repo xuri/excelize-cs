@@ -239,6 +239,13 @@ namespace ExcelizeCs
             CallingConvention = CallingConvention.Cdecl,
             CharSet = CharSet.Ansi
         )]
+        internal static extern TypesC.IntErrorResult NewStreamWriter(long fileIdx, string sheet);
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
         internal static extern TypesC.IntErrorResult NewStyle(long fileIdx, ref TypesC.Style style);
 
         [DllImport(
@@ -332,6 +339,25 @@ namespace ExcelizeCs
         internal static extern IntPtr SetSheetRow(
             long fileIdx,
             string sheet,
+            string cell,
+            [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Interface[] row,
+            int length
+        );
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
+        internal static extern IntPtr StreamFlush(long swIdx);
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
+        internal static extern IntPtr StreamSetRow(
+            long swIdx,
             string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Interface[] row,
             int length
@@ -1138,6 +1164,59 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// StreamWriter is a streaming writer for writing large amounts of data to
+    /// a worksheet.
+    /// </summary>
+    public class StreamWriter
+    {
+        public long StreamWriterIdx { get; set; }
+
+        public StreamWriter() { }
+
+        public StreamWriter(long swIdx)
+            : this()
+        {
+            StreamWriterIdx = swIdx;
+        }
+
+        /// <summary>
+        /// Ending the streaming writing process.
+        /// </summary>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe void Flush()
+        {
+            var err = Marshal.PtrToStringAnsi(Lib.StreamFlush(StreamWriterIdx));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Writes an array to stream rows by giving starting cell reference and
+        /// a pointer to an array of values. Note that you must call the `flush`
+        /// function to end the streaming writing process.
+        /// </summary>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="values">The cell values</param>
+        /// <exception cref="RuntimeError"></exception>
+        public void SetRow(string cell, List<object> values)
+        {
+            if (values == null || values.Count == 0)
+                return;
+            var arr = new TypesC.Interface[values.Count];
+            for (int i = 0; i < values.Count; i++)
+            {
+                arr[i] = (TypesC.Interface)Lib.CsValToCInterface(values[i]);
+            }
+            var err = Marshal.PtrToStringAnsi(
+                Lib.StreamSetRow(StreamWriterIdx, cell, arr, values.Count)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+    }
+
+    /// <summary>
     /// File is a representation of an workbook.
     /// </summary>
     public class File
@@ -1525,6 +1604,32 @@ namespace ExcelizeCs
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
             return res.val;
+        }
+
+        /// <summary>
+        /// Returns stream writer struct by given worksheet name used for
+        /// writing data on a new existing empty worksheet with large amounts of
+        /// data. Note that after writing data with the stream writer for the
+        /// worksheet, you must call the 'flush' method to end the streaming
+        /// writing process, ensure that the order of row numbers is ascending
+        /// when set rows, and the normal mode functions and stream mode
+        /// functions can not be work mixed to writing data on the worksheets.
+        /// The stream writer will try to use temporary files on disk to reduce
+        /// the memory usage when in-memory chunks data over 16MB, and you can't
+        /// get cell value at this time.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <returns>Return the stream writer object if no error occurred,
+        /// otherwise raise a RuntimeError with the message.
+        /// </returns>
+        /// <exception cref="RuntimeError"></exception>
+        public unsafe StreamWriter NewStreamWriter(string sheet)
+        {
+            var res = Lib.NewStreamWriter(FileIdx, sheet);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return new StreamWriter { StreamWriterIdx = res.val };
         }
 
         /// <summary>
