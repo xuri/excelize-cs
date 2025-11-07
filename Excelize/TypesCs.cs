@@ -1,6 +1,6 @@
-// Copyright 2025 The excelize Authors. All rights reserved. Use of this source
-// code is governed by a BSD-style license that can be found in the LICENSE
-// file.
+// Copyright 2025 - 2026 The excelize Authors. All rights reserved. Use of this
+// source code is governed by a BSD-style license that can be found in the
+// LICENSE file.
 //
 // Package excelize-cs is a C# port of Go Excelize library, providing a set of
 // functions that allow you to write and read from XLAM / XLSM / XLSX / XLTM /
@@ -514,6 +514,88 @@ namespace ExcelizeCs
         public int HoleSize;
         public uint? GapWidth;
         public int? Overlap;
+    }
+
+    /// <summary>
+    /// PivotTableField directly maps the field settings of the pivot table.
+    /// </summary>
+    /// <remarks>
+    /// Name specifies the name of the data field. Maximum 255 characters
+    /// are allowed in data field name, excess characters will be truncated.
+    ///
+    /// Subtotal specifies the aggregation function that applies to this data
+    /// field. The default value is sum. The possible values for this attribute
+    /// are:
+    ///
+    /// Average
+    /// Count
+    /// CountNums
+    /// Max
+    /// Min
+    /// Product
+    /// StdDev
+    /// StdDevp
+    /// Sum
+    /// Var
+    /// Varp
+    ///
+    /// NumFmt specifies the number format ID of the data field, this filed only
+    /// accepts built-in number format ID and does not support custom number
+    /// format expression currently.
+    /// </remarks>
+    public struct PivotTableField
+    {
+        public bool Compact;
+        public string Data;
+        public string Name;
+        public bool Outline;
+        public bool ShowAll;
+        public bool InsertBlankRow;
+        public string Subtotal;
+        public bool DefaultSubtotal;
+        public int NumFmt;
+    }
+
+    /// <summary>
+    /// PivotTableOptions directly maps the format settings of the pivot table.
+    /// </summary>
+    /// <remarks
+    /// PivotTableStyleName: The built-in pivot table style names
+    ///
+    ///	PivotStyleLight1 - PivotStyleLight28
+    ///	PivotStyleMedium1 - PivotStyleMedium28
+    ///	PivotStyleDark1 - PivotStyleDark28
+    /// </remarks>
+    public struct PivotTableOptions
+    {
+        public string DataRange;
+        public string PivotTableRange;
+        public string Name;
+        public int RowsLen;
+        public PivotTableField[]? Rows;
+        public int ColumnsLen;
+        public PivotTableField[]? Columns;
+        public int DataLen;
+        public PivotTableField[]? Data;
+        public int FilterLen;
+        public PivotTableField[]? Filter;
+        public bool RowGrandTotals;
+        public bool ColGrandTotals;
+        public bool ShowDrill;
+        public bool UseAutoFormatting;
+        public bool PageOverThenDown;
+        public bool MergeItem;
+        public bool ClassicLayout;
+        public bool CompactData;
+        public bool ShowError;
+        public bool ShowRowHeaders;
+        public bool ShowColHeaders;
+        public bool ShowRowStripes;
+        public bool ShowColStripes;
+        public bool ShowLastColumn;
+        public bool FieldPrintTitles;
+        public bool ItemPrintTitles;
+        public string PivotTableStyleName;
     }
 
     public struct Row

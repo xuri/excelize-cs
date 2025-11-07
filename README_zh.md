@@ -17,7 +17,7 @@ excelize-cs 是 Go 语言 [Excelize](https://github.com/xuri/excelize) 基础库
 ### 安装
 
 ```bash
-dotnet add package ExcelizeCs --version 0.0.3
+dotnet add package ExcelizeCs --version 0.0.4
 ```
 
 ### 创建 Excel 文档

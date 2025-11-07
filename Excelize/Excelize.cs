@@ -1,6 +1,6 @@
-// Copyright 2025 The excelize Authors. All rights reserved. Use of this source
-// code is governed by a BSD-style license that can be found in the LICENSE
-// file.
+// Copyright 2025 - 2026 The excelize Authors. All rights reserved. Use of this
+// source code is governed by a BSD-style license that can be found in the
+// LICENSE file.
 //
 // Package excelize-cs is a C# port of Go Excelize library, providing a set of
 // functions that allow you to write and read from XLAM / XLSM / XLSX / XLTM /
@@ -140,6 +140,16 @@ namespace ExcelizeCs
             string sheet,
             string cell,
             ref TypesC.Picture pic
+        );
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
+        internal static extern IntPtr AddPivotTable(
+            long fileIdx,
+            ref TypesC.PivotTableOptions opts
         );
 
         [DllImport(
@@ -1186,19 +1196,20 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe void Flush()
         {
-            var err = Marshal.PtrToStringAnsi(Lib.StreamFlush(StreamWriterIdx));
+            string err = Marshal.PtrToStringAnsi(Lib.StreamFlush(StreamWriterIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
 
         /// <summary>
         /// Writes an array to stream rows by giving starting cell reference and
-        /// a pointer to an array of values. Note that you must call the `flush`
-        /// function to end the streaming writing process.
+        /// a pointer to an array of values. Note that you must call the
+        /// <c>Flush</c> function to end the streaming writing process.
         /// </summary>
         /// <param name="cell">The cell reference</param>
         /// <param name="values">The cell values</param>
-        /// <exception cref="RuntimeError"></exception>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public void SetRow(string cell, List<object> values)
         {
             if (values == null || values.Count == 0)
@@ -1208,7 +1219,7 @@ namespace ExcelizeCs
             {
                 arr[i] = (TypesC.Interface)Lib.CsValToCInterface(values[i]);
             }
-            var err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringAnsi(
                 Lib.StreamSetRow(StreamWriterIdx, cell, arr, values.Count)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1257,7 +1268,9 @@ namespace ExcelizeCs
                     arr[i + 1] = (TypesC.Chart)Lib.CsToC(combo[i], new TypesC.Chart());
                 }
             }
-            var err = Marshal.PtrToStringAnsi(Lib.AddChart(FileIdx, sheet, cell, arr, arr.Length));
+            string err = Marshal.PtrToStringAnsi(
+                Lib.AddChart(FileIdx, sheet, cell, arr, arr.Length)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1288,7 +1301,9 @@ namespace ExcelizeCs
                     arr[i + 1] = (TypesC.Chart)Lib.CsToC(combo[i], new TypesC.Chart());
                 }
             }
-            var err = Marshal.PtrToStringAnsi(Lib.AddChartSheet(FileIdx, sheet, arr, arr.Length));
+            string err = Marshal.PtrToStringAnsi(
+                Lib.AddChartSheet(FileIdx, sheet, arr, arr.Length)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1307,7 +1322,7 @@ namespace ExcelizeCs
             if (options == null)
                 return;
             var opts = (TypesC.Comment)Lib.CsToC(options, new TypesC.Comment());
-            var err = Marshal.PtrToStringAnsi(Lib.AddComment(FileIdx, sheet, ref opts));
+            string err = Marshal.PtrToStringAnsi(Lib.AddComment(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1319,13 +1334,6 @@ namespace ExcelizeCs
         /// this function only supports adding pictures placed over the cells
         /// currently, and doesn't support adding pictures placed in cells or
         /// creating the Kingsoft WPS Office embedded image cells.
-        /// </summary>
-        /// <param name="sheet">The worksheet name</param>
-        /// <param name="cell">The cell reference</param>
-        /// <param name="name">The image file path</param>
-        /// <param name="options">The image options</param>
-        /// <exception cref="RuntimeError">Return None if no error occurred,
-        /// otherwise raise a RuntimeError with the message.</exception>
         /// <example>
         /// For example:
         /// <code>
@@ -1391,11 +1399,20 @@ namespace ExcelizeCs
         /// }
         /// </code>
         /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="name">The image file path</param>
+        /// <param name="options">The image options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public void AddPicture(string sheet, string cell, string name, GraphicOptions? options)
         {
             var opts = (TypesC.GraphicOptions)
                 Lib.CsToC(options ?? new GraphicOptions(), new TypesC.GraphicOptions());
-            var err = Marshal.PtrToStringAnsi(Lib.AddPicture(FileIdx, sheet, cell, name, ref opts));
+            string err = Marshal.PtrToStringAnsi(
+                Lib.AddPicture(FileIdx, sheet, cell, name, ref opts)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1408,12 +1425,6 @@ namespace ExcelizeCs
         /// pictures placed over the cells currently, and doesn't support adding
         /// pictures placed in cells or creating the Kingsoft WPS Office
         /// embedded image cells.
-        /// </summary>
-        /// <param name="sheet">The worksheet name</param>
-        /// <param name="cell">The cell reference</param>
-        /// <param name="picture">The picture options</param>
-        /// <exception cref="RuntimeError">Return None if no error occurred,
-        /// otherwise raise a RuntimeError with the message.</exception>
         /// <example>
         /// For example, insert a picture from bytes read from an image file:
         /// <code>
@@ -1459,12 +1470,144 @@ namespace ExcelizeCs
         /// }
         /// </code>
         /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="picture">The picture options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public void AddPictureFromBytes(string sheet, string cell, Picture picture)
         {
             var pic = (TypesC.Picture)Lib.CsToC(picture, new TypesC.Picture());
-            var err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringAnsi(
                 Lib.AddPictureFromBytes(FileIdx, sheet, cell, ref pic)
             );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// AddPivotTable provides the method to add pivot table by given pivot
+        /// table options. Note that the same fields can not in Columns, Rows
+        /// and Filter fields at the same time.
+        /// <example>
+        /// For example, create a pivot table on the range reference
+        /// Sheet1!G2:M34 with the range reference Sheet1!A1:E31 as the data
+        /// source, summarize by sum for sales:
+        /// <code><![CDATA[
+        /// using ExcelizeCs;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         var f = Excelize.NewFile();
+        ///         List<string> months = new List<string>
+        ///         {
+        ///             "Jan",
+        ///             "Feb",
+        ///             "Mar",
+        ///             "Apr",
+        ///             "May",
+        ///             "Jun",
+        ///             "Jul",
+        ///             "Aug",
+        ///             "Sep",
+        ///             "Oct",
+        ///             "Nov",
+        ///             "Dec",
+        ///         };
+        ///         List<int> year = new List<int> { 2017, 2018, 2019 };
+        ///         List<string> types = new List<string> { "Meat", "Dairy", "Beverages", "Produce" };
+        ///         List<string> region = new List<string> { "East", "West", "North", "South" };
+        ///         Random random = new Random();
+        ///         try
+        ///         {
+        ///             f.SetSheetRow(
+        ///                 "Sheet1",
+        ///                 "A1",
+        ///                 new List<object> { "Month", "Year", "Type", "Sales", "Region" }
+        ///             );
+        ///             for (int row = 2; row < 32; row++)
+        ///             {
+        ///                 f.SetCellValue(
+        ///                     "Sheet1",
+        ///                     Excelize.CoordinatesToCellName(1, row),
+        ///                     months[random.Next(12)]
+        ///                 );
+        ///                 f.SetCellValue(
+        ///                     "Sheet1",
+        ///                     Excelize.CoordinatesToCellName(2, row),
+        ///                     year[random.Next(3)]
+        ///                 );
+        ///                 f.SetCellValue(
+        ///                     "Sheet1",
+        ///                     Excelize.CoordinatesToCellName(3, row),
+        ///                     types[random.Next(4)]
+        ///                 );
+        ///                 f.SetCellValue("Sheet1", Excelize.CoordinatesToCellName(4, row), random.Next(5000));
+        ///                 f.SetCellValue(
+        ///                     "Sheet1",
+        ///                     Excelize.CoordinatesToCellName(5, row),
+        ///                     region[random.Next(4)]
+        ///                 );
+        ///             }
+        ///             f.AddPivotTable(
+        ///                 new PivotTableOptions
+        ///                 {
+        ///                     DataRange = "Sheet1!A1:E31",
+        ///                     PivotTableRange = "Sheet1!G2:M34",
+        ///                     Rows = new PivotTableField[]
+        ///                     {
+        ///                         new() { Data = "Month", DefaultSubtotal = true },
+        ///                         new() { Data = "Year" },
+        ///                     },
+        ///                     Filter = new PivotTableField[] { new() { Data = "Region" } },
+        ///                     Columns = new PivotTableField[]
+        ///                     {
+        ///                         new() { Data = "Type", DefaultSubtotal = true },
+        ///                     },
+        ///                     Data = new PivotTableField[]
+        ///                     {
+        ///                         new()
+        ///                         {
+        ///                             Data = "Sales",
+        ///                             Name = "Summarize",
+        ///                             Subtotal = "sum",
+        ///                         },
+        ///                     },
+        ///                     RowGrandTotals = true,
+        ///                     ColGrandTotals = true,
+        ///                     ShowDrill = true,
+        ///                     ShowRowHeaders = true,
+        ///                     ShowColHeaders = true,
+        ///                     ShowLastColumn = true,
+        ///                 }
+        ///             );
+        ///             f.SaveAs("Book1.xlsx");
+        ///         }
+        ///         catch (RuntimeError err)
+        ///         {
+        ///             Console.WriteLine(err.Message);
+        ///         }
+        ///         finally
+        ///         {
+        ///             var err = f.Close();
+        ///             if (!string.IsNullOrEmpty(err))
+        ///                 Console.WriteLine(err);
+        ///         }
+        ///     }
+        /// }]]>
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="options">The pivot table options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AddPivotTable(PivotTableOptions options)
+        {
+            var opts = (TypesC.PivotTableOptions)Lib.CsToC(options, new TypesC.PivotTableOptions());
+            string err = Marshal.PtrToStringAnsi(Lib.AddPivotTable(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1478,7 +1621,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void AddVBAProject(byte[] buffer)
         {
-            var err = Marshal.PtrToStringAnsi(Lib.AddVBAProject(FileIdx, buffer, buffer.Length));
+            string err = Marshal.PtrToStringAnsi(Lib.AddVBAProject(FileIdx, buffer, buffer.Length));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1506,7 +1649,8 @@ namespace ExcelizeCs
         /// <param name="options">Optional parameters for get cell value</param>
         /// <returns>Return the cell value if no error occurred, otherwise raise
         /// a RuntimeError with the message.</returns>
-        /// <exception cref="RuntimeError"></exception>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe string GetCellValue(string sheet, string cell, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
@@ -1525,12 +1669,6 @@ namespace ExcelizeCs
         /// value will be used. This function fetched the rows with value or
         /// formula cells, the continually blank cells in the tail of each row
         /// will be skipped, so the length of each row may be inconsistent.
-        /// </summary>
-        /// <param name="sheet">The worksheet name</param>
-        /// <param name="options">Optional parameters for get rows</param>
-        /// <returns>Return all the rows in a sheet by given worksheet name,
-        /// returned as a two-dimensional array if no error occurred, otherwise
-        /// raise a RuntimeError with the message.</returns>
         /// <example>
         /// For example, get and traverse the value of all cells by rows on a
         /// worksheet named 'Sheet1':
@@ -1546,6 +1684,14 @@ namespace ExcelizeCs
         /// }
         /// </code>
         /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">Optional parameters for get rows</param>
+        /// <returns>Return all the rows in a sheet by given worksheet name,
+        /// returned as a two-dimensional array if no error occurred, otherwise
+        /// raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe List<List<string>> GetRows(string sheet, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
@@ -1576,7 +1722,8 @@ namespace ExcelizeCs
         /// <param name="styleId">The style ID</param>
         /// <returns>Return the style definition if no error occurred, otherwise
         /// raise a RuntimeError with the message.</returns>
-        /// <exception cref="RuntimeError"></exception>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe Style GetStyle(long styleId)
         {
             TypesC.GetStyleResult res = Lib.GetStyle(FileIdx, styleId);
@@ -1590,13 +1737,14 @@ namespace ExcelizeCs
         /// <summary>
         /// Create a new sheet by given a worksheet name and returns the index
         /// of the sheets in the workbook after it appended. Note that when
-        // creating a new workbook, the default worksheet named `Sheet1` will be
-        // created.
+        /// creating a new workbook, the default worksheet named <c>Sheet1</c>
+        /// will be created.
         /// </summary>
         /// <param name="sheet">The worksheet name</param>
         /// <returns>Return the index of the sheets in the workbook if no error
         /// occurred, otherwise raise a RuntimeError with the message.</returns>
-        /// <exception cref="RuntimeError"></exception>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe int NewSheet(string sheet)
         {
             var res = Lib.NewSheet(FileIdx, sheet);
@@ -1622,7 +1770,8 @@ namespace ExcelizeCs
         /// <returns>Return the stream writer object if no error occurred,
         /// otherwise raise a RuntimeError with the message.
         /// </returns>
-        /// <exception cref="RuntimeError"></exception>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe StreamWriter NewStreamWriter(string sheet)
         {
             var res = Lib.NewStreamWriter(FileIdx, sheet);
@@ -1641,7 +1790,8 @@ namespace ExcelizeCs
         /// <param name="style">The style options</param>
         /// <returns>Return the style index if no error occurred, otherwise
         /// raise a RuntimeError with the message.</returns>
-        /// <exception cref="RuntimeError"></exception>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe int NewStyle(Style style)
         {
             var options = (TypesC.Style)Lib.CsToC(style, new TypesC.Style());
@@ -1661,7 +1811,7 @@ namespace ExcelizeCs
         public void Save(Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
-            var err = Marshal.PtrToStringAnsi(Lib.Save(FileIdx, ref opts));
+            string err = Marshal.PtrToStringAnsi(Lib.Save(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1676,7 +1826,7 @@ namespace ExcelizeCs
         public void SaveAs(string filename, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
-            var err = Marshal.PtrToStringAnsi(Lib.SaveAs(FileIdx, filename, ref opts));
+            string err = Marshal.PtrToStringAnsi(Lib.SaveAs(FileIdx, filename, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1685,15 +1835,15 @@ namespace ExcelizeCs
         /// index.
         /// </summary>
         /// <remarks>Note that the active index is different from the ID
-        /// returned by function `GetSheetMap`. It should be greater than or
-        /// equal to 0 and less than the total worksheet numbers.</remarks>
+        /// returned by function <c>GetSheetMap</c>. It should be greater than
+        /// or equal to 0 and less than the total worksheet numbers.</remarks>
         /// <param name="index">The index of the worksheet to be set as active.
         /// </param>
         /// <exception cref="RuntimeError">Return None if no error occurred,
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetActiveSheet(int index)
         {
-            var err = Marshal.PtrToStringAnsi(Lib.SetActiveSheet(FileIdx, index));
+            string err = Marshal.PtrToStringAnsi(Lib.SetActiveSheet(FileIdx, index));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1709,7 +1859,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetCellInt(string sheet, string cell, long value)
         {
-            var err = Marshal.PtrToStringAnsi(Lib.SetCellInt(FileIdx, sheet, cell, value));
+            string err = Marshal.PtrToStringAnsi(Lib.SetCellInt(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1731,7 +1881,7 @@ namespace ExcelizeCs
             long styleID
         )
         {
-            var err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringAnsi(
                 Lib.SetCellStyle(FileIdx, sheet, topLeftCell, bottomRightCell, styleID)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1750,7 +1900,7 @@ namespace ExcelizeCs
         public void SetCellValue(string sheet, string cell, object value)
         {
             var val = (TypesC.Interface)Lib.CsValToCInterface(value);
-            var err = Marshal.PtrToStringAnsi(Lib.SetCellValue(FileIdx, sheet, cell, ref val));
+            string err = Marshal.PtrToStringAnsi(Lib.SetCellValue(FileIdx, sheet, cell, ref val));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1773,7 +1923,7 @@ namespace ExcelizeCs
             {
                 arr[i] = (TypesC.Interface)Lib.CsValToCInterface(values[i]);
             }
-            var err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringAnsi(
                 Lib.SetSheetRow(FileIdx, sheet, cell, arr, values.Count)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1792,7 +1942,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void UpdateLinkedValue()
         {
-            var err = Marshal.PtrToStringAnsi(Lib.UpdateLinkedValue(FileIdx));
+            string err = Marshal.PtrToStringAnsi(Lib.UpdateLinkedValue(FileIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

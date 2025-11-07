@@ -1,6 +1,6 @@
-// Copyright 2025 The excelize Authors. All rights reserved. Use of this source
-// code is governed by a BSD-style license that can be found in the LICENSE
-// file.
+// Copyright 2025 - 2026 The excelize Authors. All rights reserved. Use of this
+// source code is governed by a BSD-style license that can be found in the
+// LICENSE file.
 //
 // Package excelize-cs is a C# port of Go Excelize library, providing a set of
 // functions that allow you to write and read from XLAM / XLSM / XLSX / XLTM /
@@ -468,6 +468,113 @@ public class UnitTest
             )
         );
         Assert.Equal("zip: not a valid zip file", err.Message);
+    }
+
+    [Fact]
+    public void TestPivotTable()
+    {
+        File f = Excelize.NewFile();
+        List<string> months = new List<string>
+        {
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        };
+        List<int> year = new List<int> { 2017, 2018, 2019 };
+        List<string> types = new List<string> { "Meat", "Dairy", "Beverages", "Produce" };
+        List<string> region = new List<string> { "East", "West", "North", "South" };
+        Random random = new Random();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetSheetRow(
+                    "Sheet1",
+                    "A1",
+                    new List<object> { "Month", "Year", "Type", "Sales", "Region" }
+                );
+                for (int row = 2; row < 32; row++)
+                {
+                    f.SetCellValue(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(1, row),
+                        months[random.Next(12)]
+                    );
+                    f.SetCellValue(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(2, row),
+                        year[random.Next(3)]
+                    );
+                    f.SetCellValue(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(3, row),
+                        types[random.Next(4)]
+                    );
+                    f.SetCellValue(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(4, row),
+                        random.Next(5000)
+                    );
+                    f.SetCellValue(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(5, row),
+                        region[random.Next(4)]
+                    );
+                }
+                f.AddPivotTable(
+                    new PivotTableOptions
+                    {
+                        DataRange = "Sheet1!A1:E31",
+                        PivotTableRange = "Sheet1!G2:M34",
+                        Rows = new PivotTableField[]
+                        {
+                            new() { Data = "Month", DefaultSubtotal = true },
+                            new() { Data = "Year" },
+                        },
+                        Filter = new PivotTableField[] { new() { Data = "Region" } },
+                        Columns = new PivotTableField[]
+                        {
+                            new() { Data = "Type", DefaultSubtotal = true },
+                        },
+                        Data = new PivotTableField[]
+                        {
+                            new()
+                            {
+                                Data = "Sales",
+                                Name = "Summarize",
+                                Subtotal = "sum",
+                            },
+                        },
+                        RowGrandTotals = true,
+                        ColGrandTotals = true,
+                        ShowDrill = true,
+                        ShowRowHeaders = true,
+                        ShowColHeaders = true,
+                        ShowLastColumn = true,
+                    }
+                );
+            })
+        );
+        var err = Assert.Throws<RuntimeError>(() => f.AddPivotTable(new PivotTableOptions { }));
+        Assert.Equal(
+            "parameter 'PivotTableRange' parsing error: parameter is required",
+            err.Message
+        );
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddPivotTable.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
     }
 
     [StructLayout(LayoutKind.Sequential)]

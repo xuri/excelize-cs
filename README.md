@@ -17,7 +17,7 @@ Package excelize-cs is a C# port of Go [Excelize](https://github.com/xuri/exceli
 ### Installation
 
 ```bash
-dotnet add package ExcelizeCs --version 0.0.3
+dotnet add package ExcelizeCs --version 0.0.4
 ```
 
 ### Create spreadsheet

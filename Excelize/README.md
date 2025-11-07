@@ -1,6 +1,6 @@
 # excelize-cs
 
-!["excelize-cs logo"](https://github.com/xuri/excelize-cs/raw/main/Excelize/excelize-cs.png)
+!["excelize-cs logo"](https://raw.githubusercontent.com/xuri/excelize-cs/main/Excelize/excelize-cs.png)
 
 [!["NuGet version"](https://img.shields.io/nuget/v/ExcelizeCs.svg)](https://www.nuget.org/packages/ExcelizeCs)
 [!["Build Status"](https://github.com/xuri/excelize-cs/actions/workflows/build.yml/badge.svg)](https://github.com/xuri/excelize-cs/actions/workflows/build.yml)
@@ -15,7 +15,7 @@ Package excelize-cs is a C# port of Go [Excelize](https://github.com/xuri/exceli
 ### Installation
 
 ```bash
-dotnet add package ExcelizeCs --version 0.0.3
+dotnet add package ExcelizeCs --version 0.0.4
 ```
 
 ### Create spreadsheet
@@ -112,7 +112,7 @@ class Program
 
 With Excelize chart generation and management is as easy as a few lines of code. You can build charts based on data in your worksheet or generate charts without any data in your worksheet at all.
 
-!["Add chart to spreadsheet file by Excelie for C#"](https://github.com/xuri/excelize-cs/raw/main/Excelize/chart.png)
+!["Add chart to spreadsheet file by Excelie for C#"](https://raw.githubusercontent.com/xuri/excelize-cs/main/Excelize/chart.png)
 
 ```csharp
 using ExcelizeCs;

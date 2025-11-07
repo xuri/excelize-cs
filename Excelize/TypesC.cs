@@ -1,6 +1,6 @@
-// Copyright 2025 The excelize Authors. All rights reserved. Use of this source
-// code is governed by a BSD-style license that can be found in the LICENSE
-// file.
+// Copyright 2025 - 2026 The excelize Authors. All rights reserved. Use of this
+// source code is governed by a BSD-style license that can be found in the
+// LICENSE file.
 //
 // Package excelize-cs is a C# port of Go Excelize library, providing a set of
 // functions that allow you to write and read from XLAM / XLSM / XLSX / XLTM /
@@ -353,6 +353,53 @@ namespace ExcelizeCs.TypesC
         public int HoleSize;
         public uint* GapWidth;
         public int* Overlap;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct PivotTableField
+    {
+        public bool Compact;
+        public sbyte* Data;
+        public sbyte* Name;
+        public bool Outline;
+        public bool ShowAll;
+        public bool InsertBlankRow;
+        public sbyte* Subtotal;
+        public bool DefaultSubtotal;
+        public int NumFmt;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct PivotTableOptions
+    {
+        public sbyte* DataRange;
+        public sbyte* PivotTableRange;
+        public sbyte* Name;
+        public int RowsLen;
+        public PivotTableField* Rows;
+        public int ColumnsLen;
+        public PivotTableField* Columns;
+        public int DataLen;
+        public PivotTableField* Data;
+        public int FilterLen;
+        public PivotTableField* Filter;
+        public bool RowGrandTotals;
+        public bool ColGrandTotals;
+        public bool ShowDrill;
+        public bool UseAutoFormatting;
+        public bool PageOverThenDown;
+        public bool MergeItem;
+        public bool ClassicLayout;
+        public bool CompactData;
+        public bool ShowError;
+        public bool ShowRowHeaders;
+        public bool ShowColHeaders;
+        public bool ShowRowStripes;
+        public bool ShowColStripes;
+        public bool ShowLastColumn;
+        public bool FieldPrintTitles;
+        public bool ItemPrintTitles;
+        public sbyte* PivotTableStyleName;
     }
 
     [StructLayout(LayoutKind.Sequential)]
