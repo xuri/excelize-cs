@@ -362,6 +362,29 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// FormControl directly maps the form controls information.
+    /// </summary>
+    public struct FormControl
+    {
+        public string Cell;
+        public string Macro;
+        public uint Width;
+        public uint Height;
+        public bool Checked;
+        public uint CurrentVal;
+        public uint MinVal;
+        public uint MaxVal;
+        public uint IncChange;
+        public uint PageChange;
+        public bool Horizontally;
+        public string CellLink;
+        public string Text;
+        public RichTextRun[]? Paragraph;
+        public FormControlType Type;
+        public GraphicOptions Format;
+    }
+
+    /// <summary>
     /// ChartNumFmt directly maps the number format settings of the chart.
     /// </summary>
     public struct ChartNumFmt
@@ -419,7 +442,6 @@ namespace ExcelizeCs
         public ChartLineType Type;
         public ChartDashType Dash;
         public Fill Fill;
-
         public bool Smooth;
         public double Width;
     }
@@ -559,7 +581,7 @@ namespace ExcelizeCs
     /// <summary>
     /// PivotTableOptions directly maps the format settings of the pivot table.
     /// </summary>
-    /// <remarks
+    /// <remarks>
     /// PivotTableStyleName: The built-in pivot table style names
     ///
     ///	PivotStyleLight1 - PivotStyleLight28
@@ -571,13 +593,9 @@ namespace ExcelizeCs
         public string DataRange;
         public string PivotTableRange;
         public string Name;
-        public int RowsLen;
         public PivotTableField[]? Rows;
-        public int ColumnsLen;
         public PivotTableField[]? Columns;
-        public int DataLen;
         public PivotTableField[]? Data;
-        public int FilterLen;
         public PivotTableField[]? Filter;
         public bool RowGrandTotals;
         public bool ColGrandTotals;

@@ -215,7 +215,7 @@ public class UnitTest
     }
 
     [Fact]
-    public void TesttreamWriter()
+    public void TestStreamWriter()
     {
         var f = Excelize.NewFile();
         Assert.Null(
@@ -409,11 +409,95 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
+                f.AddFormControl(
+                    "Sheet1",
+                    new FormControl
+                    {
+                        Cell = "A3",
+                        Macro = "Button1_Click",
+                        Width = 140,
+                        Height = 60,
+                        Text = "Button 1\r\n",
+                        Paragraph = new RichTextRun[]
+                        {
+                            new()
+                            {
+                                Font = new Font
+                                {
+                                    Bold = true,
+                                    Italic = true,
+                                    Underline = "single",
+                                    Family = "Times New Roman",
+                                    Size = 14,
+                                    Color = "777777",
+                                },
+                                Text = "C1=A1+B1",
+                            },
+                        },
+                        Type = FormControlType.FormControlButton,
+                        Format = new GraphicOptions
+                        {
+                            PrintObject = true,
+                            Positioning = "absolute",
+                        },
+                    }
+                );
+                f.AddFormControl(
+                    "Sheet1",
+                    new FormControl
+                    {
+                        Cell = "A1",
+                        Macro = "Button1_Click",
+                        Text = "Option Button 1",
+                        Type = FormControlType.FormControlOptionButton,
+                    }
+                );
+                f.AddFormControl(
+                    "Sheet1",
+                    new FormControl
+                    {
+                        Cell = "B1",
+                        Type = FormControlType.FormControlSpinButton,
+                        Width = 15,
+                        Height = 40,
+                        CurrentVal = 7,
+                        MinVal = 5,
+                        MaxVal = 10,
+                        IncChange = 1,
+                        CellLink = "A1",
+                    }
+                );
+                f.AddFormControl(
+                    "Sheet1",
+                    new FormControl
+                    {
+                        Cell = "B3",
+                        Type = FormControlType.FormControlScrollBar,
+                        Width = 140,
+                        Height = 20,
+                        CurrentVal = 50,
+                        MinVal = 10,
+                        MaxVal = 100,
+                        PageChange = 1,
+                        CellLink = "A1",
+                        Horizontally = true,
+                    }
+                );
+                f.AddFormControl("Sheet1", null);
                 f.AddVBAProject(
                     System.IO.File.ReadAllBytes(
                         Path.GetFullPath(Path.Combine("..", "..", "..", "vbaProject.bin"))
                     )
                 );
+            })
+        );
+        var err = Assert.Throws<RuntimeError>(() =>
+            f.AddFormControl("SheetN", new FormControl { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
                 f.SaveAs("TestAddFormControl.xlsm");
             })
         );
