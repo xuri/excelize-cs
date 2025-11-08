@@ -122,6 +122,17 @@ namespace ExcelizeCs
             CallingConvention = CallingConvention.Cdecl,
             CharSet = CharSet.Ansi
         )]
+        internal static extern IntPtr AddFormControl(
+            long fileIdx,
+            string sheet,
+            ref TypesC.FormControl options
+        );
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
         internal static extern IntPtr AddPicture(
             long fileIdx,
             string sheet,
@@ -1323,6 +1334,154 @@ namespace ExcelizeCs
                 return;
             var opts = (TypesC.Comment)Lib.CsToC(options, new TypesC.Comment());
             string err = Marshal.PtrToStringAnsi(Lib.AddComment(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// AddFormControl provides the method to add form control object in a
+        /// worksheet by given worksheet name and form control options.
+        /// Supported form control type: button, check box, group box, label,
+        /// option button, scroll bar and spinner. If set macro for the form
+        /// control, the workbook extension should be XLSM or XLTM. Scroll value
+        /// must be between 0 and 30000. Please note that if a cell link is set
+        /// for a checkbox form control, Excelize will not assign a value to the
+        /// linked cell when the checkbox is checked. To reflect the checkbox
+        /// state, please use the <c>SetCellValue</c> function to manually set
+        /// the linked cell's value to <c>true</c>.
+        /// <example>
+        /// </example>
+        /// Example 1, add button form control with macro, rich-text, custom
+        /// button size, print property on Sheet1!A2, and let the button do not
+        /// move or size with cells:
+        /// <code>
+        /// try
+        /// {
+        ///     f.AddFormControl(
+        ///         "Sheet1",
+        ///         new FormControl
+        ///         {
+        ///             Cell = "A2",
+        ///             Macro = "Button1_Click",
+        ///             Width = 140,
+        ///             Height = 60,
+        ///             Text = "Button 1\r\n",
+        ///             Paragraph = new RichTextRun[]
+        ///             {
+        ///                 new()
+        ///                 {
+        ///                     Font = new Font
+        ///                     {
+        ///                         Bold = true,
+        ///                         Italic = true,
+        ///                         Underline = "single",
+        ///                         Family = "Times New Roman",
+        ///                         Size = 14,
+        ///                         Color = "777777",
+        ///                     },
+        ///                     Text = "C1=A1+B1",
+        ///                 },
+        ///             },
+        ///             Type = FormControlType.FormControlButton,
+        ///             Format = new GraphicOptions
+        ///             {
+        ///                 PrintObject = true,
+        ///                 Positioning = "absolute",
+        ///             },
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 2, add option button form control with checked status and
+        /// text on Sheet1!A1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.AddFormControl(
+        ///         "Sheet1",
+        ///         new FormControl
+        ///         {
+        ///             Cell = "A1",
+        ///             Macro = "Button1_Click",
+        ///             Text = "Option Button 1",
+        ///             Type = FormControlType.FormControlOptionButton,
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 3, add spin button form control on Sheet1!B1 to increase or
+        /// decrease the value of Sheet1!A1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.AddFormControl(
+        ///         "Sheet1",
+        ///         new FormControl
+        ///         {
+        ///             Cell = "B1",
+        ///             Type = FormControlType.FormControlSpinButton,
+        ///             Width = 15,
+        ///             Height = 40,
+        ///             CurrentVal = 7,
+        ///             MinVal = 5,
+        ///             MaxVal = 10,
+        ///             IncChange = 1,
+        ///             CellLink = "A1",
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 4, add horizontally scroll bar form control on Sheet1!A2 to
+        /// change the value of Sheet1!A1 by click the scroll arrows or drag
+        /// the scroll box:
+        /// <code>
+        /// try
+        /// {
+        ///     f.AddFormControl(
+        ///         "Sheet1",
+        ///         new FormControl
+        ///         {
+        ///             Cell = "A2",
+        ///             Type = FormControlType.FormControlScrollBar,
+        ///             Width = 140,
+        ///             Height = 20,
+        ///             CurrentVal = 50,
+        ///             MinVal = 10,
+        ///             MaxVal = 100,
+        ///             PageChange = 1,
+        ///             CellLink = "A1",
+        ///             Horizontally = true,
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The form control options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe void AddFormControl(string sheet, FormControl? options = null)
+        {
+            if (options == null)
+                return;
+            var opts = (TypesC.FormControl)Lib.CsToC(options, new TypesC.FormControl());
+            string err = Marshal.PtrToStringAnsi(Lib.AddFormControl(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

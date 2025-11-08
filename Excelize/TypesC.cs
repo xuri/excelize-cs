@@ -190,6 +190,32 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct FormControl
+    {
+        public sbyte* Cell;
+        public sbyte* Macro;
+        public uint Width;
+        public uint Height;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Checked;
+        public uint CurrentVal;
+        public uint MinVal;
+        public uint MaxVal;
+        public uint IncChange;
+        public uint PageChange;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Horizontally;
+        public sbyte* CellLink;
+        public sbyte* Text;
+        public int ParagraphLen;
+        public RichTextRun* Paragraph;
+        public uint Type;
+        public GraphicOptions Format;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ChartNumFmt
     {
         public sbyte* CustomNumFmt;
@@ -358,13 +384,22 @@ namespace ExcelizeCs.TypesC
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct PivotTableField
     {
+        [MarshalAs(UnmanagedType.I1)]
         public bool Compact;
         public sbyte* Data;
         public sbyte* Name;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool Outline;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowAll;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool InsertBlankRow;
         public sbyte* Subtotal;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool DefaultSubtotal;
         public int NumFmt;
     }
@@ -383,21 +418,53 @@ namespace ExcelizeCs.TypesC
         public PivotTableField* Data;
         public int FilterLen;
         public PivotTableField* Filter;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool RowGrandTotals;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ColGrandTotals;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowDrill;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool UseAutoFormatting;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool PageOverThenDown;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool MergeItem;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ClassicLayout;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool CompactData;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowError;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowRowHeaders;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowColHeaders;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowRowStripes;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowColStripes;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ShowLastColumn;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool FieldPrintTitles;
+
+        [MarshalAs(UnmanagedType.I1)]
         public bool ItemPrintTitles;
         public sbyte* PivotTableStyleName;
     }

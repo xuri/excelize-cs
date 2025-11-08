@@ -2,7 +2,7 @@
 
 !["excelize-cs logo"](https://raw.githubusercontent.com/xuri/excelize-cs/main/Excelize/excelize-cs.png)
 
-[!["NuGet version"](https://img.shields.io/nuget/v/ExcelizeCs.svg)](https://www.nuget.org/packages/ExcelizeCs)
+[!["NuGet version"](https://img.shields.io/nuget/v/ExcelizeCs.svg?color=%23007ec6)](https://www.nuget.org/packages/ExcelizeCs)
 [!["Build Status"](https://github.com/xuri/excelize-cs/actions/workflows/build.yml/badge.svg)](https://github.com/xuri/excelize-cs/actions/workflows/build.yml)
 [!["Code Coverage"](https://codecov.io/gh/xuri/excelize-cs/branch/main/graph/badge.svg)](https://codecov.io/gh/xuri/excelize-cs)
 [!["Licenses"](https://img.shields.io/badge/license-bsd-orange.svg)](https://opensource.org/licenses/BSD-3-Clause)
