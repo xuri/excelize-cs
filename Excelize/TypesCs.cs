@@ -616,6 +616,31 @@ namespace ExcelizeCs
         public string PivotTableStyleName;
     }
 
+    /// <summary>
+    /// SheetPropsOptions provides a function to set worksheet properties.
+    /// </summary>
+    public struct SheetPropsOptions
+    {
+        public string? CodeName;
+        public bool? EnableFormatConditionsCalculation;
+        public bool? Published;
+        public bool? AutoPageBreaks;
+        public bool? FitToPage;
+        public int? TabColorIndexed;
+        public string? TabColorRGB;
+        public int? TabColorTheme;
+        public double? TabColorTint;
+        public bool? OutlineSummaryBelow;
+        public bool? OutlineSummaryRight;
+        public uint? BaseColWidth;
+        public double? DefaultColWidth;
+        public double? DefaultRowHeight;
+        public bool? CustomHeight;
+        public bool? ZeroHeight;
+        public bool? ThickTop;
+        public bool? ThickBottom;
+    }
+
     public struct Row
     {
         public string[]? Cell;

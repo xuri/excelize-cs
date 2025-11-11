@@ -357,6 +357,17 @@ namespace ExcelizeCs
             CallingConvention = CallingConvention.Cdecl,
             CharSet = CharSet.Ansi
         )]
+        internal static extern IntPtr SetSheetProps(
+            long fileIdx,
+            string sheet,
+            ref TypesC.SheetPropsOptions options
+        );
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
         internal static extern IntPtr SetSheetRow(
             long fileIdx,
             string sheet,
@@ -1350,7 +1361,6 @@ namespace ExcelizeCs
         /// state, please use the <c>SetCellValue</c> function to manually set
         /// the linked cell's value to <c>true</c>.
         /// <example>
-        /// </example>
         /// Example 1, add button form control with macro, rich-text, custom
         /// button size, print property on Sheet1!A2, and let the button do not
         /// move or size with cells:
@@ -1471,6 +1481,7 @@ namespace ExcelizeCs
         ///     Console.WriteLine(err.Message);
         /// }
         /// </code>
+        /// </example>
         /// </summary>
         /// <param name="sheet">The worksheet name</param>
         /// <param name="options">The form control options</param>
@@ -2060,6 +2071,76 @@ namespace ExcelizeCs
         {
             var val = (TypesC.Interface)Lib.CsValToCInterface(value);
             string err = Marshal.PtrToStringAnsi(Lib.SetCellValue(FileIdx, sheet, cell, ref val));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetSheetProps provides a function to set worksheet properties.
+        /// <example>
+        /// There 4 kinds of presets "Custom Scaling Options" in the spreadsheet
+        /// applications, if you need to set those kind of scaling options,
+        /// please using the <c>SetSheetProps</c> and <c>SetPageLayout</c>
+        /// functions to approach these 4 scaling options:
+        /// 1. No Scaling (Print sheets at their actual size):
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetSheetProps("Sheet1", new SheetPropsOptions { FitToPage = false });
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// 2. Fit Sheet on One Page (Shrink the printout so that it fits on one
+        /// page):
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetSheetProps("Sheet1", new SheetPropsOptions { FitToPage = true });
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// 3. Fit All Columns on One Page (Shrink the printout so that it is
+        /// one page wide):
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetSheetProps("Sheet1", new SheetPropsOptions { FitToPage = true });
+        ///     f.SetPageLayout("Sheet1", new PageLayoutOptions { FitToHeight = 0 });
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// 4. Fit All Rows on One Page (Shrink the printout so that it is one
+        /// page high):
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetSheetProps("Sheet1", new SheetPropsOptions { FitToPage = true });
+        ///     f.SetPageLayout("Sheet1", new PageLayoutOptions { FitToWidth = 0 });
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The sheet properties options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetSheetProps(string sheet, SheetPropsOptions options)
+        {
+            var opts = (TypesC.SheetPropsOptions)Lib.CsToC(options, new TypesC.SheetPropsOptions());
+            string err = Marshal.PtrToStringAnsi(Lib.SetSheetProps(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

@@ -470,6 +470,29 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct SheetPropsOptions
+    {
+        public sbyte** CodeName;
+        public bool* EnableFormatConditionsCalculation;
+        public bool* Published;
+        public bool* AutoPageBreaks;
+        public bool* FitToPage;
+        public int* TabColorIndexed;
+        public sbyte** TabColorRGB;
+        public int* TabColorTheme;
+        public double* TabColorTint;
+        public bool* OutlineSummaryBelow;
+        public bool* OutlineSummaryRight;
+        public uint* BaseColWidth;
+        public double* DefaultColWidth;
+        public double* DefaultRowHeight;
+        public bool* CustomHeight;
+        public bool* ZeroHeight;
+        public bool* ThickTop;
+        public bool* ThickBottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct StringErrorResult
     {
         public sbyte* val;

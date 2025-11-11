@@ -483,6 +483,7 @@ public class UnitTest
                         Horizontally = true,
                     }
                 );
+                f.SetSheetProps("Sheet1", new SheetPropsOptions { CodeName = "Sheet1" });
                 f.AddFormControl("Sheet1", null);
                 f.AddVBAProject(
                     System.IO.File.ReadAllBytes(
@@ -491,8 +492,12 @@ public class UnitTest
                 );
             })
         );
-        var err = Assert.Throws<RuntimeError>(() =>
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
             f.AddFormControl("SheetN", new FormControl { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.SetSheetProps("SheetN", new SheetPropsOptions { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(
