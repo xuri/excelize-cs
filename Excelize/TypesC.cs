@@ -119,6 +119,25 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct HeaderFooterOptions
+    {
+        public bool* AlignWithMargins;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool DifferentFirst;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool DifferentOddEven;
+        public bool* ScaleWithDoc;
+        public sbyte* OddHeader;
+        public sbyte* OddFooter;
+        public sbyte* EvenHeader;
+        public sbyte* EvenFooter;
+        public sbyte* FirstHeader;
+        public sbyte* FirstFooter;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Style
     {
         public int BorderLen;

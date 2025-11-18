@@ -530,6 +530,41 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestHeaderFooter()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetHeaderFooter(
+                    "Sheet1",
+                    new HeaderFooterOptions
+                    {
+                        DifferentFirst = true,
+                        DifferentOddEven = true,
+                        OddHeader = "&R&P",
+                        OddFooter = "&C&F",
+                        EvenHeader = "&L&P",
+                        EvenFooter = "&L&D&R&T",
+                        FirstHeader = "&CCenter &\"-,Bold\"Bold&\"-,Regular\"HeaderU+000A&D",
+                    }
+                );
+            })
+        );
+        var err = Assert.Throws<RuntimeError>(() =>
+            f.SetHeaderFooter("SheetN", new HeaderFooterOptions { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestHeaderFooter.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestOpenFile()
     {
         Assert.Null(

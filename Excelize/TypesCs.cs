@@ -292,6 +292,23 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// HeaderFooterOptions directly maps the settings of header and footer.
+    /// </summary>
+    public struct HeaderFooterOptions
+    {
+        public bool? AlignWithMargins;
+        public bool DifferentFirst;
+        public bool DifferentOddEven;
+        public bool? ScaleWithDoc;
+        public string OddHeader;
+        public string OddFooter;
+        public string EvenHeader;
+        public string EvenFooter;
+        public string FirstHeader;
+        public string FirstFooter;
+    }
+
+    /// <summary>
     /// Style directly maps the style settings of the cells.
     /// </summary>
     public struct Style

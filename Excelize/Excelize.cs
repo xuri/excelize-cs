@@ -368,6 +368,17 @@ namespace ExcelizeCs
             CallingConvention = CallingConvention.Cdecl,
             CharSet = CharSet.Ansi
         )]
+        internal static extern IntPtr SetHeaderFooter(
+            long fileIdx,
+            string sheet,
+            ref TypesC.HeaderFooterOptions opts
+        );
+
+        [DllImport(
+            LibraryName,
+            CallingConvention = CallingConvention.Cdecl,
+            CharSet = CharSet.Ansi
+        )]
         internal static extern IntPtr SetSheetRow(
             long fileIdx,
             string sheet,
@@ -2141,6 +2152,48 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.SheetPropsOptions)Lib.CsToC(options, new TypesC.SheetPropsOptions());
             string err = Marshal.PtrToStringAnsi(Lib.SetSheetProps(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set headers and footers by given worksheet name and the control
+        /// characters.
+        /// <example>
+        /// For example:
+        /// <code><![CDATA[
+        /// try
+        /// {
+        ///     f.SetHeaderFooter(
+        ///         "Sheet1",
+        ///         new HeaderFooterOptions
+        ///         {
+        ///             DifferentFirst = true,
+        ///             DifferentOddEven = true,
+        ///             OddHeader = "&R&P",
+        ///             OddFooter = "&C&F",
+        ///             EvenHeader = "&L&P",
+        ///             EvenFooter = "&L&D&R&T",
+        ///             FirstHeader = "&CCenter &\"-,Bold\"Bold&\"-,Regular\"HeaderU+000A&D",
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }]]>
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The header footer options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetHeaderFooter(string sheet, HeaderFooterOptions? options)
+        {
+            var opts = (TypesC.HeaderFooterOptions)
+                Lib.CsToC(options ?? new HeaderFooterOptions(), new TypesC.HeaderFooterOptions());
+            string err = Marshal.PtrToStringAnsi(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
