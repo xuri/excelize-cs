@@ -20,15 +20,17 @@ public class UnitTest
     [Fact]
     public void TestDllImportResolver()
     {
-        var err = Assert.Throws<RuntimeError>(() => Lib.DllImportResolver("lib", null, null));
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            Lib.DllImportResolver("lib", null, null)
+        );
         Assert.Equal(Lib.ErrUnsupportedPlatformOrArch, err.Message);
     }
 
     [Fact]
     public void TestStyle()
     {
-        var f = Excelize.NewFile();
-        var s = new Style
+        File f = Excelize.NewFile();
+        Style s = new Style
         {
             Border = new Border[]
             {
@@ -104,9 +106,9 @@ public class UnitTest
             Protection = new Protection { Locked = false, Hidden = true },
             CustomNumFmt = ";;;",
         };
-        var styleId = f.NewStyle(s);
+        int styleId = f.NewStyle(s);
         Assert.Equal(1, styleId);
-        var style = f.GetStyle(styleId);
+        Style style = f.GetStyle(styleId);
         Assert.Equivalent(s, style);
 
         Assert.Null(Record.Exception(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId)));
@@ -166,11 +168,11 @@ public class UnitTest
         Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
         Assert.Empty(f.Close());
 
-        var err = Assert.Throws<RuntimeError>(() => Excelize.CoordinatesToCellName(0, 1));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.CoordinatesToCellName(0, 1));
         Assert.Equal("invalid cell reference [0, 1]", err.Message);
 
         f = new File(0);
-        var expected = "can not find file pointer";
+        string expected = "can not find file pointer";
         err = Assert.Throws<RuntimeError>(() => f.AddChart("Sheet1", "A1", new Chart()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.AddChartSheet("Sheet1", new Chart()));
@@ -217,7 +219,7 @@ public class UnitTest
     [Fact]
     public void TestStreamWriter()
     {
-        var f = Excelize.NewFile();
+        File f = Excelize.NewFile();
         Assert.Null(
             Record.Exception(() =>
             {
@@ -238,7 +240,7 @@ public class UnitTest
                 sw.Flush();
             })
         );
-        var err = Assert.Throws<RuntimeError>(() => f.NewStreamWriter("SheetN"));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.NewStreamWriter("SheetN"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(
             Record.Exception(() =>
@@ -259,8 +261,8 @@ public class UnitTest
     [Fact]
     public void TestAddChart()
     {
-        var f = Excelize.NewFile();
-        var data = new List<List<object?>>
+        File f = Excelize.NewFile();
+        List<List<object?>> data = new List<List<object?>>
         {
             new() { null, "Apple", "Orange", "Pear" },
             new() { "Small", 2, 3, 3 },
@@ -269,7 +271,7 @@ public class UnitTest
         };
         Assert.Null(Record.Exception(() => f.SetSheetRow("Sheet1", "A1", null)));
         Assert.Null(Record.Exception(() => f.SetSheetRow("Sheet1", "A1", new List<object>())));
-        foreach (var row in data)
+        foreach (List<object?> row in data)
         {
             Assert.Null(
                 Record.Exception(() =>
@@ -281,7 +283,7 @@ public class UnitTest
                 )
             );
         }
-        var chart = new Chart
+        Chart chart = new Chart
         {
             Type = ChartType.Col3DClustered,
             Series = new ChartSeries[]
@@ -327,8 +329,8 @@ public class UnitTest
     [Fact]
     public void TestAddComment()
     {
-        var f = Excelize.NewFile();
-        var comment = new Comment
+        File f = Excelize.NewFile();
+        Comment comment = new Comment
         {
             Cell = "A5",
             Author = "Excelize",
@@ -358,9 +360,9 @@ public class UnitTest
     [Fact]
     public void TestAddPicture()
     {
-        var f = Excelize.NewFile();
+        File f = Excelize.NewFile();
         string filePath = Path.GetFullPath(Path.Combine("..", "..", "..", "..", "chart.png"));
-        var pic = System.IO.File.ReadAllBytes(filePath);
+        byte[] pic = System.IO.File.ReadAllBytes(filePath);
         Assert.Null(
             Record.Exception(() =>
             {
@@ -397,7 +399,9 @@ public class UnitTest
                 f.SaveAs("TestAddPicture.xlsx");
             })
         );
-        var err = Assert.Throws<RuntimeError>(() => f.AddPicture("SheetN", "A1", filePath, null));
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddPicture("SheetN", "A1", filePath, null)
+        );
         Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Empty(f.Close());
     }
@@ -405,7 +409,7 @@ public class UnitTest
     [Fact]
     public void TestAddFormControl()
     {
-        var f = Excelize.NewFile();
+        File f = Excelize.NewFile();
         Assert.Null(
             Record.Exception(() =>
             {
@@ -510,11 +514,59 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestAddShape()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.AddShape(
+                    "Sheet1",
+                    new Shape
+                    {
+                        Cell = "G6",
+                        Type = "rect",
+                        Line = new ShapeLine { Color = "4286F4", Width = 1.2 },
+                        Fill = new Fill { Color = new string[] { "8EB9FF" }, Pattern = 1 },
+                        Paragraph = new RichTextRun[]
+                        {
+                            new()
+                            {
+                                Text = "Rectangle Shape",
+                                Font = new Font
+                                {
+                                    Bold = true,
+                                    Italic = true,
+                                    Family = "Times New Roman",
+                                    Size = 19,
+                                    Color = "777777",
+                                    Underline = "sng",
+                                },
+                            },
+                        },
+                        Width = 180,
+                        Height = 40,
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.AddShape("SheetN", new Shape { }));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddShape.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestCoordinates()
     {
         var (col, row) = Excelize.CellNameToCoordinates("Z3");
         Assert.Equal((26, 3), (col, row));
-        var err = Assert.Throws<RuntimeError>(() => Excelize.CellNameToCoordinates("A"));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.CellNameToCoordinates("A"));
         Assert.Equal(
             "cannot convert cell \"A\" to coordinates: invalid cell name \"A\"",
             err.Message
@@ -551,7 +603,7 @@ public class UnitTest
                 );
             })
         );
-        var err = Assert.Throws<RuntimeError>(() =>
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
             f.SetHeaderFooter("SheetN", new HeaderFooterOptions { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
@@ -570,19 +622,19 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
-                var opt = new Options { Password = "password" };
-                var f = Excelize.NewFile();
+                Options opt = new Options { Password = "password" };
+                File f = Excelize.NewFile();
                 f.UpdateLinkedValue();
                 f.SaveAs("Book2.xlsx", opt);
                 f.Close();
                 f = Excelize.OpenFile("Book2.xlsx", opt);
                 f.Save();
                 f.Close();
-                var f2 = Excelize.OpenReader(System.IO.File.ReadAllBytes("Book2.xlsx"));
+                File f2 = Excelize.OpenReader(System.IO.File.ReadAllBytes("Book2.xlsx"));
                 f2.Close();
             })
         );
-        var err = Assert.Throws<RuntimeError>(() => Excelize.OpenFile("Book1"));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.OpenFile("Book1"));
         Assert.StartsWith("open Book1", err.Message);
         err = Assert.Throws<RuntimeError>(() =>
             Excelize.OpenReader(
@@ -687,7 +739,9 @@ public class UnitTest
                 );
             })
         );
-        var err = Assert.Throws<RuntimeError>(() => f.AddPivotTable(new PivotTableOptions { }));
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddPivotTable(new PivotTableOptions { })
+        );
         Assert.Equal(
             "parameter 'PivotTableRange' parsing error: parameter is required",
             err.Message
@@ -745,7 +799,7 @@ public class UnitTest
     [Fact]
     public unsafe void TestTypeConvert()
     {
-        var expected = new CsT1
+        CsT1 expected = new CsT1
         {
             A = new int[] { 1, 2 },
             B = new int?[] { 3, 4, null },
@@ -766,8 +820,8 @@ public class UnitTest
             M = "text",
             N = true,
         };
-        var cT1 = (C1)Lib.CsToC(expected, new C1());
-        var csT1 = (CsT1)Lib.CToCs(cT1, new CsT1());
+        C1 cT1 = (C1)Lib.CsToC(expected, new C1());
+        CsT1 csT1 = (CsT1)Lib.CToCs(cT1, new CsT1());
         Assert.Equivalent(expected, csT1);
         Assert.Null(Lib.CsToC(null, new CsT1()));
         Assert.Null(Lib.CToCs(null, new C1()));

@@ -634,6 +634,31 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// ShapeLine directly maps the line settings of the shape.
+    /// </summary>
+    public struct ShapeLine
+    {
+        public string Color;
+        public double? Width;
+    }
+
+    /// <summary>
+    /// Shape directly maps the format settings of the shape.
+    /// </summary>
+    public struct Shape
+    {
+        public string Cell;
+        public string Type;
+        public string Macro;
+        public uint Width;
+        public uint Height;
+        public GraphicOptions Format;
+        public Fill Fill;
+        public ShapeLine Line;
+        public RichTextRun[]? Paragraph;
+    }
+
+    /// <summary>
     /// SheetPropsOptions provides a function to set worksheet properties.
     /// </summary>
     public struct SheetPropsOptions

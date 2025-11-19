@@ -489,6 +489,28 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct ShapeLine
+    {
+        public sbyte* Color;
+        public double* Width;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct Shape
+    {
+        public sbyte* Cell;
+        public sbyte* Type;
+        public sbyte* Macro;
+        public uint Width;
+        public uint Height;
+        public GraphicOptions Format;
+        public Fill Fill;
+        public ShapeLine Line;
+        public int ParagraphLen;
+        public RichTextRun* Paragraph;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct SheetPropsOptions
     {
         public sbyte** CodeName;

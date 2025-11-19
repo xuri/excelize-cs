@@ -81,336 +81,215 @@ namespace ExcelizeCs
             throw new RuntimeError(ErrUnsupportedPlatformOrArch);
         }
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddChart(
             long fileIdx,
-            string sheet,
-            string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Chart[] chart,
             int length
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddChartSheet(
             long fileIdx,
-            string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Chart[] chart,
             int length
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddComment(
             long fileIdx,
-            string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.Comment comment
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddFormControl(
             long fileIdx,
-            string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.FormControl options
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddPicture(
             long fileIdx,
-            string sheet,
-            string cell,
-            string name,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string name,
             ref TypesC.GraphicOptions opts
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddPictureFromBytes(
             long fileIdx,
-            string sheet,
-            string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             ref TypesC.Picture pic
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddPivotTable(
             long fileIdx,
             ref TypesC.PivotTableOptions opts
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
-        internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
-
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
-        internal static extern TypesC.CellNameToCoordinatesResult CellNameToCoordinates(
-            string cell
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AddShape(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            ref TypesC.Shape opts
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.CellNameToCoordinatesResult CellNameToCoordinates(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr Close(long fileIdx);
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
-        internal static extern TypesC.IntErrorResult ColumnNameToNumber(string name);
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.IntErrorResult ColumnNameToNumber(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string name
+        );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult ColumnNumberToName(int num);
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult CoordinatesToCellName(
             int col,
             int row,
             bool abs
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult GetCellValue(
             long fileIdx,
-            string sheet,
-            string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             ref TypesC.Options opts
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.GetRowsResult GetRows(
             long fileIdx,
-            string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.Options opts
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.GetStyleResult GetStyle(long fileIdx, long styleID);
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern long NewFile();
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
-        internal static extern TypesC.IntErrorResult NewSheet(long fileIdx, string sheet);
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.IntErrorResult NewSheet(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet
+        );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
-        internal static extern TypesC.IntErrorResult NewStreamWriter(long fileIdx, string sheet);
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.IntErrorResult NewStreamWriter(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet
+        );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.IntErrorResult NewStyle(long fileIdx, ref TypesC.Style style);
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.IntErrorResult OpenFile(
-            string filename,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string filename,
             ref TypesC.Options options
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.IntErrorResult OpenReader(
             byte[] b,
             int bLen,
             ref TypesC.Options options
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr Save(long fileIdx, ref TypesC.Options options);
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SaveAs(
             long fileIdx,
-            string filename,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string filename,
             ref TypesC.Options options
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetActiveSheet(long fileIdx, int index);
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellInt(
             long fileIdx,
-            string sheet,
-            string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             long value
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellStyle(
             long fileIdx,
-            string sheet,
-            string topLeftCell,
-            string bottomRightCell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string topLeftCell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string bottomRightCell,
             long styleID
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellValue(
             long fileIdx,
-            string sheet,
-            string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             ref TypesC.Interface value
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetSheetProps(
             long fileIdx,
-            string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.SheetPropsOptions options
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetHeaderFooter(
             long fileIdx,
-            string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.HeaderFooterOptions opts
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetSheetRow(
             long fileIdx,
-            string sheet,
-            string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Interface[] row,
             int length
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr StreamFlush(long swIdx);
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr StreamSetRow(
             long swIdx,
-            string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Interface[] row,
             int length
         );
 
-        [DllImport(
-            LibraryName,
-            CallingConvention = CallingConvention.Cdecl,
-            CharSet = CharSet.Ansi
-        )]
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr UpdateLinkedValue(long fileIdx);
 
         /// <summary>
@@ -676,7 +555,7 @@ namespace ExcelizeCs
                                                 arrPtr,
                                                 i * IntPtr.Size
                                             );
-                                            arr.SetValue(Marshal.PtrToStringAnsi(strPtr), i);
+                                            arr.SetValue(Marshal.PtrToStringUTF8(strPtr), i);
                                         }
                                     }
                                     else
@@ -752,7 +631,7 @@ namespace ExcelizeCs
                                             {
                                                 if (underlyingType == typeof(string))
                                                 {
-                                                    string strValue = Marshal.PtrToStringAnsi(
+                                                    string strValue = Marshal.PtrToStringUTF8(
                                                         ptrToElement
                                                     );
                                                     arr.SetValue(strValue, i);
@@ -853,7 +732,7 @@ namespace ExcelizeCs
                     {
                         if (csField.FieldType == typeof(string))
                         {
-                            IntPtr ptr = Marshal.StringToHGlobalAnsi(
+                            IntPtr ptr = Marshal.StringToCoTaskMemUTF8(
                                 csField.GetValue(csInstance).ToString()
                             );
                             cField.SetValueDirect(__makeref(cInstance), ptr);
@@ -889,7 +768,7 @@ namespace ExcelizeCs
                             // Pointer of the Go basic data type, for example: *string
                             if (csField.FieldType == typeof(string))
                             {
-                                IntPtr ptr = Marshal.StringToHGlobalAnsi(
+                                IntPtr ptr = Marshal.StringToCoTaskMemUTF8(
                                     csField.GetValue(csInstance).ToString()
                                 );
                                 IntPtr ptrPtr = Marshal.AllocHGlobal(IntPtr.Size);
@@ -953,7 +832,7 @@ namespace ExcelizeCs
                                             Marshal.WriteIntPtr(
                                                 arrPtr,
                                                 i * IntPtr.Size,
-                                                Marshal.StringToHGlobalAnsi(str)
+                                                Marshal.StringToCoTaskMemUTF8(str)
                                             );
                                         }
                                     }
@@ -1026,7 +905,7 @@ namespace ExcelizeCs
                                         {
                                             if (underlyingType == typeof(string))
                                             {
-                                                elePtr = Marshal.StringToHGlobalAnsi(
+                                                elePtr = Marshal.StringToCoTaskMemUTF8(
                                                     ele.ToString()
                                                 );
                                             }
@@ -1229,7 +1108,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe void Flush()
         {
-            string err = Marshal.PtrToStringAnsi(Lib.StreamFlush(StreamWriterIdx));
+            string err = Marshal.PtrToStringUTF8(Lib.StreamFlush(StreamWriterIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1252,7 +1131,7 @@ namespace ExcelizeCs
             {
                 arr[i] = (TypesC.Interface)Lib.CsValToCInterface(values[i]);
             }
-            string err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringUTF8(
                 Lib.StreamSetRow(StreamWriterIdx, cell, arr, values.Count)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1301,7 +1180,7 @@ namespace ExcelizeCs
                     arr[i + 1] = (TypesC.Chart)Lib.CsToC(combo[i], new TypesC.Chart());
                 }
             }
-            string err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringUTF8(
                 Lib.AddChart(FileIdx, sheet, cell, arr, arr.Length)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1334,7 +1213,7 @@ namespace ExcelizeCs
                     arr[i + 1] = (TypesC.Chart)Lib.CsToC(combo[i], new TypesC.Chart());
                 }
             }
-            string err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringUTF8(
                 Lib.AddChartSheet(FileIdx, sheet, arr, arr.Length)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1355,7 +1234,7 @@ namespace ExcelizeCs
             if (options == null)
                 return;
             var opts = (TypesC.Comment)Lib.CsToC(options, new TypesC.Comment());
-            string err = Marshal.PtrToStringAnsi(Lib.AddComment(FileIdx, sheet, ref opts));
+            string err = Marshal.PtrToStringUTF8(Lib.AddComment(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1503,7 +1382,7 @@ namespace ExcelizeCs
             if (options == null)
                 return;
             var opts = (TypesC.FormControl)Lib.CsToC(options, new TypesC.FormControl());
-            string err = Marshal.PtrToStringAnsi(Lib.AddFormControl(FileIdx, sheet, ref opts));
+            string err = Marshal.PtrToStringUTF8(Lib.AddFormControl(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1572,7 +1451,7 @@ namespace ExcelizeCs
         ///         finally
         ///         {
         ///             // Close the spreadsheet.
-        ///             var err = f.Close();
+        ///             string err = f.Close();
         ///             if (!string.IsNullOrEmpty(err))
         ///                 Console.WriteLine(err);
         ///         }
@@ -1591,7 +1470,7 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.GraphicOptions)
                 Lib.CsToC(options ?? new GraphicOptions(), new TypesC.GraphicOptions());
-            string err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringUTF8(
                 Lib.AddPicture(FileIdx, sheet, cell, name, ref opts)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1615,7 +1494,7 @@ namespace ExcelizeCs
         /// {
         ///     static void Main()
         ///     {
-        ///         var f = Excelize.NewFile();
+        ///         ExcelizeCs.File f = Excelize.NewFile();
         ///         try
         ///         {
         ///             f.AddPictureFromBytes(
@@ -1643,7 +1522,7 @@ namespace ExcelizeCs
         ///         }
         ///         finally
         ///         {
-        ///             var err = f.Close();
+        ///             string err = f.Close();
         ///             if (!string.IsNullOrEmpty(err))
         ///                 Console.WriteLine(err);
         ///         }
@@ -1660,7 +1539,7 @@ namespace ExcelizeCs
         public void AddPictureFromBytes(string sheet, string cell, Picture picture)
         {
             var pic = (TypesC.Picture)Lib.CsToC(picture, new TypesC.Picture());
-            string err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringUTF8(
                 Lib.AddPictureFromBytes(FileIdx, sheet, cell, ref pic)
             );
             if (!string.IsNullOrEmpty(err))
@@ -1682,7 +1561,7 @@ namespace ExcelizeCs
         /// {
         ///     static void Main()
         ///     {
-        ///         var f = Excelize.NewFile();
+        ///         ExcelizeCs.File f = Excelize.NewFile();
         ///         List<string> months = new List<string>
         ///         {
         ///             "Jan",
@@ -1773,7 +1652,7 @@ namespace ExcelizeCs
         ///         }
         ///         finally
         ///         {
-        ///             var err = f.Close();
+        ///             string err = f.Close();
         ///             if (!string.IsNullOrEmpty(err))
         ///                 Console.WriteLine(err);
         ///         }
@@ -1788,7 +1667,298 @@ namespace ExcelizeCs
         public void AddPivotTable(PivotTableOptions options)
         {
             var opts = (TypesC.PivotTableOptions)Lib.CsToC(options, new TypesC.PivotTableOptions());
-            string err = Marshal.PtrToStringAnsi(Lib.AddPivotTable(FileIdx, ref opts));
+            string err = Marshal.PtrToStringUTF8(Lib.AddPivotTable(FileIdx, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// AddShape provides the method to add shape in a sheet by given
+        /// worksheet name and shape format set (such as offset, scale, aspect
+        /// ratio setting and print settings). The following shows the type of
+        /// shape supported by excelize:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Type</term>
+        ///         <description>Shape</description>
+        ///     </listheader>
+        ///     <item><term>accentBorderCallout1</term><description>Callout 1 with Border and Accent Shape</description></item>
+        ///     <item><term>accentBorderCallout2</term><description>Callout 2 with Border and Accent Shape</description></item>
+        ///     <item><term>accentBorderCallout3</term><description>Callout 3 with Border and Accent Shape</description></item>
+        ///     <item><term>accentCallout1</term><description>Callout 1 Shape</description></item>
+        ///     <item><term>accentCallout2</term><description>Callout 2 Shape</description></item>
+        ///     <item><term>accentCallout3</term><description>Callout 3 Shape</description></item>
+        ///     <item><term>actionButtonBackPrevious</term><description>Back or Previous Button Shape</description></item>
+        ///     <item><term>actionButtonBeginning</term><description>Beginning Button Shape</description></item>
+        ///     <item><term>actionButtonBlank</term><description>Blank Button Shape</description></item>
+        ///     <item><term>actionButtonDocument</term><description>Document Button Shape</description></item>
+        ///     <item><term>actionButtonEnd</term><description>End Button Shape</description></item>
+        ///     <item><term>actionButtonForwardNext</term><description>Forward or Next Button Shape</description></item>
+        ///     <item><term>actionButtonHelp</term><description>Help Button Shape</description></item>
+        ///     <item><term>actionButtonHome</term><description>Home Button Shape</description></item>
+        ///     <item><term>actionButtonInformation</term><description>Information Button Shape</description></item>
+        ///     <item><term>actionButtonMovie</term><description>Movie Button Shape</description></item>
+        ///     <item><term>actionButtonReturn</term><description>Return Button Shape</description></item>
+        ///     <item><term>actionButtonSound</term><description>Sound Button Shape</description></item>
+        ///     <item><term>arc</term><description>Curved Arc Shape</description></item>
+        ///     <item><term>bentArrow</term><description>Bent Arrow Shape</description></item>
+        ///     <item><term>bentConnector2</term><description>Bent Connector 2 Shape</description></item>
+        ///     <item><term>bentConnector3</term><description>Bent Connector 3 Shape</description></item>
+        ///     <item><term>bentConnector4</term><description>Bent Connector 4 Shape</description></item>
+        ///     <item><term>bentConnector5</term><description>Bent Connector 5 Shape</description></item>
+        ///     <item><term>bentUpArrow</term><description>Bent Up Arrow Shape</description></item>
+        ///     <item><term>bevel</term><description>Bevel Shape</description></item>
+        ///     <item><term>blockArc</term><description>Block Arc Shape</description></item>
+        ///     <item><term>borderCallout1</term><description>Callout 1 with Border Shape</description></item>
+        ///     <item><term>borderCallout2</term><description>Callout 2 with Border Shape</description></item>
+        ///     <item><term>borderCallout3</term><description>Callout 3 with Border Shape</description></item>
+        ///     <item><term>bracePair</term><description>Brace Pair Shape</description></item>
+        ///     <item><term>bracketPair</term><description>Bracket Pair Shape</description></item>
+        ///     <item><term>callout1</term><description>Callout 1 Shape</description></item>
+        ///     <item><term>callout2</term><description>Callout 2 Shape</description></item>
+        ///     <item><term>callout3</term><description>Callout 3 Shape</description></item>
+        ///     <item><term>can</term><description>Can Shape</description></item>
+        ///     <item><term>chartPlus</term><description>Chart Plus Shape</description></item>
+        ///     <item><term>chartStar</term><description>Chart Star Shape</description></item>
+        ///     <item><term>chartX</term><description>Chart X Shape</description></item>
+        ///     <item><term>chevron</term><description>Chevron Shape</description></item>
+        ///     <item><term>chord</term><description>Chord Shape</description></item>
+        ///     <item><term>circularArrow</term><description>Circular Arrow Shape</description></item>
+        ///     <item><term>cloud</term><description>Cloud Shape</description></item>
+        ///     <item><term>cloudCallout</term><description>Callout Cloud Shape</description></item>
+        ///     <item><term>corner</term><description>Corner Shape</description></item>
+        ///     <item><term>cornerTabs</term><description>Corner Tabs Shape</description></item>
+        ///     <item><term>cube</term><description>Cube Shape</description></item>
+        ///     <item><term>curvedConnector2</term><description>Curved Connector 2 Shape</description></item>
+        ///     <item><term>curvedConnector3</term><description>Curved Connector 3 Shape</description></item>
+        ///     <item><term>curvedConnector4</term><description>Curved Connector 4 Shape</description></item>
+        ///     <item><term>curvedConnector5</term><description>Curved Connector 5 Shape</description></item>
+        ///     <item><term>curvedDownArrow</term><description>Curved Down Arrow Shape</description></item>
+        ///     <item><term>curvedLeftArrow</term><description>Curved Left Arrow Shape</description></item>
+        ///     <item><term>curvedRightArrow</term><description>Curved Right Arrow Shape</description></item>
+        ///     <item><term>curvedUpArrow</term><description>Curved Up Arrow Shape</description></item>
+        ///     <item><term>decagon</term><description>Decagon Shape</description></item>
+        ///     <item><term>diagStripe</term><description>Diagonal Stripe Shape</description></item>
+        ///     <item><term>diamond</term><description>Diamond Shape</description></item>
+        ///     <item><term>dodecagon</term><description>Dodecagon Shape</description></item>
+        ///     <item><term>donut</term><description>Donut Shape</description></item>
+        ///     <item><term>doubleWave</term><description>Double Wave Shape</description></item>
+        ///     <item><term>downArrow</term><description>Down Arrow Shape</description></item>
+        ///     <item><term>downArrowCallout</term><description>Callout Down Arrow Shape</description></item>
+        ///     <item><term>ellipse</term><description>Ellipse Shape</description></item>
+        ///     <item><term>ellipseRibbon</term><description>Ellipse Ribbon Shape</description></item>
+        ///     <item><term>ellipseRibbon2</term><description>Ellipse Ribbon 2 Shape</description></item>
+        ///     <item><term>flowChartAlternateProcess</term><description>Alternate Process Flow Shape</description></item>
+        ///     <item><term>flowChartCollate</term><description>Collate Flow Shape</description></item>
+        ///     <item><term>flowChartConnector</term><description>Connector Flow Shape</description></item>
+        ///     <item><term>flowChartDecision</term><description>Decision Flow Shape</description></item>
+        ///     <item><term>flowChartDelay</term><description>Delay Flow Shape</description></item>
+        ///     <item><term>flowChartDisplay</term><description>Display Flow Shape</description></item>
+        ///     <item><term>flowChartDocument</term><description>Document Flow Shape</description></item>
+        ///     <item><term>flowChartExtract</term><description>Extract Flow Shape</description></item>
+        ///     <item><term>flowChartInputOutput</term><description>Input Output Flow Shape</description></item>
+        ///     <item><term>flowChartInternalStorage</term><description>Internal Storage Flow Shape</description></item>
+        ///     <item><term>flowChartMagneticDisk</term><description>Magnetic Disk Flow Shape</description></item>
+        ///     <item><term>flowChartMagneticDrum</term><description>Magnetic Drum Flow Shape</description></item>
+        ///     <item><term>flowChartMagneticTape</term><description>Magnetic Tape Flow Shape</description></item>
+        ///     <item><term>flowChartManualInput</term><description>Manual Input Flow Shape</description></item>
+        ///     <item><term>flowChartManualOperation</term><description>Manual Operation Flow Shape</description></item>
+        ///     <item><term>flowChartMerge</term><description>Merge Flow Shape</description></item>
+        ///     <item><term>flowChartMultidocument</term><description>Multi-Document Flow Shape</description></item>
+        ///     <item><term>flowChartOfflineStorage</term><description>Offline Storage Flow Shape</description></item>
+        ///     <item><term>flowChartOffpageConnector</term><description>Off-Page Connector Flow Shape</description></item>
+        ///     <item><term>flowChartOnlineStorage</term><description>Online Storage Flow Shape</description></item>
+        ///     <item><term>flowChartOr</term><description>Or Flow Shape</description></item>
+        ///     <item><term>flowChartPredefinedProcess</term><description>Predefined Process Flow Shape</description></item>
+        ///     <item><term>flowChartPreparation</term><description>Preparation Flow Shape</description></item>
+        ///     <item><term>flowChartProcess</term><description>Process Flow Shape</description></item>
+        ///     <item><term>flowChartPunchedCard</term><description>Punched Card Flow Shape</description></item>
+        ///     <item><term>flowChartPunchedTape</term><description>Punched Tape Flow Shape</description></item>
+        ///     <item><term>flowChartSort</term><description>Sort Flow Shape</description></item>
+        ///     <item><term>flowChartSummingJunction</term><description>Summing Junction Flow Shape</description></item>
+        ///     <item><term>flowChartTerminator</term><description>Terminator Flow Shape</description></item>
+        ///     <item><term>foldedCorner</term><description>Folded Corner Shape</description></item>
+        ///     <item><term>frame</term><description>Frame Shape</description></item>
+        ///     <item><term>funnel</term><description>Funnel Shape</description></item>
+        ///     <item><term>gear6</term><description>Gear 6 Shape</description></item>
+        ///     <item><term>gear9</term><description>Gear 9 Shape</description></item>
+        ///     <item><term>halfFrame</term><description>Half Frame Shape</description></item>
+        ///     <item><term>heart</term><description>Heart Shape</description></item>
+        ///     <item><term>heptagon</term><description>Heptagon Shape</description></item>
+        ///     <item><term>hexagon</term><description>Hexagon Shape</description></item>
+        ///     <item><term>homePlate</term><description>Home Plate Shape</description></item>
+        ///     <item><term>horizontalScroll</term><description>Horizontal Scroll Shape</description></item>
+        ///     <item><term>irregularSeal1</term><description>Irregular Seal 1 Shape</description></item>
+        ///     <item><term>irregularSeal2</term><description>Irregular Seal 2 Shape</description></item>
+        ///     <item><term>leftArrow</term><description>Left Arrow Shape</description></item>
+        ///     <item><term>leftArrowCallout</term><description>Callout Left Arrow Shape</description></item>
+        ///     <item><term>leftBrace</term><description>Left Brace Shape</description></item>
+        ///     <item><term>leftBracket</term><description>Left Bracket Shape</description></item>
+        ///     <item><term>leftCircularArrow</term><description>Left Circular Arrow Shape</description></item>
+        ///     <item><term>leftRightArrow</term><description>Left Right Arrow Shape</description></item>
+        ///     <item><term>leftRightArrowCallout</term><description>Callout Left Right Arrow Shape</description></item>
+        ///     <item><term>leftRightCircularArrow</term><description>Left Right Circular Arrow Shape</description></item>
+        ///     <item><term>leftRightRibbon</term><description>Left Right Ribbon Shape</description></item>
+        ///     <item><term>leftRightUpArrow</term><description>Left Right Up Arrow Shape</description></item>
+        ///     <item><term>leftUpArrow</term><description>Left Up Arrow Shape</description></item>
+        ///     <item><term>lightningBolt</term><description>Lightning Bolt Shape</description></item>
+        ///     <item><term>line</term><description>Line Shape</description></item>
+        ///     <item><term>lineInv</term><description>Line Inverse Shape</description></item>
+        ///     <item><term>mathDivide</term><description>Divide Math Shape</description></item>
+        ///     <item><term>mathEqual</term><description>Equal Math Shape</description></item>
+        ///     <item><term>mathMinus</term><description>Minus Math Shape</description></item>
+        ///     <item><term>mathMultiply</term><description>Multiply Math Shape</description></item>
+        ///     <item><term>mathNotEqual</term><description>Not Equal Math Shape</description></item>
+        ///     <item><term>mathPlus</term><description>Plus Math Shape</description></item>
+        ///     <item><term>moon</term><description>Moon Shape</description></item>
+        ///     <item><term>nonIsoscelesTrapezoid</term><description>Non-Isosceles Trapezoid Shape</description></item>
+        ///     <item><term>noSmoking</term><description>No Smoking Shape</description></item>
+        ///     <item><term>notchedRightArrow</term><description>Notched Right Arrow Shape</description></item>
+        ///     <item><term>octagon</term><description>Octagon Shape</description></item>
+        ///     <item><term>parallelogram</term><description>Parallelogram Shape</description></item>
+        ///     <item><term>pentagon</term><description>Pentagon Shape</description></item>
+        ///     <item><term>pie</term><description>Pie Shape</description></item>
+        ///     <item><term>pieWedge</term><description>Pie Wedge Shape</description></item>
+        ///     <item><term>plaque</term><description>Plaque Shape</description></item>
+        ///     <item><term>plaqueTabs</term><description>Plaque Tabs Shape</description></item>
+        ///     <item><term>plus</term><description>Plus Shape</description></item>
+        ///     <item><term>quadArrow</term><description>Quad-Arrow Shape</description></item>
+        ///     <item><term>quadArrowCallout</term><description>Callout Quad-Arrow Shape</description></item>
+        ///     <item><term>rect</term><description>Rectangle Shape</description></item>
+        ///     <item><term>ribbon</term><description>Ribbon Shape</description></item>
+        ///     <item><term>ribbon2</term><description>Ribbon 2 Shape</description></item>
+        ///     <item><term>rightArrow</term><description>Right Arrow Shape</description></item>
+        ///     <item><term>rightArrowCallout</term><description>Callout Right Arrow Shape</description></item>
+        ///     <item><term>rightBrace</term><description>Right Brace Shape</description></item>
+        ///     <item><term>rightBracket</term><description>Right Bracket Shape</description></item>
+        ///     <item><term>round1Rect</term><description>One Round Corner Rectangle Shape</description></item>
+        ///     <item><term>round2DiagRect</term><description>Two Diagonal Round Corner Rectangle Shape</description></item>
+        ///     <item><term>round2SameRect</term><description>Two Same-side Round Corner Rectangle Shape</description></item>
+        ///     <item><term>roundRect</term><description>Round Corner Rectangle Shape</description></item>
+        ///     <item><term>rtTriangle</term><description>Right Triangle Shape</description></item>
+        ///     <item><term>smileyFace</term><description>Smiley Face Shape</description></item>
+        ///     <item><term>snip1Rect</term><description>One Snip Corner Rectangle Shape</description></item>
+        ///     <item><term>snip2DiagRect</term><description>Two Diagonal Snip Corner Rectangle Shape</description></item>
+        ///     <item><term>snip2SameRect</term><description>Two Same-side Snip Corner Rectangle Shape</description></item>
+        ///     <item><term>snipRoundRect</term><description>One Snip One Round Corner Rectangle Shape</description></item>
+        ///     <item><term>squareTabs</term><description>Square Tabs Shape</description></item>
+        ///     <item><term>star10</term><description>Ten Pointed Star Shape</description></item>
+        ///     <item><term>star12</term><description>Twelve Pointed Star Shape</description></item>
+        ///     <item><term>star16</term><description>Sixteen Pointed Star Shape</description></item>
+        ///     <item><term>star24</term><description>Twenty Four Pointed Star Shape</description></item>
+        ///     <item><term>star32</term><description>Thirty Two Pointed Star Shape</description></item>
+        ///     <item><term>star4</term><description>Four Pointed Star Shape</description></item>
+        ///     <item><term>star5</term><description>Five Pointed Star Shape</description></item>
+        ///     <item><term>star6</term><description>Six Pointed Star Shape</description></item>
+        ///     <item><term>star7</term><description>Seven Pointed Star Shape</description></item>
+        ///     <item><term>star8</term><description>Eight Pointed Star Shape</description></item>
+        ///     <item><term>straightConnector1</term><description>Straight Connector 1 Shape</description></item>
+        ///     <item><term>stripedRightArrow</term><description>Striped Right Arrow Shape</description></item>
+        ///     <item><term>sun</term><description>Sun Shape</description></item>
+        ///     <item><term>swooshArrow</term><description>Swoosh Arrow Shape</description></item>
+        ///     <item><term>teardrop</term><description>Teardrop Shape</description></item>
+        ///     <item><term>trapezoid</term><description>Trapezoid Shape</description></item>
+        ///     <item><term>triangle</term><description>Triangle Shape</description></item>
+        ///     <item><term>upArrow</term><description>Up Arrow Shape</description></item>
+        ///     <item><term>upArrowCallout</term><description>Callout Up Arrow Shape</description></item>
+        ///     <item><term>upDownArrow</term><description>Up Down Arrow Shape</description></item>
+        ///     <item><term>upDownArrowCallout</term><description>Callout Up Down Arrow Shape</description></item>
+        ///     <item><term>uturnArrow</term><description>U-Turn Arrow Shape</description></item>
+        ///     <item><term>verticalScroll</term><description>Vertical Scroll Shape</description></item>
+        ///     <item><term>wave</term><description>Wave Shape</description></item>
+        ///     <item><term>wedgeEllipseCallout</term><description>Callout Wedge Ellipse Shape</description></item>
+        ///     <item><term>wedgeRectCallout</term><description>Callout Wedge Rectangle Shape</description></item>
+        ///     <item><term>wedgeRoundRectCallout</term><description>Callout Wedge Round Rectangle Shape</description></item>
+        /// </list>
+        /// The following shows the type of text underline supported by excelize:
+        /// <list type="bullet">
+        ///     <listheader>
+        ///         <term>Type</term>
+        ///     </listheader>
+        ///     <item><term>none</term></item>
+        ///     <item><term>words</term></item>
+        ///     <item><term>sng</term></item>
+        ///     <item><term>dbl</term></item>
+        ///     <item><term>heavy</term></item>
+        ///     <item><term>dotted</term></item>
+        ///     <item><term>dottedHeavy</term></item>
+        ///     <item><term>dash</term></item>
+        ///     <item><term>dashHeavy</term></item>
+        ///     <item><term>dashLong</term></item>
+        ///     <item><term>dashLongHeavy</term></item>
+        ///     <item><term>dotDash</term></item>
+        ///     <item><term>dotDashHeavy</term></item>
+        ///     <item><term>dotDotDash</term></item>
+        ///     <item><term>dotDotDashHeavy</term></item>
+        ///     <item><term>wavy</term></item>
+        ///     <item><term>wavyHeavy</term></item>
+        ///     <item><term>wavyDbl</term></item>
+        /// </list>
+        /// <example>
+        /// For example, add text box (rect shape) in Sheet1:
+        /// <code>
+        /// using ExcelizeCs;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         ExcelizeCs.File f = Excelize.NewFile();
+        ///         try
+        ///         {
+        ///             f.AddShape(
+        ///                 "Sheet1",
+        ///                 new Shape
+        ///                 {
+        ///                     Cell = "G6",
+        ///                     Type = "rect",
+        ///                     Line = new ShapeLine { Color = "4286F4", Width = 1.2 },
+        ///                     Fill = new Fill { Color = new string[] { "8EB9FF" }, Pattern = 1 },
+        ///                     Paragraph = new RichTextRun[]
+        ///                     {
+        ///                         new()
+        ///                         {
+        ///                             Text = "Rectangle Shape",
+        ///                             Font = new Font
+        ///                             {
+        ///                                 Bold = true,
+        ///                                 Italic = true,
+        ///                                 Family = "Times New Roman",
+        ///                                 Size = 19,
+        ///                                 Color = "777777",
+        ///                                 Underline = "sng",
+        ///                             },
+        ///                         },
+        ///                     },
+        ///                     Width = 180,
+        ///                     Height = 40,
+        ///                 }
+        ///             );
+        ///             f.SaveAs("Book1.xlsx");
+        ///         }
+        ///         catch (RuntimeError err)
+        ///         {
+        ///             Console.WriteLine(err.Message);
+        ///         }
+        ///         finally
+        ///         {
+        ///             string err = f.Close();
+        ///             if (!string.IsNullOrEmpty(err))
+        ///                 Console.WriteLine(err);
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The shape options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AddShape(string sheet, Shape options)
+        {
+            var opts = (TypesC.Shape)Lib.CsToC(options, new TypesC.Shape());
+            string err = Marshal.PtrToStringUTF8(Lib.AddShape(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1802,7 +1972,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void AddVBAProject(byte[] buffer)
         {
-            string err = Marshal.PtrToStringAnsi(Lib.AddVBAProject(FileIdx, buffer, buffer.Length));
+            string err = Marshal.PtrToStringUTF8(Lib.AddVBAProject(FileIdx, buffer, buffer.Length));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1814,7 +1984,7 @@ namespace ExcelizeCs
         /// returns an empty string.</returns>
         public string Close()
         {
-            return Marshal.PtrToStringAnsi(Lib.Close(FileIdx));
+            return Marshal.PtrToStringUTF8(Lib.Close(FileIdx));
         }
 
         /// <summary>
@@ -1992,7 +2162,7 @@ namespace ExcelizeCs
         public void Save(Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
-            string err = Marshal.PtrToStringAnsi(Lib.Save(FileIdx, ref opts));
+            string err = Marshal.PtrToStringUTF8(Lib.Save(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2007,7 +2177,7 @@ namespace ExcelizeCs
         public void SaveAs(string filename, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
-            string err = Marshal.PtrToStringAnsi(Lib.SaveAs(FileIdx, filename, ref opts));
+            string err = Marshal.PtrToStringUTF8(Lib.SaveAs(FileIdx, filename, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2024,7 +2194,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetActiveSheet(int index)
         {
-            string err = Marshal.PtrToStringAnsi(Lib.SetActiveSheet(FileIdx, index));
+            string err = Marshal.PtrToStringUTF8(Lib.SetActiveSheet(FileIdx, index));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2040,7 +2210,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetCellInt(string sheet, string cell, long value)
         {
-            string err = Marshal.PtrToStringAnsi(Lib.SetCellInt(FileIdx, sheet, cell, value));
+            string err = Marshal.PtrToStringUTF8(Lib.SetCellInt(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2062,7 +2232,7 @@ namespace ExcelizeCs
             long styleID
         )
         {
-            string err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringUTF8(
                 Lib.SetCellStyle(FileIdx, sheet, topLeftCell, bottomRightCell, styleID)
             );
             if (!string.IsNullOrEmpty(err))
@@ -2081,7 +2251,7 @@ namespace ExcelizeCs
         public void SetCellValue(string sheet, string cell, object value)
         {
             var val = (TypesC.Interface)Lib.CsValToCInterface(value);
-            string err = Marshal.PtrToStringAnsi(Lib.SetCellValue(FileIdx, sheet, cell, ref val));
+            string err = Marshal.PtrToStringUTF8(Lib.SetCellValue(FileIdx, sheet, cell, ref val));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2151,7 +2321,7 @@ namespace ExcelizeCs
         public void SetSheetProps(string sheet, SheetPropsOptions options)
         {
             var opts = (TypesC.SheetPropsOptions)Lib.CsToC(options, new TypesC.SheetPropsOptions());
-            string err = Marshal.PtrToStringAnsi(Lib.SetSheetProps(FileIdx, sheet, ref opts));
+            string err = Marshal.PtrToStringUTF8(Lib.SetSheetProps(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2193,7 +2363,7 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.HeaderFooterOptions)
                 Lib.CsToC(options ?? new HeaderFooterOptions(), new TypesC.HeaderFooterOptions());
-            string err = Marshal.PtrToStringAnsi(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
+            string err = Marshal.PtrToStringUTF8(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2216,7 +2386,7 @@ namespace ExcelizeCs
             {
                 arr[i] = (TypesC.Interface)Lib.CsValToCInterface(values[i]);
             }
-            string err = Marshal.PtrToStringAnsi(
+            string err = Marshal.PtrToStringUTF8(
                 Lib.SetSheetRow(FileIdx, sheet, cell, arr, values.Count)
             );
             if (!string.IsNullOrEmpty(err))
@@ -2235,7 +2405,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void UpdateLinkedValue()
         {
-            string err = Marshal.PtrToStringAnsi(Lib.UpdateLinkedValue(FileIdx));
+            string err = Marshal.PtrToStringUTF8(Lib.UpdateLinkedValue(FileIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

@@ -31,11 +31,11 @@ class Program
 {
     static void Main()
     {
-        var f = Excelize.NewFile();
+        ExcelizeCs.File f = Excelize.NewFile();
         try
         {
             // 新建一张工作表
-            var index = f.NewSheet("Sheet2");
+            int index = f.NewSheet("Sheet2");
             // 设置单元格的值
             f.SetCellValue("Sheet2", "A1", "Hello world.");
             f.SetCellValue("Sheet1", "B2", 100);
@@ -50,7 +50,7 @@ class Program
         }
         finally
         {
-            var err = f.Close();
+            string err = f.Close();
             if (!string.IsNullOrEmpty(err))
                 Console.WriteLine(err);
         }
@@ -102,7 +102,7 @@ class Program
         finally
         {
             // 关闭工作簿
-            var err = f.Close();
+            string err = f.Close();
             if (!string.IsNullOrEmpty(err))
                 Console.WriteLine(err);
         }
@@ -123,7 +123,7 @@ class Program
 {
     static void Main()
     {
-        var f = Excelize.NewFile();
+        ExcelizeCs.File f = Excelize.NewFile();
         var data = new List<List<object?>>
         {
             new() { null, "Apple", "Orange", "Pear" },
@@ -178,7 +178,7 @@ class Program
         }
         finally
         {
-            var err = f.Close();
+            string err = f.Close();
             if (!string.IsNullOrEmpty(err))
                 Console.WriteLine(err);
         }
@@ -244,7 +244,7 @@ class Program
         finally
         {
             // Close the spreadsheet.
-            var err = f.Close();
+            string err = f.Close();
             if (!string.IsNullOrEmpty(err))
                 Console.WriteLine(err);
         }
