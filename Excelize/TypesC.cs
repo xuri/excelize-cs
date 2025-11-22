@@ -534,6 +534,24 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct SlicerOptions
+    {
+        public sbyte* Name;
+        public sbyte* Cell;
+        public sbyte* TableSheet;
+        public sbyte* TableName;
+        public sbyte* Caption;
+        public sbyte* Macro;
+        public uint Width;
+        public uint Height;
+        public bool* DisplayHeader;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool ItemDesc;
+        public GraphicOptions Format;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct StringErrorResult
     {
         public sbyte* val;

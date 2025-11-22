@@ -683,6 +683,51 @@ namespace ExcelizeCs
         public bool? ThickBottom;
     }
 
+    /// <summary>
+    /// Represents the settings of the slicer.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Name</b> specifies the slicer name and should be an existing
+    /// field name of the given table or pivot table. This setting is
+    /// required.</para>
+    /// <para><b>Cell</b> specifies the top-left cell coordinates for inserting
+    /// the slicer. This setting is required.</para>
+    /// <para><b>TableSheet</b> specifies the worksheet name of the table or
+    /// pivot table. This setting is required.</para>
+    /// <para><b>TableName</b> specifies the name of the table or pivot table.
+    /// This setting is required.</para>
+    /// <para><b>Caption</b> specifies the caption of the slicer. This setting
+    /// is optional.</para>
+    /// <para><b>Macro</b> specifies the macro to assign to the slicer. The
+    /// workbook extension should be XLSM or XLTM.</para>
+    /// <para><b>Width</b> specifies the width of the slicer. This setting is
+    /// optional.</para>
+    /// <para><b>Height</b> specifies the height of the slicer. This setting is
+    /// optional.</para>
+    /// <para><b>DisplayHeader</b> specifies whether the slicer header is
+    /// displayed. This setting is optional; the default is to display
+    /// it.</para>
+    /// <para><b>ItemDesc</b> specifies whether to sort items in descending
+    /// (Z-A) order. This setting is optional; the default is false
+    /// (ascending).</para>
+    /// <para><b>Format</b> specifies the format of the slicer. This setting is
+    /// optional.</para>
+    /// </remarks>
+    public struct SlicerOptions
+    {
+        public string Name;
+        public string Cell;
+        public string TableSheet;
+        public string TableName;
+        public string Caption;
+        public string Macro;
+        public uint Width;
+        public uint Height;
+        public bool? DisplayHeader;
+        public bool ItemDesc;
+        public GraphicOptions Format;
+    }
+
     public struct Row
     {
         public string[]? Cell;

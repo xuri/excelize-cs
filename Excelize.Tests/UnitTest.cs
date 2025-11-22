@@ -550,7 +550,9 @@ public class UnitTest
                 );
             })
         );
-        RuntimeError err = Assert.Throws<RuntimeError>(() => f.AddShape("SheetN", new Shape { }));
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddShape("SheetN", new Shape { Cell = "G6", Type = "rect" })
+        );
         Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(
             Record.Exception(() =>
@@ -710,6 +712,7 @@ public class UnitTest
                     {
                         DataRange = "Sheet1!A1:E31",
                         PivotTableRange = "Sheet1!G2:M34",
+                        Name = "PivotTable1",
                         Rows = new PivotTableField[]
                         {
                             new() { Data = "Month", DefaultSubtotal = true },
@@ -737,6 +740,17 @@ public class UnitTest
                         ShowLastColumn = true,
                     }
                 );
+                f.AddSlicer(
+                    "Sheet1",
+                    new SlicerOptions
+                    {
+                        Name = "Month",
+                        Cell = "O2",
+                        TableSheet = "Sheet1",
+                        TableName = "PivotTable1",
+                        Caption = "Month",
+                    }
+                );
             })
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
@@ -746,6 +760,22 @@ public class UnitTest
             "parameter 'PivotTableRange' parsing error: parameter is required",
             err.Message
         );
+
+        err = Assert.Throws<RuntimeError>(() =>
+            f.AddSlicer(
+                "SheetN",
+                new SlicerOptions
+                {
+                    Name = "Year",
+                    Cell = "S2",
+                    TableSheet = "Sheet1",
+                    TableName = "PivotTable1",
+                    Caption = "Year",
+                }
+            )
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+
         Assert.Null(
             Record.Exception(() =>
             {
@@ -753,6 +783,16 @@ public class UnitTest
             })
         );
         Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestAddSlicer()
+    {
+        File f = Excelize.NewFile();
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddSlicer("Sheet1", new SlicerOptions { })
+        );
+        Assert.Equal("parameter is invalid", err.Message);
     }
 
     [StructLayout(LayoutKind.Sequential)]

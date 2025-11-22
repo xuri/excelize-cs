@@ -143,6 +143,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AddSlicer(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            ref TypesC.SlicerOptions opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -1959,6 +1966,41 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.Shape)Lib.CsToC(options, new TypesC.Shape());
             string err = Marshal.PtrToStringUTF8(Lib.AddShape(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// AddSlicer function inserts a slicer by giving the worksheet name and
+        /// slicer settings.
+        /// <example>
+        /// For example, insert a slicer on the <c>Sheet1!E1</c> with field
+        /// <c>Column1</c> for the table named <c>Table1</c>:
+        /// <code>
+        /// f.AddSlicer(
+        ///     "Sheet1",
+        ///     new SlicerOptions
+        ///     {
+        ///         Name = "Column1",
+        ///         Cell = "E1",
+        ///         TableSheet = "Sheet1",
+        ///         TableName = "Table1",
+        ///         Caption = "Column1",
+        ///         Width = 200,
+        ///         Height = 200,
+        ///     }
+        /// );
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The slicer options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AddSlicer(string sheet, SlicerOptions options)
+        {
+            var opts = (TypesC.SlicerOptions)Lib.CsToC(options, new TypesC.SlicerOptions());
+            string err = Marshal.PtrToStringUTF8(Lib.AddSlicer(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
