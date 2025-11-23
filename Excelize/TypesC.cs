@@ -552,6 +552,60 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct SparklineOptions
+    {
+        public int LocationLen;
+        public sbyte** Location;
+        public int RangeLen;
+        public sbyte** Range;
+        public int Max;
+        public int CustMax;
+        public int Min;
+        public int CustMin;
+        public sbyte* Type;
+        public double Weight;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool DateAxis;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Markers;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool High;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Low;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool First;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Last;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Negative;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Axis;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Hidden;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Reverse;
+        public int Style;
+        public sbyte* SeriesColor;
+        public sbyte* NegativeColor;
+        public sbyte* MarkersColor;
+        public sbyte* FirstColor;
+        public sbyte* LastColor;
+        public sbyte* HightColor;
+        public sbyte* LowColor;
+        public sbyte* EmptyCells;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct StringErrorResult
     {
         public sbyte* val;

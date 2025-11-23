@@ -150,6 +150,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AddSparkline(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            ref TypesC.SparklineOptions opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -2001,6 +2008,103 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.SlicerOptions)Lib.CsToC(options, new TypesC.SlicerOptions());
             string err = Marshal.PtrToStringUTF8(Lib.AddSlicer(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// AddSparkline provides a function to add sparklines to the worksheet
+        /// by given formatting options. Sparklines are small charts that fit in
+        /// a single cell and are used to show trends in data. Sparklines are a
+        /// feature of Excel 2010 and later only. You can write them to workbook
+        /// that can be read by Excel 2007, but they won't be displayed.
+        /// <example>
+        /// For example, add a grouped sparkline. Changes are applied to all
+        /// three:
+        /// <code>
+        /// f.AddSparkline(
+        ///     "Sheet1",
+        ///     new SparklineOptions
+        ///     {
+        ///         Location = new string[] { "A1", "A2", "A3" },
+        ///         Range = new string[] { "Sheet2!A1:J1", "Sheet2!A2:J2", "Sheet2!A3:J3" },
+        ///         Markers = true,
+        ///     }
+        /// );
+        /// </code>
+        /// </example>
+        /// The following shows the formatting options of sparkline supported by
+        /// excelize:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Parameter</term>
+        ///         <description>Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Location</term>
+        ///         <description>Required — must have the same number as the
+        ///         <c>Range</c> parameter.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Range</term>
+        ///         <description>Required — must have the same number as the
+        ///         <c>Location</c> parameter.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Type</term>
+        ///         <description>Enumeration value: <c>line</c>, <c>column</c>,
+        ///         <c>win_loss</c>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Style</term>
+        ///         <description>Value range: 0–35.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Hight</term>
+        ///         <description>Toggle sparkline high points.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Low</term>
+        ///         <description>Toggle sparkline low points.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>First</term>
+        ///         <description>Toggle sparkline first points.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Last</term>
+        ///         <description>Toggle sparkline last points.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Negative</term>
+        ///         <description>Toggle sparkline negative points.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Markers</term>
+        ///         <description>Toggle sparkline markers.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Axis</term>
+        ///         <description>Specifies whether to show the horizontal axis.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Reverse</term>
+        ///         <description>Specifies whether to plot data right-to-left.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>SeriesColor</term>
+        ///         <description>An RGB color specified as <c>RRGGBB</c>.</description>
+        ///     </item>
+        /// </list>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The sparklines options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AddSparkline(string sheet, SparklineOptions options)
+        {
+            var opts = (TypesC.SparklineOptions)Lib.CsToC(options, new TypesC.SparklineOptions());
+            string err = Marshal.PtrToStringUTF8(Lib.AddSparkline(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

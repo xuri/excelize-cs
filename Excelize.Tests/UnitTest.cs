@@ -795,6 +795,37 @@ public class UnitTest
         Assert.Equal("parameter is invalid", err.Message);
     }
 
+    [Fact]
+    public void TestAddSparkline()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.AddSparkline(
+                    "Sheet1",
+                    new SparklineOptions
+                    {
+                        Location = new string[] { "A2" },
+                        Range = new string[] { "Sheet1!B1:J1" },
+                        Markers = true,
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddSparkline("SheetN", new SparklineOptions { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddSparkline.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct C1
     {

@@ -728,6 +728,40 @@ namespace ExcelizeCs
         public GraphicOptions Format;
     }
 
+    /// <summary>
+    /// SparklineOptions directly maps the settings of the sparkline.
+    /// </summary>
+    public struct SparklineOptions
+    {
+        public string[]? Location;
+        public string[]? Range;
+        public int Max;
+        public int CustMax;
+        public int Min;
+        public int CustMin;
+        public string Type;
+        public double Weight;
+        public bool DateAxis;
+        public bool Markers;
+        public bool High;
+        public bool Low;
+        public bool First;
+        public bool Last;
+        public bool Negative;
+        public bool Axis;
+        public bool Hidden;
+        public bool Reverse;
+        public int Style;
+        public string SeriesColor;
+        public string NegativeColor;
+        public string MarkersColor;
+        public string FirstColor;
+        public string LastColor;
+        public string HightColor;
+        public string LowColor;
+        public string EmptyCells;
+    }
+
     public struct Row
     {
         public string[]? Cell;
