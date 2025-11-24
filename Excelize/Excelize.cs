@@ -157,6 +157,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AddTable(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            ref TypesC.Table opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -2105,6 +2112,61 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.SparklineOptions)Lib.CsToC(options, new TypesC.SparklineOptions());
             string err = Marshal.PtrToStringUTF8(Lib.AddSparkline(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Adds a table to a worksheet using the specified worksheet name,
+        /// range reference, and format settings.
+        /// <example>
+        /// Create a table on Sheet1 for the range A1:D5:
+        /// <code>
+        /// f.AddTable("Sheet1", new Table { Range = "A1:D5" });
+        /// </code>
+        /// Create a table on Sheet2 for the range F2:H6 with formatting:
+        /// <code>
+        /// f.AddTable(
+        ///     "Sheet2",
+        ///     new Table
+        ///     {
+        ///         Range = "F2:H6",
+        ///         Name = "table",
+        ///         StyleName = "TableStyleMedium2",
+        ///         ShowFirstColumn = true,
+        ///         ShowLastColumn = true,
+        ///         ShowRowStripes = false,
+        ///         ShowColumnStripes = true,
+        ///     }
+        /// );
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <remarks>
+        /// The table must include at least two rows, including a header row.
+        /// Header cells must contain unique string values.
+        /// Set the header row data before calling <c>AddTable</c>.
+        /// Table ranges within the same worksheet must not intersect.
+        ///
+        /// <para><b>Name:</b> The name of the table must be unique within the
+        /// worksheet, begin with a letter or underscore, contain no spaces or
+        /// special characters, and be no more than 255 characters long.</para>
+        ///
+        /// <para><b>StyleName:</b> Valid built-in table style names include:</para>
+        /// <list type="bullet">
+        ///   <item><description>TableStyleLight1 – TableStyleLight21</description></item>
+        ///   <item><description>TableStyleMedium1 – TableStyleMedium28</description></item>
+        ///   <item><description>TableStyleDark1 – TableStyleDark11</description></item>
+        /// </list>
+        /// </remarks>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The table options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AddTable(string sheet, Table options)
+        {
+            var opts = (TypesC.Table)Lib.CsToC(options, new TypesC.Table());
+            string err = Marshal.PtrToStringUTF8(Lib.AddTable(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

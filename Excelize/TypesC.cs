@@ -606,6 +606,25 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct Table
+    {
+        public sbyte* Range;
+        public sbyte* Name;
+        public sbyte* StyleName;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool ShowColumnStripes;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool ShowFirstColumn;
+        public bool* ShowHeaderRow;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool ShowLastColumn;
+        public bool* ShowRowStripes;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct StringErrorResult
     {
         public sbyte* val;

@@ -789,10 +789,61 @@ public class UnitTest
     public void TestAddSlicer()
     {
         File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.NewSheet("Sheet2");
+                f.AddTable("Sheet1", new Table { Name = "Table1", Range = "A1:D5" });
+                f.AddTable(
+                    "Sheet2",
+                    new Table
+                    {
+                        Range = "F2:H6",
+                        Name = "table",
+                        StyleName = "TableStyleMedium2",
+                        ShowFirstColumn = true,
+                        ShowLastColumn = true,
+                        ShowRowStripes = false,
+                        ShowColumnStripes = true,
+                    }
+                );
+                f.AddSlicer(
+                    "Sheet1",
+                    new SlicerOptions
+                    {
+                        Name = "Column1",
+                        Cell = "E1",
+                        TableSheet = "Sheet1",
+                        TableName = "Table1",
+                        Caption = "Column1",
+                    }
+                );
+                f.AddSlicer(
+                    "Sheet1",
+                    new SlicerOptions
+                    {
+                        Name = "Column1",
+                        Cell = "I1",
+                        TableSheet = "Sheet2",
+                        TableName = "table",
+                        Caption = "Column1",
+                    }
+                );
+            })
+        );
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
             f.AddSlicer("Sheet1", new SlicerOptions { })
         );
         Assert.Equal("parameter is invalid", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.AddTable("Sheet1", new Table { }));
+        Assert.Equal("parameter is invalid", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddSlicer.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
     }
 
     [Fact]

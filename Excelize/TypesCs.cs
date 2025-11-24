@@ -762,6 +762,21 @@ namespace ExcelizeCs
         public string EmptyCells;
     }
 
+    /// <summary>
+    /// Table directly maps the format settings of the table.
+    /// </summary>
+    public struct Table
+    {
+        public string Range;
+        public string Name;
+        public string StyleName;
+        public bool ShowColumnStripes;
+        public bool ShowFirstColumn;
+        public bool? ShowHeaderRow;
+        public bool ShowLastColumn;
+        public bool? ShowRowStripes;
+    }
+
     public struct Row
     {
         public string[]? Cell;
