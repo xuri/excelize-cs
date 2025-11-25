@@ -119,6 +119,13 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct AutoFilterOptions
+    {
+        public sbyte* Column;
+        public sbyte* Expression;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct HeaderFooterOptions
     {
         public bool* AlignWithMargins;

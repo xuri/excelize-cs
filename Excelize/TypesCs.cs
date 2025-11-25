@@ -292,6 +292,15 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// AutoFilterOptions directly maps the auto filter settings.
+    /// </summary>
+    public struct AutoFilterOptions
+    {
+        public string Column;
+        public string Expression;
+    }
+
+    /// <summary>
     /// HeaderFooterOptions directly maps the settings of header and footer.
     /// </summary>
     public struct HeaderFooterOptions

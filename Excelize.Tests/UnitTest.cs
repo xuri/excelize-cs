@@ -877,6 +877,37 @@ public class UnitTest
         Assert.Empty(f.Close());
     }
 
+    [Fact]
+    public void TestAutoFilter()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.AutoFilter("Sheet1", "A2:D4", new AutoFilterOptions[] { });
+                f.AutoFilter(
+                    "Sheet1",
+                    "F2:H4",
+                    new AutoFilterOptions[]
+                    {
+                        new AutoFilterOptions { Column = "F", Expression = "x != blanks" },
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AutoFilter("SheetN", "L1:N4", new AutoFilterOptions[] { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAutoFilter.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct C1
     {

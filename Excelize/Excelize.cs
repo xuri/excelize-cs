@@ -167,6 +167,15 @@ namespace ExcelizeCs
         internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AutoFilter(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string range,
+            [In, MarshalAs(UnmanagedType.LPArray)] TypesC.AutoFilterOptions[] options,
+            int length
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.CellNameToCoordinatesResult CellNameToCoordinates(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
         );
@@ -2181,6 +2190,131 @@ namespace ExcelizeCs
         public void AddVBAProject(byte[] buffer)
         {
             string err = Marshal.PtrToStringUTF8(Lib.AddVBAProject(FileIdx, buffer, buffer.Length));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Adds an auto filter to a worksheet using the specified sheet name,
+        /// range reference, and filter options.
+        ///
+        /// An auto filter in Excel provides a way to filter a 2D range of data
+        /// based on simple criteria. For example, to apply an auto filter to
+        /// the range <c>A1:D4</c> on the worksheet "Sheet1":
+        ///
+        /// <code><![CDATA[
+        /// f.AutoFilter("Sheet1", "A1:D4", Array.Empty<AutoFilterOptions>());
+        /// ]]></code>
+        ///
+        /// To filter data within an auto filter:
+        ///
+        /// <code>
+        /// f.AutoFilter("Sheet1", "A1:D4", new AutoFilterOptions[]
+        /// {
+        ///     new AutoFilterOptions { Column = "B", Expression = "x != blanks" }
+        /// });
+        /// </code>
+        ///
+        /// <para>
+        /// <b>Column</b> specifies which column in the auto filter range will
+        /// apply a filter.
+        /// </para>
+        ///
+        /// <para>
+        /// Note: Specifying filter conditions alone is not sufficient. Rows
+        /// that do not match the filter criteria must also be hidden manually
+        /// using <c>SetRowVisible</c>. The library cannot automatically hide
+        /// rows because this is outside the Excel file format's capabilities.
+        /// </para>
+        ///
+        /// <para>
+        /// <b>Expression</b> defines the filter criteria. The following
+        /// operators are supported:
+        /// </para>
+        ///
+        /// <list type="bullet">
+        ///   <item><description><c>==</c></description></item>
+        ///   <item><description><c>!=</c></description></item>
+        ///   <item><description><c>&gt;</c></description></item>
+        ///   <item><description><c>&lt;</c></description></item>
+        ///   <item><description><c>&gt;=</c></description></item>
+        ///   <item><description><c>&lt;=</c></description></item>
+        ///   <item><description><c>and</c></description></item>
+        ///   <item><description><c>or</c></description></item>
+        /// </list>
+        ///
+        /// <para>
+        /// Expressions may contain a single condition or two conditions
+        /// combined using <c>and</c> or <c>or</c>. Examples:
+        /// </para>
+        ///
+        /// <code>
+        /// x &lt; 2000
+        /// x &gt; 2000
+        /// x == 2000
+        /// x &gt; 2000 and x &lt; 5000
+        /// x == 2000 or x == 5000
+        /// </code>
+        ///
+        /// <para>
+        /// Filtering blank or non-blank values:
+        /// </para>
+        ///
+        /// <code>
+        /// x == Blanks
+        /// x == NonBlanks
+        /// </code>
+        ///
+        /// <para>
+        /// Simple string matching is also supported:
+        /// </para>
+        ///
+        /// <code>
+        /// x == b*      // begins with b
+        /// x != b*      // doesn't begin with b
+        /// x == *b      // ends with b
+        /// x != *b      // doesn't end with b
+        /// x == *b*     // contains b
+        /// x != *b*     // doesn't contain b
+        /// </code>
+        ///
+        /// <para>
+        /// Wildcards:
+        /// </para>
+        /// <list type="bullet">
+        ///   <item><description><c>*</c> matches any sequence of characters or digits.</description></item>
+        ///   <item><description><c>?</c> matches any single character or digit.</description></item>
+        ///   <item><description><c>~</c> escapes Excel's wildcard characters.</description></item>
+        /// </list>
+        ///
+        /// <para>
+        /// In expressions, the placeholder variable (commonly shown as <c>x</c>)
+        /// may be any simple string. The actual placeholder name is ignored, so
+        /// the following are equivalent:
+        /// </para>
+        ///
+        /// <code>
+        /// x     &lt; 2000
+        /// col   &lt; 2000
+        /// Price &lt; 2000
+        /// </code>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="range">The top-left and right-bottom cell range reference</param>
+        /// <param name="opts"> The auto filter options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AutoFilter(string sheet, string range, AutoFilterOptions[] opts)
+        {
+            TypesC.AutoFilterOptions[] arr = new TypesC.AutoFilterOptions[opts.Length];
+            for (int i = 0; i < opts.Length; i++)
+            {
+                arr[i] = (TypesC.AutoFilterOptions)
+                    Lib.CsToC(opts[i], new TypesC.AutoFilterOptions());
+            }
+            string err = Marshal.PtrToStringUTF8(
+                Lib.AutoFilter(FileIdx, sheet, range, arr, arr.Length)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
