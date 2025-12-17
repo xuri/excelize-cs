@@ -167,6 +167,14 @@ namespace ExcelizeCs
         internal static extern IntPtr AddVBAProject(long fileIdx, byte[] b, int bLen);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.StringErrorResult CalcCellValue(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
+            ref TypesC.Options options
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AutoFilter(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -2317,6 +2325,25 @@ namespace ExcelizeCs
             );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// CalcCellValue provides a function to get calculated cell value. This
+        /// feature is currently in working processing. Iterative calculation,
+        /// implicit intersection, explicit intersection, array formula, table
+        /// formula and some other formulas are not supported currently.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="options">Optional parameters for calculate cell value</param>
+        public unsafe string CalcCellValue(string sheet, string cell, Options? options = null)
+        {
+            var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
+            TypesC.StringErrorResult res = Lib.CalcCellValue(FileIdx, sheet, cell, ref opts);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return new(res.val);
         }
 
         /// <summary>

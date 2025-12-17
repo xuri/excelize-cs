@@ -141,6 +141,7 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
+                Assert.Equal("100", f.CalcCellValue("Sheet1", "A4"));
                 f.SetActiveSheet(f.NewSheet("Sheet2"));
             })
         );
@@ -561,6 +562,14 @@ public class UnitTest
             })
         );
         Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestCalcCellValue()
+    {
+        File f = Excelize.NewFile();
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.CalcCellValue("SheetN", "A1"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
     }
 
     [Fact]

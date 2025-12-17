@@ -368,6 +368,13 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct ChartDataPoint
+    {
+        public int Index;
+        public Fill Fill;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ChartSeries
     {
         public sbyte* Name;
@@ -380,6 +387,8 @@ namespace ExcelizeCs.TypesC
         public ChartMarker Marker;
         public ChartDataLabel DataLabel;
         public byte DataLabelPosition;
+        public int DataPointLen;
+        public ChartDataPoint* DataPoint;
     }
 
     [StructLayout(LayoutKind.Sequential)]

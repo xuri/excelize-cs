@@ -524,6 +524,16 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// ChartDataPoint directly maps the format settings of the chart data point
+    /// for doughnut, pie and 3D pie charts.
+    /// </summary>
+    public struct ChartDataPoint
+    {
+        public int Index;
+        public Fill Fill;
+    }
+
+    /// <summary>
     /// ChartSeries directly maps the format settings of the chart series.
     /// </summary>
     public struct ChartSeries
@@ -538,6 +548,7 @@ namespace ExcelizeCs
         public ChartMarker Marker;
         public ChartDataLabel DataLabel;
         public ChartDataLabelPositionType DataLabelPosition;
+        public ChartDataPoint[]? DataPoint;
     }
 
     /// <summary>
