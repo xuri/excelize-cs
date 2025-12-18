@@ -203,6 +203,7 @@ namespace ExcelizeCs
     {
         public int Type;
         public int Integer;
+        public int Integer32;
         public string String;
         public double Float;
         public bool Boolean;

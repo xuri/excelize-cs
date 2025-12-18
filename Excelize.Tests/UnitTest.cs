@@ -166,6 +166,7 @@ public class UnitTest
             },
             f.GetRows("Sheet1")
         );
+        Assert.Null(Record.Exception(() => f.CopySheet(0, f.NewSheet("Sheet3"))));
         Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
         Assert.Empty(f.Close());
 
@@ -185,6 +186,8 @@ public class UnitTest
         );
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.AddVBAProject(Array.Empty<byte>()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.CopySheet(1, 2));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);

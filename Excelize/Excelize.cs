@@ -192,6 +192,9 @@ namespace ExcelizeCs
         internal static extern IntPtr Close(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr CopySheet(long fileIdx, int from, int to);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.IntErrorResult ColumnNameToNumber(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string name
         );
@@ -366,12 +369,12 @@ namespace ExcelizeCs
                 value switch
                 {
                     int _ => new Interface { Type = 1, Integer = (int)value },
-                    string _ => new Interface { Type = 2, String = (string)value },
-                    double _ => new Interface { Type = 3, Float = (double)value },
-                    float _ => new Interface { Type = 3, Float = (float)value },
-                    long _ => new Interface { Type = 3, Float = (long)value },
-                    short _ => new Interface { Type = 3, Float = (short)value },
-                    bool _ => new Interface { Type = 4, Boolean = (bool)value },
+                    string _ => new Interface { Type = 3, String = (string)value },
+                    double _ => new Interface { Type = 4, Float = (double)value },
+                    float _ => new Interface { Type = 4, Float = (float)value },
+                    long _ => new Interface { Type = 4, Float = (long)value },
+                    short _ => new Interface { Type = 4, Float = (short)value },
+                    bool _ => new Interface { Type = 5, Boolean = (bool)value },
                     _ => new Interface { Type = 0 },
                 },
                 new TypesC.Interface()
@@ -2357,10 +2360,25 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// Duplicate a worksheet by gave source and target worksheet index.
+        /// Note that currently doesn't support duplicate workbooks that contain
+        /// tables, charts or pictures.
+        /// </summary>
+        /// <param name="buffer">The contents buffer of the file</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void CopySheet(int from, int to)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.CopySheet(FileIdx, from, to));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
         /// Get formatted value from cell by given worksheet name and cell
         /// reference in spreadsheet. The return value is converted to the
-        /// 'string' data type. If the cell format can be applied to the value
-        /// of a cell, the applied value will be returned, otherwise the
+        /// <c>string</c> data type. If the cell format can be applied to the
+        /// value of a cell, the applied value will be returned, otherwise the
         /// original value will be returned. All cells' values will be the same
         /// in a merged range.
         /// </summary>

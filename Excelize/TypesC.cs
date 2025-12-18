@@ -19,6 +19,7 @@ namespace ExcelizeCs.TypesC
     {
         public int Type;
         public int Integer;
+        public int Integer32;
         public sbyte* String;
         public double Float;
 
