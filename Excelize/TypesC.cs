@@ -649,6 +649,14 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct StringIntErrorResult
+    {
+        public sbyte* strVal;
+        public int intVal;
+        public sbyte* err;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct IntErrorResult
     {
         public int val;
@@ -664,17 +672,17 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Row
+    public unsafe struct Cells
     {
         public int CellLen;
         public sbyte** Cell;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct GetRowsResult
+    public unsafe struct StringMatrixErrorResult
     {
         public int RowLen;
-        public Row* Row;
+        public Cells* Row;
         public sbyte* err;
     }
 

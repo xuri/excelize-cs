@@ -920,6 +920,22 @@ public class UnitTest
         Assert.Empty(f.Close());
     }
 
+    [Fact]
+    public void TestJoinCellName()
+    {
+        Assert.Equal("A1", Excelize.JoinCellName("A", 1));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.JoinCellName("", 0));
+        Assert.Equal("invalid column name \"\"", err.Message);
+    }
+
+    [Fact]
+    public void TestSplitCellName()
+    {
+        Assert.Equal(("AK", 74), Excelize.SplitCellName("AK74"));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.SplitCellName(""));
+        Assert.Equal("invalid cell name \"\"", err.Message);
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct C1
     {

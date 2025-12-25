@@ -210,6 +210,17 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.StringErrorResult JoinCellName(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
+            int row
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.StringIntErrorResult SplitCellName(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult GetCellValue(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -218,7 +229,7 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern TypesC.GetRowsResult GetRows(
+        internal static extern TypesC.StringMatrixErrorResult GetRows(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.Options opts
@@ -1078,6 +1089,42 @@ namespace ExcelizeCs
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
             return new(res.val);
+        }
+
+        /// <summary>
+        /// Joins cell name from column name and row number.
+        /// </summary>
+        /// <param name="col">The column name</param>
+        /// <param name="row">The row number</param>
+        /// <returns>Return the cell name as a string if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public static unsafe string JoinCellName(string col, int row)
+        {
+            TypesC.StringErrorResult res = Lib.JoinCellName(col, row);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return new(res.val);
+        }
+
+        /// <summary>
+        /// Splits cell name to column name and row number.
+        /// </summary>
+        /// <param name="cell">The cell reference</param>
+        /// <returns>Return a tuple containing column name and row number if no
+        /// error occurred, otherwise raise a RuntimeError with the message.
+        /// </returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public static unsafe (string, int) SplitCellName(string cell)
+        {
+            TypesC.StringIntErrorResult res = Lib.SplitCellName(cell);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return (new string(res.strVal), res.intVal);
         }
 
         /// <summary>
@@ -2433,12 +2480,12 @@ namespace ExcelizeCs
         public unsafe List<List<string>> GetRows(string sheet, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
-            TypesC.GetRowsResult res = Lib.GetRows(FileIdx, sheet, ref opts);
+            TypesC.StringMatrixErrorResult res = Lib.GetRows(FileIdx, sheet, ref opts);
             var rows = new List<List<string>>();
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
-            var result = (GetRowsResult)Lib.CToCs(res, new GetRowsResult());
+            var result = (StringMatrixErrorResult)Lib.CToCs(res, new StringMatrixErrorResult());
             foreach (var r in result.Row)
             {
                 var row = new List<string>();

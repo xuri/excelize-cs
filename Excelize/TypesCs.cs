@@ -798,13 +798,13 @@ namespace ExcelizeCs
         public bool? ShowRowStripes;
     }
 
-    public struct Row
+    public struct Cells
     {
         public string[]? Cell;
     }
 
-    public struct GetRowsResult
+    public struct StringMatrixErrorResult
     {
-        public Row[]? Row;
+        public Cells[]? Row;
     }
 }
