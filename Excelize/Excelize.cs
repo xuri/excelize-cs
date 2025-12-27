@@ -113,6 +113,21 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AddHeaderFooterImage(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            ref TypesC.HeaderFooterImageOptions options
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AddIgnoredErrors(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string rangeRef,
+            byte ignoredErrorsType
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr AddPicture(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -1317,7 +1332,7 @@ namespace ExcelizeCs
         /// <param name="options">The comment options</param>
         /// <exception cref="RuntimeError">Return None if no error occurred,
         /// otherwise raise a RuntimeError with the message.</exception>
-        public unsafe void AddComment(string sheet, Comment? options = null)
+        public void AddComment(string sheet, Comment? options = null)
         {
             if (options == null)
                 return;
@@ -1465,12 +1480,55 @@ namespace ExcelizeCs
         /// <param name="options">The form control options</param>
         /// <exception cref="RuntimeError">Return None if no error occurred,
         /// otherwise raise a RuntimeError with the message.</exception>
-        public unsafe void AddFormControl(string sheet, FormControl? options = null)
+        public void AddFormControl(string sheet, FormControl? options = null)
         {
             if (options == null)
                 return;
             var opts = (TypesC.FormControl)Lib.CsToC(options, new TypesC.FormControl());
             string err = Marshal.PtrToStringUTF8(Lib.AddFormControl(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set the graphics that can be referenced in the header and footer
+        /// definitions via `&G`, supported image types: EMF, EMZ, GIF, ICO,
+        /// JPEG, JPG, PNG, SVG, TIF, TIFF, WMF, and WMZ.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The header and footer image options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AddHeaderFooterImage(string sheet, HeaderFooterImageOptions? options = null)
+        {
+            if (options == null)
+                return;
+            var opts = (TypesC.HeaderFooterImageOptions)
+                Lib.CsToC(options, new TypesC.HeaderFooterImageOptions());
+            string err = Marshal.PtrToStringUTF8(
+                Lib.AddHeaderFooterImage(FileIdx, sheet, ref opts)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Ignored error for a range of cells.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="rangeRef">The cell range reference</param>
+        /// <param name="ignoredErrorsType">The ignored errors type</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AddIgnoredErrors(
+            string sheet,
+            string rangeRef,
+            IgnoredErrorsType ignoredErrorsType
+        )
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.AddIgnoredErrors(FileIdx, sheet, rangeRef, (byte)ignoredErrorsType)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

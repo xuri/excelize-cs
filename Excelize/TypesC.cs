@@ -146,6 +146,23 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct HeaderFooterImageOptions
+    {
+        public byte Position;
+        public int FileLen;
+        public byte* File;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool IsFooter;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool FirstPage;
+        public sbyte* Extension;
+        public sbyte* Width;
+        public sbyte* Height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Style
     {
         public int BorderLen;

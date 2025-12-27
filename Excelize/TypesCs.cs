@@ -185,6 +185,33 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// HeaderFooterImagePositionType is the type of header and footer image
+    /// position.
+    /// </summary>
+    public enum HeaderFooterImagePositionType : byte
+    {
+        HeaderFooterImagePositionLeft = 0,
+        HeaderFooterImagePositionCenter = 1,
+        HeaderFooterImagePositionRight = 2,
+    }
+
+    /// <summary>
+    /// IgnoredErrorsType is the type of ignored errors.
+    /// </summary>
+    public enum IgnoredErrorsType : byte
+    {
+        IgnoredErrorsEvalError = 0,
+        IgnoredErrorsTwoDigitTextYear = 1,
+        IgnoredErrorsNumberStoredAsText = 2,
+        IgnoredErrorsFormula = 3,
+        IgnoredErrorsFormulaRange = 4,
+        IgnoredErrorsUnlockedFormula = 5,
+        IgnoredErrorsEmptyCellReference = 6,
+        IgnoredErrorsListDataValidation = 7,
+        IgnoredErrorsCalculatedColumn = 8,
+    }
+
+    /// <summary>
     /// PictureInsertType defines the type of the picture has been inserted into
     /// the worksheet.
     /// </summary>
@@ -316,6 +343,21 @@ namespace ExcelizeCs
         public string EvenFooter;
         public string FirstHeader;
         public string FirstFooter;
+    }
+
+    /// <summary>
+    /// HeaderFooterImageOptions defines the settings for an image to be
+    ///  accessible from the worksheet header and footer options.
+    /// </summary>
+    public struct HeaderFooterImageOptions
+    {
+        public HeaderFooterImagePositionType Position;
+        public byte[]? File;
+        public bool IsFooter;
+        public bool FirstPage;
+        public string Extension;
+        public string Width;
+        public string Height;
     }
 
     /// <summary>

@@ -182,6 +182,14 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.AddComment("Sheet1", new Comment()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() =>
+            f.AddHeaderFooterImage("Sheet1", new HeaderFooterImageOptions())
+        );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.AddIgnoredErrors("Sheet1", "A1", IgnoredErrorsType.IgnoredErrorsEvalError)
+        );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
             f.AddPictureFromBytes("Sheet1", "A1", new Picture())
         );
         Assert.Equal(expected, err.Message);
@@ -625,6 +633,87 @@ public class UnitTest
             Record.Exception(() =>
             {
                 f.SaveAs("TestHeaderFooter.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestHeaderFooterImage()
+    {
+        File f = Excelize.NewFile();
+        string filePath = Path.GetFullPath(Path.Combine("..", "..", "..", "..", "chart.png"));
+        byte[] pic = System.IO.File.ReadAllBytes(filePath);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetCellValue("Sheet1", "A1", "Example");
+                f.SetHeaderFooter(
+                    "Sheet1",
+                    new HeaderFooterOptions
+                    {
+                        DifferentFirst = true,
+                        OddHeader = "&L&GExcelize&C&G&R&G",
+                        OddFooter = "&L&GExcelize&C&G&R&G",
+                        FirstHeader = "&L&GExcelize&C&G&R&G",
+                        FirstFooter = "&L&GExcelize&C&G&R&G",
+                    }
+                );
+                f.AddHeaderFooterImage(
+                    "Sheet1",
+                    new HeaderFooterImageOptions
+                    {
+                        Position = HeaderFooterImagePositionType.HeaderFooterImagePositionLeft,
+                        File = pic,
+                        FirstPage = true,
+                        Extension = ".png",
+                        Width = "50pt",
+                        Height = "32pt",
+                    }
+                );
+                f.AddHeaderFooterImage("Sheet1", null);
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddHeaderFooterImage("SheetN", new HeaderFooterImageOptions { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddHeaderFooterImage.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestAddIgnoredErrors()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetCellValue("Sheet1", "A3", "3");
+                int row = 1;
+                foreach (IgnoredErrorsType errorType in Enum.GetValues(typeof(IgnoredErrorsType)))
+                {
+                    f.AddIgnoredErrors(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(1, row++),
+                        errorType
+                    );
+                }
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddIgnoredErrors("SheetN", "A1", IgnoredErrorsType.IgnoredErrorsEvalError)
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddIgnoredErrors.xlsx");
             })
         );
         Assert.Empty(f.Close());
