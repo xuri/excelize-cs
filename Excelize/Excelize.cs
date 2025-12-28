@@ -225,6 +225,20 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeleteChart(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeleteComment(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult JoinCellName(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
             int row
@@ -2469,12 +2483,43 @@ namespace ExcelizeCs
         /// Note that currently doesn't support duplicate workbooks that contain
         /// tables, charts or pictures.
         /// </summary>
-        /// <param name="buffer">The contents buffer of the file</param>
+        /// <param name="from">Source sheet index</param>
+        /// <param name="to">Target sheet index</param>
         /// <exception cref="RuntimeError">Return None if no error occurred,
         /// otherwise raise a RuntimeError with the message.</exception>
         public void CopySheet(int from, int to)
         {
             string err = Marshal.PtrToStringUTF8(Lib.CopySheet(FileIdx, from, to));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Delete chart in spreadsheet by given worksheet name and cell
+        /// reference.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeleteChart(string sheet, string cell)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DeleteChart(FileIdx, sheet, cell));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Delete comment in a worksheet by given worksheet name and cell
+        /// reference.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeleteComment(string sheet, string cell)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DeleteComment(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

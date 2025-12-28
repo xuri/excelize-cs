@@ -197,6 +197,10 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.CopySheet(1, 2));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteChart("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteComment("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
@@ -332,8 +336,11 @@ public class UnitTest
                 f.AddChartSheet("Sheet3", chart, chart);
                 f.AddChartSheet("Sheet4", chart, null);
                 f.AddChartSheet("Sheet5", chart, Array.Empty<Chart>());
+                f.DeleteChart("Sheet1", "E46");
             })
         );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteChart("SheetN", "A1"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("TestAddChart.xlsx")));
         Assert.Empty(f.Close());
     }
@@ -358,11 +365,14 @@ public class UnitTest
             Height = 40,
             Width = 180,
         };
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteComment("SheetN", "A1"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(
             Record.Exception(() =>
             {
                 f.AddComment("Sheet1", null);
                 f.AddComment("Sheet1", comment);
+                f.DeleteComment("Sheet1", "A5");
                 f.SaveAs("TestComment.xlsx");
             })
         );
