@@ -18,263 +18,6 @@ using Xunit;
 public class UnitTest
 {
     [Fact]
-    public void TestDllImportResolver()
-    {
-        RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            Lib.DllImportResolver("lib", null, null)
-        );
-        Assert.Equal(Lib.ErrUnsupportedPlatformOrArch, err.Message);
-    }
-
-    [Fact]
-    public void TestStyle()
-    {
-        File f = Excelize.NewFile();
-        Style s = new Style
-        {
-            Border = new Border[]
-            {
-                new()
-                {
-                    Type = "left",
-                    Color = "0000FF",
-                    Style = 3,
-                },
-                new()
-                {
-                    Type = "right",
-                    Color = "FF0000",
-                    Style = 6,
-                },
-                new()
-                {
-                    Type = "top",
-                    Color = "00FF00",
-                    Style = 4,
-                },
-                new()
-                {
-                    Type = "bottom",
-                    Color = "FFFF00",
-                    Style = 5,
-                },
-                new()
-                {
-                    Type = "diagonalUp",
-                    Color = "A020F0",
-                    Style = 8,
-                },
-                new()
-                {
-                    Type = "diagonalDown",
-                    Color = "A020F0",
-                    Style = 8,
-                },
-            },
-            Font = new Font
-            {
-                Bold = true,
-                Size = 11.5,
-                Italic = true,
-                Strike = true,
-                Color = "FFF000",
-                Underline = "single",
-                Family = "Times New Roman",
-                ColorIndexed = 6,
-                ColorTheme = 1,
-                ColorTint = 0.11,
-                VertAlign = "superscript",
-            },
-            Fill = new Fill
-            {
-                Shading = 1,
-                Color = new string[] { "00FF00", "FFFF00" },
-                Type = "gradient",
-            },
-            Alignment = new Alignment
-            {
-                Horizontal = "center",
-                Indent = 1,
-                JustifyLastLine = true,
-                ReadingOrder = 1,
-                RelativeIndent = 1,
-                ShrinkToFit = true,
-                TextRotation = 180,
-                Vertical = "center",
-                WrapText = true,
-            },
-            Protection = new Protection { Locked = false, Hidden = true },
-            CustomNumFmt = ";;;",
-        };
-        int styleId = f.NewStyle(s);
-        Assert.Equal(1, styleId);
-        Style style = f.GetStyle(styleId);
-        Assert.Equivalent(s, style);
-
-        Assert.Null(Record.Exception(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId)));
-        Assert.Null(Record.Exception(() => f.UpdateLinkedValue()));
-        Assert.Null(Record.Exception(() => f.SetCellInt("Sheet1", "A1", 100)));
-
-        List<object?> arr = new()
-        {
-            null,
-            "Hello",
-            100,
-            123.45,
-            true,
-            (float)123,
-            (long)12345,
-            (short)12,
-        };
-        arr.ForEach(v =>
-            Assert.Null(
-                Record.Exception(() =>
-                {
-                    f.SetCellValue(
-                        "Sheet1",
-                        Excelize.CoordinatesToCellName(1, arr.IndexOf(v) + 2),
-                        v
-                    );
-                })
-            )
-        );
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                Assert.Equal("100", f.CalcCellValue("Sheet1", "A4"));
-                f.SetActiveSheet(f.NewSheet("Sheet2"));
-            })
-        );
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                Assert.Equal("100", f.GetCellValue("Sheet1", "A4"));
-            })
-        );
-        Assert.Equal(
-            new List<List<string>>
-            {
-                new() { },
-                new() { },
-                new() { "Hello" },
-                new() { "100" },
-                new() { "123.45" },
-                new() { "TRUE" },
-                new() { "123" },
-                new() { "12345" },
-                new() { "12" },
-            },
-            f.GetRows("Sheet1")
-        );
-        Assert.Null(Record.Exception(() => f.CopySheet(0, f.NewSheet("Sheet3"))));
-        Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
-        Assert.Empty(f.Close());
-
-        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.CoordinatesToCellName(0, 1));
-        Assert.Equal("invalid cell reference [0, 1]", err.Message);
-
-        f = new File(0);
-        string expected = "can not find file pointer";
-        err = Assert.Throws<RuntimeError>(() => f.AddChart("Sheet1", "A1", new Chart()));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.AddChartSheet("Sheet1", new Chart()));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.AddComment("Sheet1", new Comment()));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() =>
-            f.AddHeaderFooterImage("Sheet1", new HeaderFooterImageOptions())
-        );
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() =>
-            f.AddIgnoredErrors("Sheet1", "A1", IgnoredErrorsType.IgnoredErrorsEvalError)
-        );
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() =>
-            f.AddPictureFromBytes("Sheet1", "A1", new Picture())
-        );
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.AddVBAProject(Array.Empty<byte>()));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.CopySheet(1, 2));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.DeleteChart("Sheet1", "A1"));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.DeleteComment("Sheet1", "A1"));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.GetStyle(1));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.NewSheet("Sheet1"));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.NewStyle(s));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.Save());
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.SetActiveSheet(1));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.SetCellInt("Sheet1", "A1", 100));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.SetCellValue("Sheet1", "A1", 100));
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() =>
-            f.SetSheetRow("Sheet1", "A1", new List<object> { 1 })
-        );
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.UpdateLinkedValue());
-        Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.SaveAs("Book1.xlsx"));
-        Assert.Equal(expected, err.Message);
-        Assert.Equal(expected, f.Close());
-    }
-
-    [Fact]
-    public void TestStreamWriter()
-    {
-        File f = Excelize.NewFile();
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                StreamWriter sw = f.NewStreamWriter("Sheet1");
-                sw.SetRow("A1", null);
-                sw.SetRow("A1", new List<object>());
-                for (int r = 4; r < 11; r++)
-                {
-                    Random random = new Random();
-                    List<object> row = new List<object>();
-                    for (int i = 1; i < 4; i++)
-                    {
-                        row.Add(random.Next(640000));
-                    }
-                    string cell = Excelize.CoordinatesToCellName(1, r, false);
-                    sw.SetRow(cell, row);
-                }
-                sw.Flush();
-            })
-        );
-        RuntimeError err = Assert.Throws<RuntimeError>(() => f.NewStreamWriter("SheetN"));
-        Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestStreamWriter.xlsx");
-            })
-        );
-        Assert.Empty(f.Close());
-
-        const string errStreamWriterPtr = "can not find stream writer pointer";
-        StreamWriter sw = new StreamWriter(0);
-        err = Assert.Throws<RuntimeError>(() => sw.SetRow("A1", new List<object> { 1 }));
-        Assert.Equal(errStreamWriterPtr, err.Message);
-        err = Assert.Throws<RuntimeError>(sw.Flush);
-        Assert.Equal(errStreamWriterPtr, err.Message);
-    }
-
-    [Fact]
     public void TestAddChart()
     {
         File f = Excelize.NewFile();
@@ -376,55 +119,6 @@ public class UnitTest
                 f.SaveAs("TestComment.xlsx");
             })
         );
-        Assert.Empty(f.Close());
-    }
-
-    [Fact]
-    public void TestAddPicture()
-    {
-        File f = Excelize.NewFile();
-        string filePath = Path.GetFullPath(Path.Combine("..", "..", "..", "..", "chart.png"));
-        byte[] pic = System.IO.File.ReadAllBytes(filePath);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.AddPicture("Sheet1", "A1", filePath, null);
-                f.AddPicture(
-                    "Sheet1",
-                    "A1",
-                    filePath,
-                    new GraphicOptions
-                    {
-                        PrintObject = true,
-                        ScaleX = 0.1,
-                        ScaleY = 0.1,
-                        Locked = false,
-                    }
-                );
-                f.AddPictureFromBytes(
-                    "Sheet1",
-                    "A3",
-                    new Picture
-                    {
-                        Extension = ".png",
-                        File = pic,
-                        Format = new GraphicOptions
-                        {
-                            PrintObject = true,
-                            ScaleX = 0.1,
-                            ScaleY = 0.1,
-                            Locked = false,
-                        },
-                        InsertType = PictureInsertType.PictureInsertTypePlaceOverCells,
-                    }
-                );
-                f.SaveAs("TestAddPicture.xlsx");
-            })
-        );
-        RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            f.AddPicture("SheetN", "A1", filePath, null)
-        );
-        Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Empty(f.Close());
     }
 
@@ -536,6 +230,90 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestAddIgnoredErrors()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetCellValue("Sheet1", "A3", "3");
+                int row = 1;
+                foreach (IgnoredErrorsType errorType in Enum.GetValues(typeof(IgnoredErrorsType)))
+                {
+                    f.AddIgnoredErrors(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(1, row++),
+                        errorType
+                    );
+                }
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddIgnoredErrors("SheetN", "A1", IgnoredErrorsType.IgnoredErrorsEvalError)
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddIgnoredErrors.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestAddPicture()
+    {
+        File f = Excelize.NewFile();
+        string filePath = Path.GetFullPath(Path.Combine("..", "..", "..", "..", "chart.png"));
+        byte[] pic = System.IO.File.ReadAllBytes(filePath);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.AddPicture("Sheet1", "A1", filePath, null);
+                f.AddPicture(
+                    "Sheet1",
+                    "A1",
+                    filePath,
+                    new GraphicOptions
+                    {
+                        PrintObject = true,
+                        ScaleX = 0.1,
+                        ScaleY = 0.1,
+                        Locked = false,
+                    }
+                );
+                f.AddPictureFromBytes(
+                    "Sheet1",
+                    "A3",
+                    new Picture
+                    {
+                        Extension = ".png",
+                        File = pic,
+                        Format = new GraphicOptions
+                        {
+                            PrintObject = true,
+                            ScaleX = 0.1,
+                            ScaleY = 0.1,
+                            Locked = false,
+                        },
+                        InsertType = PictureInsertType.PictureInsertTypePlaceOverCells,
+                    }
+                );
+                f.DeletePicture("Sheet1", "A4");
+                f.SaveAs("TestAddPicture.xlsx");
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddPicture("SheetN", "A1", filePath, null)
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeletePicture("SheetN", "A1"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestAddShape()
     {
         File f = Excelize.NewFile();
@@ -586,6 +364,129 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestAddSlicer()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.NewSheet("Sheet2");
+                f.AddTable("Sheet1", new Table { Name = "Table1", Range = "A1:D5" });
+                f.AddTable(
+                    "Sheet2",
+                    new Table
+                    {
+                        Range = "F2:H6",
+                        Name = "table",
+                        StyleName = "TableStyleMedium2",
+                        ShowFirstColumn = true,
+                        ShowLastColumn = true,
+                        ShowRowStripes = false,
+                        ShowColumnStripes = true,
+                    }
+                );
+                f.AddSlicer(
+                    "Sheet1",
+                    new SlicerOptions
+                    {
+                        Name = "Column1",
+                        Cell = "E1",
+                        TableSheet = "Sheet1",
+                        TableName = "Table1",
+                        Caption = "Column1",
+                    }
+                );
+                f.AddSlicer(
+                    "Sheet1",
+                    new SlicerOptions
+                    {
+                        Name = "Column1",
+                        Cell = "I1",
+                        TableSheet = "Sheet2",
+                        TableName = "table",
+                        Caption = "Column1",
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddSlicer("Sheet1", new SlicerOptions { })
+        );
+        Assert.Equal("parameter is invalid", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.AddTable("Sheet1", new Table { }));
+        Assert.Equal("parameter is invalid", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddSlicer.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestAddSparkline()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.AddSparkline(
+                    "Sheet1",
+                    new SparklineOptions
+                    {
+                        Location = new string[] { "A2" },
+                        Range = new string[] { "Sheet1!B1:J1" },
+                        Markers = true,
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AddSparkline("SheetN", new SparklineOptions { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAddSparkline.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestAutoFilter()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.AutoFilter("Sheet1", "A2:D4", new AutoFilterOptions[] { });
+                f.AutoFilter(
+                    "Sheet1",
+                    "F2:H4",
+                    new AutoFilterOptions[]
+                    {
+                        new AutoFilterOptions { Column = "F", Expression = "x != blanks" },
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.AutoFilter("SheetN", "L1:N4", new AutoFilterOptions[] { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestAutoFilter.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestCalcCellValue()
     {
         File f = Excelize.NewFile();
@@ -611,6 +512,15 @@ public class UnitTest
             "the column number must be greater than or equal to 1 and less than or equal to 16384",
             err.Message
         );
+    }
+
+    [Fact]
+    public void TestDllImportResolver()
+    {
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            Lib.DllImportResolver("lib", null, null)
+        );
+        Assert.Equal(Lib.ErrUnsupportedPlatformOrArch, err.Message);
     }
 
     [Fact]
@@ -698,35 +608,11 @@ public class UnitTest
     }
 
     [Fact]
-    public void TestAddIgnoredErrors()
+    public void TestJoinCellName()
     {
-        File f = Excelize.NewFile();
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SetCellValue("Sheet1", "A3", "3");
-                int row = 1;
-                foreach (IgnoredErrorsType errorType in Enum.GetValues(typeof(IgnoredErrorsType)))
-                {
-                    f.AddIgnoredErrors(
-                        "Sheet1",
-                        Excelize.CoordinatesToCellName(1, row++),
-                        errorType
-                    );
-                }
-            })
-        );
-        RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            f.AddIgnoredErrors("SheetN", "A1", IgnoredErrorsType.IgnoredErrorsEvalError)
-        );
-        Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddIgnoredErrors.xlsx");
-            })
-        );
-        Assert.Empty(f.Close());
+        Assert.Equal("A1", Excelize.JoinCellName("A", 1));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.JoinCellName("", 0));
+        Assert.Equal("invalid column name \"\"", err.Message);
     }
 
     [Fact]
@@ -897,142 +783,266 @@ public class UnitTest
     }
 
     [Fact]
-    public void TestAddSlicer()
-    {
-        File f = Excelize.NewFile();
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.NewSheet("Sheet2");
-                f.AddTable("Sheet1", new Table { Name = "Table1", Range = "A1:D5" });
-                f.AddTable(
-                    "Sheet2",
-                    new Table
-                    {
-                        Range = "F2:H6",
-                        Name = "table",
-                        StyleName = "TableStyleMedium2",
-                        ShowFirstColumn = true,
-                        ShowLastColumn = true,
-                        ShowRowStripes = false,
-                        ShowColumnStripes = true,
-                    }
-                );
-                f.AddSlicer(
-                    "Sheet1",
-                    new SlicerOptions
-                    {
-                        Name = "Column1",
-                        Cell = "E1",
-                        TableSheet = "Sheet1",
-                        TableName = "Table1",
-                        Caption = "Column1",
-                    }
-                );
-                f.AddSlicer(
-                    "Sheet1",
-                    new SlicerOptions
-                    {
-                        Name = "Column1",
-                        Cell = "I1",
-                        TableSheet = "Sheet2",
-                        TableName = "table",
-                        Caption = "Column1",
-                    }
-                );
-            })
-        );
-        RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            f.AddSlicer("Sheet1", new SlicerOptions { })
-        );
-        Assert.Equal("parameter is invalid", err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.AddTable("Sheet1", new Table { }));
-        Assert.Equal("parameter is invalid", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddSlicer.xlsx");
-            })
-        );
-        Assert.Empty(f.Close());
-    }
-
-    [Fact]
-    public void TestAddSparkline()
-    {
-        File f = Excelize.NewFile();
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.AddSparkline(
-                    "Sheet1",
-                    new SparklineOptions
-                    {
-                        Location = new string[] { "A2" },
-                        Range = new string[] { "Sheet1!B1:J1" },
-                        Markers = true,
-                    }
-                );
-            })
-        );
-        RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            f.AddSparkline("SheetN", new SparklineOptions { })
-        );
-        Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddSparkline.xlsx");
-            })
-        );
-        Assert.Empty(f.Close());
-    }
-
-    [Fact]
-    public void TestAutoFilter()
-    {
-        File f = Excelize.NewFile();
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.AutoFilter("Sheet1", "A2:D4", new AutoFilterOptions[] { });
-                f.AutoFilter(
-                    "Sheet1",
-                    "F2:H4",
-                    new AutoFilterOptions[]
-                    {
-                        new AutoFilterOptions { Column = "F", Expression = "x != blanks" },
-                    }
-                );
-            })
-        );
-        RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            f.AutoFilter("SheetN", "L1:N4", new AutoFilterOptions[] { })
-        );
-        Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAutoFilter.xlsx");
-            })
-        );
-        Assert.Empty(f.Close());
-    }
-
-    [Fact]
-    public void TestJoinCellName()
-    {
-        Assert.Equal("A1", Excelize.JoinCellName("A", 1));
-        RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.JoinCellName("", 0));
-        Assert.Equal("invalid column name \"\"", err.Message);
-    }
-
-    [Fact]
     public void TestSplitCellName()
     {
         Assert.Equal(("AK", 74), Excelize.SplitCellName("AK74"));
         RuntimeError err = Assert.Throws<RuntimeError>(() => Excelize.SplitCellName(""));
         Assert.Equal("invalid cell name \"\"", err.Message);
+    }
+
+    [Fact]
+    public void TestStreamWriter()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                StreamWriter sw = f.NewStreamWriter("Sheet1");
+                sw.SetRow("A1", null);
+                sw.SetRow("A1", new List<object>());
+                for (int r = 4; r < 11; r++)
+                {
+                    Random random = new Random();
+                    List<object> row = new List<object>();
+                    for (int i = 1; i < 4; i++)
+                    {
+                        row.Add(random.Next(640000));
+                    }
+                    string cell = Excelize.CoordinatesToCellName(1, r, false);
+                    sw.SetRow(cell, row);
+                }
+                sw.Flush();
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.NewStreamWriter("SheetN"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SaveAs("TestStreamWriter.xlsx");
+            })
+        );
+        Assert.Empty(f.Close());
+
+        const string errStreamWriterPtr = "can not find stream writer pointer";
+        StreamWriter sw = new StreamWriter(0);
+        err = Assert.Throws<RuntimeError>(() => sw.SetRow("A1", new List<object> { 1 }));
+        Assert.Equal(errStreamWriterPtr, err.Message);
+        err = Assert.Throws<RuntimeError>(sw.Flush);
+        Assert.Equal(errStreamWriterPtr, err.Message);
+    }
+
+    [Fact]
+    public void TestStyle()
+    {
+        File f = Excelize.NewFile();
+        Style s = new Style
+        {
+            Border = new Border[]
+            {
+                new()
+                {
+                    Type = "left",
+                    Color = "0000FF",
+                    Style = 3,
+                },
+                new()
+                {
+                    Type = "right",
+                    Color = "FF0000",
+                    Style = 6,
+                },
+                new()
+                {
+                    Type = "top",
+                    Color = "00FF00",
+                    Style = 4,
+                },
+                new()
+                {
+                    Type = "bottom",
+                    Color = "FFFF00",
+                    Style = 5,
+                },
+                new()
+                {
+                    Type = "diagonalUp",
+                    Color = "A020F0",
+                    Style = 8,
+                },
+                new()
+                {
+                    Type = "diagonalDown",
+                    Color = "A020F0",
+                    Style = 8,
+                },
+            },
+            Font = new Font
+            {
+                Bold = true,
+                Size = 11.5,
+                Italic = true,
+                Strike = true,
+                Color = "FFF000",
+                Underline = "single",
+                Family = "Times New Roman",
+                ColorIndexed = 6,
+                ColorTheme = 1,
+                ColorTint = 0.11,
+                VertAlign = "superscript",
+            },
+            Fill = new Fill
+            {
+                Shading = 1,
+                Color = new string[] { "00FF00", "FFFF00" },
+                Type = "gradient",
+            },
+            Alignment = new Alignment
+            {
+                Horizontal = "center",
+                Indent = 1,
+                JustifyLastLine = true,
+                ReadingOrder = 1,
+                RelativeIndent = 1,
+                ShrinkToFit = true,
+                TextRotation = 180,
+                Vertical = "center",
+                WrapText = true,
+            },
+            Protection = new Protection { Locked = false, Hidden = true },
+            CustomNumFmt = ";;;",
+        };
+        int styleId = f.NewStyle(s);
+        Assert.Equal(1, styleId);
+        Style style = f.GetStyle(styleId);
+        Assert.Equivalent(s, style);
+
+        Assert.Null(Record.Exception(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId)));
+        Assert.Null(Record.Exception(() => f.UpdateLinkedValue()));
+        Assert.Null(Record.Exception(() => f.SetCellInt("Sheet1", "A1", 100)));
+
+        List<object?> arr = new()
+        {
+            null,
+            "Hello",
+            100,
+            123.45,
+            true,
+            (float)123,
+            (long)12345,
+            (short)12,
+        };
+        arr.ForEach(v =>
+            Assert.Null(
+                Record.Exception(() =>
+                {
+                    f.SetCellValue(
+                        "Sheet1",
+                        Excelize.CoordinatesToCellName(1, arr.IndexOf(v) + 2),
+                        v
+                    );
+                })
+            )
+        );
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                Assert.Equal("100", f.CalcCellValue("Sheet1", "A4"));
+                f.SetActiveSheet(f.NewSheet("Sheet2"));
+            })
+        );
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                Assert.Equal("100", f.GetCellValue("Sheet1", "A4"));
+            })
+        );
+        Assert.Equal(
+            new List<List<string>>
+            {
+                new() { },
+                new() { },
+                new() { "Hello" },
+                new() { "100" },
+                new() { "123.45" },
+                new() { "TRUE" },
+                new() { "123" },
+                new() { "12345" },
+                new() { "12" },
+            },
+            f.GetRows("Sheet1")
+        );
+        Assert.Null(Record.Exception(() => f.CopySheet(0, f.NewSheet("Sheet3"))));
+        Assert.Null(Record.Exception(() => f.DeleteSheet("Sheet3")));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet:1"));
+        Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
+        Assert.Empty(f.Close());
+
+        err = Assert.Throws<RuntimeError>(() => Excelize.CoordinatesToCellName(0, 1));
+        Assert.Equal("invalid cell reference [0, 1]", err.Message);
+
+        f = new File(0);
+        string expected = "can not find file pointer";
+        err = Assert.Throws<RuntimeError>(() => f.AddChart("Sheet1", "A1", new Chart()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.AddChartSheet("Sheet1", new Chart()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.AddComment("Sheet1", new Comment()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.AddHeaderFooterImage("Sheet1", new HeaderFooterImageOptions())
+        );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.AddIgnoredErrors("Sheet1", "A1", IgnoredErrorsType.IgnoredErrorsEvalError)
+        );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.AddPictureFromBytes("Sheet1", "A1", new Picture())
+        );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.AddVBAProject(Array.Empty<byte>()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.CopySheet(1, 2));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteChart("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteComment("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeletePicture("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetStyle(1));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.NewSheet("Sheet1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.NewStyle(s));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.Save());
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetActiveSheet(1));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellInt("Sheet1", "A1", 100));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellValue("Sheet1", "A1", 100));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.SetSheetRow("Sheet1", "A1", new List<object> { 1 })
+        );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.UpdateLinkedValue());
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SaveAs("Book1.xlsx"));
+        Assert.Equal(expected, err.Message);
+        Assert.Equal(expected, f.Close());
     }
 
     [StructLayout(LayoutKind.Sequential)]

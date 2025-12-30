@@ -239,6 +239,19 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeletePicture(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeleteSheet(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult JoinCellName(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
             int row
@@ -2520,6 +2533,38 @@ namespace ExcelizeCs
         public void DeleteComment(string sheet, string cell)
         {
             string err = Marshal.PtrToStringUTF8(Lib.DeleteComment(FileIdx, sheet, cell));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Delete all pictures in a cell by given worksheet name and cell
+        /// reference.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeletePicture(string sheet, string cell)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DeletePicture(FileIdx, sheet, cell));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Delete worksheet in a workbook by given worksheet name. Use this
+        /// method with caution, which will affect changes in references such as
+        ///  formulas, charts, and so on. If there is any referenced value of
+        /// the deleted worksheet, it will cause a file error when you open it.
+        /// This function will be invalid when only one worksheet is left.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeleteSheet(string sheet)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DeleteSheet(FileIdx, sheet));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
