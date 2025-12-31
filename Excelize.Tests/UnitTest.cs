@@ -413,6 +413,14 @@ public class UnitTest
             f.AddSlicer("Sheet1", new SlicerOptions { })
         );
         Assert.Equal("parameter is invalid", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.DeleteSlicer("Column1");
+            })
+        );
+        err = Assert.Throws<RuntimeError>(() => f.DeleteSlicer("x"));
+        Assert.Equal("slicer x does not exist", err.Message);
         err = Assert.Throws<RuntimeError>(() => f.AddTable("Sheet1", new Table { }));
         Assert.Equal("parameter is invalid", err.Message);
         Assert.Null(
@@ -974,6 +982,7 @@ public class UnitTest
         );
         Assert.Null(Record.Exception(() => f.CopySheet(0, f.NewSheet("Sheet3"))));
         Assert.Null(Record.Exception(() => f.DeleteSheet("Sheet3")));
+        Assert.Null(Record.Exception(() => f.DuplicateRow("Sheet2", 2)));
         RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet:1"));
         Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
@@ -1013,6 +1022,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.DeletePicture("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteSlicer("x"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DuplicateRow("Sheet1", 1));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);

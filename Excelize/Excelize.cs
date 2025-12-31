@@ -252,6 +252,19 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeleteSlicer(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string name
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DuplicateRow(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            int row
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult JoinCellName(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
             int row
@@ -2555,9 +2568,9 @@ namespace ExcelizeCs
         /// <summary>
         /// Delete worksheet in a workbook by given worksheet name. Use this
         /// method with caution, which will affect changes in references such as
-        ///  formulas, charts, and so on. If there is any referenced value of
-        /// the deleted worksheet, it will cause a file error when you open it.
-        /// This function will be invalid when only one worksheet is left.
+        /// formulas, charts, and so on. If there is any referenced value of the
+        /// deleted worksheet, it will cause a file error when you open it. This
+        /// function will be invalid when only one worksheet is left.
         /// </summary>
         /// <param name="sheet">The worksheet name</param>
         /// <exception cref="RuntimeError">Return None if no error occurred,
@@ -2565,6 +2578,37 @@ namespace ExcelizeCs
         public void DeleteSheet(string sheet)
         {
             string err = Marshal.PtrToStringUTF8(Lib.DeleteSheet(FileIdx, sheet));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Delete a slicer by a given slicer name.
+        /// </summary>
+        /// <param name="name">The slicer name</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeleteSlicer(string name)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DeleteSlicer(FileIdx, name));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Inserts a copy of specified row (by its Excel row number) below. Use
+        /// this method with caution, which will affect changes in references
+        /// such as formulas, charts, and so on. If there is any referenced
+        /// value of the worksheet, it will cause a file error when you open it.
+        /// The excelize only partially updates these references currently.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="row">The row number</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DuplicateRow(string sheet, int row)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DuplicateRow(FileIdx, sheet, row));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
