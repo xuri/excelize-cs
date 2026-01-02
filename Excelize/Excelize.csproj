@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Authors>xuri</Authors>
-    <Copyright>Copyright © 2025 The Excelize Authors</Copyright>
+    <Copyright>Copyright © 2025 - 2026 The Excelize Authors</Copyright>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
     <Description>Excelize is a C# port of Go Excelize library that allow you to write to and read from XLAM / XLSM / XLSX / XLTM / XLTX files.</Description>

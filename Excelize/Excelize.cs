@@ -265,6 +265,17 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DuplicateRowTo(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            int row,
+            int row2
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int GetActiveSheetIndex(long fileIdx);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult JoinCellName(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
             int row
@@ -2611,6 +2622,51 @@ namespace ExcelizeCs
             string err = Marshal.PtrToStringUTF8(Lib.DuplicateRow(FileIdx, sheet, row));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Inserts a copy of specified row by it Excel number to specified row
+        /// position moving down exists rows after target position. Use this
+        /// method with caution, which will affect changes in references such as
+        /// formulas, charts, and so on. If there is any referenced value of the
+        /// worksheet, it will cause a file error when you open it. The excelize
+        /// only partially updates these references currently.
+        /// <example>
+        /// For example:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DuplicateRowTo("Sheet1", 2, 7);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="row">The row number to duplicate from</param>
+        /// <param name="row2">The row number to duplicate to</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DuplicateRowTo(string sheet, int row, int row2)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DuplicateRowTo(FileIdx, sheet, row, row2));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Get active sheet index of the spreadsheet. If not found the active
+        /// sheet will be return integer 0.
+        /// </summary>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public int GetActiveSheetIndex()
+        {
+            int idx = Lib.GetActiveSheetIndex(FileIdx);
+            return idx;
         }
 
         /// <summary>

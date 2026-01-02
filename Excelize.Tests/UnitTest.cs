@@ -957,6 +957,7 @@ public class UnitTest
             {
                 Assert.Equal("100", f.CalcCellValue("Sheet1", "A4"));
                 f.SetActiveSheet(f.NewSheet("Sheet2"));
+                Assert.Equal(1, f.GetActiveSheetIndex());
             })
         );
         Assert.Null(
@@ -983,6 +984,7 @@ public class UnitTest
         Assert.Null(Record.Exception(() => f.CopySheet(0, f.NewSheet("Sheet3"))));
         Assert.Null(Record.Exception(() => f.DeleteSheet("Sheet3")));
         Assert.Null(Record.Exception(() => f.DuplicateRow("Sheet2", 2)));
+        Assert.Null(Record.Exception(() => f.DuplicateRowTo("Sheet2", 2, 7)));
         RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet:1"));
         Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
@@ -1027,6 +1029,9 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.DuplicateRow("Sheet1", 1));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DuplicateRowTo("Sheet1", 1, 2));
+        Assert.Equal(expected, err.Message);
+        Assert.Equal(0, f.GetActiveSheetIndex());
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
