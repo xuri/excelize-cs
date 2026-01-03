@@ -276,6 +276,9 @@ namespace ExcelizeCs
         internal static extern int GetActiveSheetIndex(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.GetAppPropsResult GetAppProps(long fileIdx);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult JoinCellName(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
             int row
@@ -347,6 +350,12 @@ namespace ExcelizeCs
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetActiveSheet(long fileIdx, int index);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetAppProps(
+            long fileIdx,
+            ref TypesC.AppProperties appProperties
+        );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellInt(
@@ -2670,6 +2679,22 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// Get document application properties.
+        /// </summary>
+        /// <returns>Return the application properties if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe AppProperties GetAppProps()
+        {
+            TypesC.GetAppPropsResult res = Lib.GetAppProps(FileIdx);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return (AppProperties)Lib.CToCs(res.opts, new AppProperties());
+        }
+
+        /// <summary>
         /// Get formatted value from cell by given worksheet name and cell
         /// reference in spreadsheet. The return value is converted to the
         /// <c>string</c> data type. If the cell format can be applied to the
@@ -2864,8 +2889,8 @@ namespace ExcelizeCs
                 throw new RuntimeError(err);
         }
 
-        /// <summary>Set the default active sheet of the workbook by a given
-        /// index.
+        /// <summary>
+        /// Set the default active sheet of the workbook by a given index.
         /// </summary>
         /// <remarks>Note that the active index is different from the ID
         /// returned by function <c>GetSheetMap</c>. It should be greater than
@@ -2877,6 +2902,106 @@ namespace ExcelizeCs
         public void SetActiveSheet(int index)
         {
             string err = Marshal.PtrToStringUTF8(Lib.SetActiveSheet(FileIdx, index));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set document application properties. The properties that can be set are:
+        /// <list type="table">
+        ///   <listheader>
+        ///     <term>Property</term>
+        ///     <description>Description</description>
+        ///   </listheader>
+        ///   <item>
+        ///     <term>Application</term>
+        ///     <description>
+        ///       The name of the application that created this document.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>ScaleCrop</term>
+        ///     <description>
+        ///       Indicates the display mode of the document thumbnail.
+        ///       Set to <c>true</c> to enable scaling of the document thumbnail to the display.
+        ///       Set to <c>false</c> to enable cropping of the document thumbnail to show only
+        ///       sections that will fit the display.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>DocSecurity</term>
+        ///     <description>
+        ///       Security level of the document as a numeric value:
+        ///       <list type="number">
+        ///         <item><description>Document is password protected.</description></item>
+        ///         <item><description>Document is recommended to be opened as read-only.</description></item>
+        ///         <item><description>Document is enforced to be opened as read-only.</description></item>
+        ///         <item><description>Document is locked for annotation.</description></item>
+        ///       </list>
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>Company</term>
+        ///     <description>
+        ///       The name of a company associated with the document.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>LinksUpToDate</term>
+        ///     <description>
+        ///       Indicates whether hyperlinks in the document are up to date.
+        ///       Set to <c>true</c> if hyperlinks are updated; otherwise, <c>false</c>.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>HyperlinksChanged</term>
+        ///     <description>
+        ///       Specifies that one or more hyperlinks in this part were updated exclusively
+        ///       by a producer. The next producer to open this document shall update the
+        ///       hyperlink relationships with the new hyperlinks specified in this part.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>AppVersion</term>
+        ///     <description>
+        ///       Specifies the version of the application that produced this document.
+        ///       The value must be in the form <c>XX.YYYY</c>, where X and Y represent numerical
+        ///       values; otherwise, the document is considered non-conformant.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// <example>
+        /// For example:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetAppProps(
+        ///         new AppProperties
+        ///         {
+        ///             Application = "Microsoft Excel",
+        ///             ScaleCrop = true,
+        ///             DocSecurity = 3,
+        ///             Company = "Company Name",
+        ///             LinksUpToDate = true,
+        ///             HyperlinksChanged = true,
+        ///             AppVersion = "16.0000",
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="appProperties">The application properties</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetAppProps(AppProperties appProperties)
+        {
+            var opts = (TypesC.AppProperties)Lib.CsToC(appProperties, new TypesC.AppProperties());
+            string err = Marshal.PtrToStringUTF8(Lib.SetAppProps(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

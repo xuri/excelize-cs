@@ -314,6 +314,22 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestAppProperties()
+    {
+        File f = Excelize.NewFile();
+        AppProperties props = new AppProperties
+        {
+            Application = "ExcelizeCs",
+            Company = "Excelize",
+            AppVersion = "1.0.0",
+        };
+        Assert.Null(Record.Exception(() => f.SetAppProps(props)));
+        Assert.Equal(props, f.GetAppProps());
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAppProps.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestAddShape()
     {
         File f = Excelize.NewFile();
@@ -1032,6 +1048,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.DuplicateRowTo("Sheet1", 1, 2));
         Assert.Equal(expected, err.Message);
         Assert.Equal(0, f.GetActiveSheetIndex());
+        err = Assert.Throws<RuntimeError>(() => f.GetAppProps());
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
@@ -1043,6 +1061,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.NewStyle(s));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.Save());
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetAppProps(new AppProperties()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetActiveSheet(1));
         Assert.Equal(expected, err.Message);

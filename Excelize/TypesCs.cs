@@ -254,6 +254,20 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// AppProperties directly maps the document application properties.
+    /// </summary>
+    public struct AppProperties
+    {
+        public string Application;
+        public bool ScaleCrop;
+        public int DocSecurity;
+        public string Company;
+        public bool LinksUpToDate;
+        public bool HyperlinksChanged;
+        public string AppVersion;
+    }
+
+    /// <summary>
     /// Alignment directly maps the alignment settings of the cells.
     /// </summary>
     public struct Alignment

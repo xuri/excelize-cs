@@ -45,6 +45,24 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct AppProperties
+    {
+        public sbyte* Application;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool ScaleCrop;
+        public int DocSecurity;
+        public sbyte* Company;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool LinksUpToDate;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool HyperlinksChanged;
+        public sbyte* AppVersion;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Border
     {
         public sbyte* Type;
@@ -685,6 +703,13 @@ namespace ExcelizeCs.TypesC
     {
         public int col;
         public int row;
+        public sbyte* err;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct GetAppPropsResult
+    {
+        public AppProperties opts;
         public sbyte* err;
     }
 
