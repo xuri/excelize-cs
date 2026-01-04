@@ -279,6 +279,9 @@ namespace ExcelizeCs
         internal static extern TypesC.GetAppPropsResult GetAppProps(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.GetCalcPropsResult GetCalcProps(long fileIdx);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult JoinCellName(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
             int row
@@ -356,6 +359,9 @@ namespace ExcelizeCs
             long fileIdx,
             ref TypesC.AppProperties appProperties
         );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCalcProps(long fileIdx, ref TypesC.CalcPropsOptions opts);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellInt(
@@ -614,19 +620,21 @@ namespace ExcelizeCs
                                 if (csField.FieldType == typeof(string))
                                 {
                                     sbyte** ptrPtr = (sbyte**)Pointer.Unbox(cVal);
-                                    sbyte* ptr = *ptrPtr;
-                                    string str = new(ptr);
-                                    csField.SetValue(csInstance, str);
+                                    if (ptrPtr != null && *ptrPtr != null)
+                                    {
+                                        csField.SetValue(csInstance, new string(*ptrPtr));
+                                    }
                                 }
                                 else
                                 {
-                                    csField.SetValue(
-                                        csInstance,
-                                        UnmarshalPrimitiveValue(
-                                            (IntPtr)Pointer.Unbox(cVal),
-                                            csField.FieldType
-                                        )
-                                    );
+                                    IntPtr ptr = (IntPtr)Pointer.Unbox(cVal);
+                                    if (ptr != IntPtr.Zero)
+                                    {
+                                        csField.SetValue(
+                                            csInstance,
+                                            UnmarshalPrimitiveValue(ptr, csField.FieldType)
+                                        );
+                                    }
                                 }
                             }
                             else
@@ -2695,6 +2703,22 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// Gets calculation properties.
+        /// </summary>
+        /// <returns>Return the calculation properties if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe CalcPropsOptions GetCalcProps()
+        {
+            TypesC.GetCalcPropsResult res = Lib.GetCalcProps(FileIdx);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return (CalcPropsOptions)Lib.CToCs(res.opts, new CalcPropsOptions());
+        }
+
+        /// <summary>
         /// Get formatted value from cell by given worksheet name and cell
         /// reference in spreadsheet. The return value is converted to the
         /// <c>string</c> data type. If the cell format can be applied to the
@@ -3002,6 +3026,23 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.AppProperties)Lib.CsToC(appProperties, new TypesC.AppProperties());
             string err = Marshal.PtrToStringUTF8(Lib.SetAppProps(FileIdx, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Sets calculation properties. Optional value of <c>CalcMode</c>
+        /// property is: <c>manual</c>, <c>auto</c> or <c>autoNoTable</c>.
+        /// Optional value of <c>RefMode</c> property is: <c>A1</c> or
+        /// <c>R1C1</c>.
+        /// </summary>
+        /// <param name="opts">The calculation properties</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCalcProps(CalcPropsOptions opts)
+        {
+            var options = (TypesC.CalcPropsOptions)Lib.CsToC(opts, new TypesC.CalcPropsOptions());
+            string err = Marshal.PtrToStringUTF8(Lib.SetCalcProps(FileIdx, ref options));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

@@ -63,6 +63,24 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct CalcPropsOptions
+    {
+        public uint* CalcID;
+        public sbyte** CalcMode;
+        public bool* FullCalcOnLoad;
+        public sbyte** RefMode;
+        public bool* Iterate;
+        public uint* IterateCount;
+        public float* IterateDelta;
+        public bool* FullPrecision;
+        public bool* CalcCompleted;
+        public bool* CalcOnSave;
+        public bool* ConcurrentCalc;
+        public uint* ConcurrentManualCount;
+        public bool* ForceFullCalc;
+    };
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Border
     {
         public sbyte* Type;
@@ -710,6 +728,13 @@ namespace ExcelizeCs.TypesC
     public unsafe struct GetAppPropsResult
     {
         public AppProperties opts;
+        public sbyte* err;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct GetCalcPropsResult
+    {
+        public CalcPropsOptions opts;
         public sbyte* err;
     }
 

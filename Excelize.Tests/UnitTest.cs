@@ -220,12 +220,7 @@ public class UnitTest
             f.SetSheetProps("SheetN", new SheetPropsOptions { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddFormControl.xlsm");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAddFormControl.xlsm")));
         Assert.Empty(f.Close());
     }
 
@@ -252,12 +247,7 @@ public class UnitTest
             f.AddIgnoredErrors("SheetN", "A1", IgnoredErrorsType.IgnoredErrorsEvalError)
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddIgnoredErrors.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAddIgnoredErrors.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -370,12 +360,7 @@ public class UnitTest
             f.AddShape("SheetN", new Shape { Cell = "G6", Type = "rect" })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddShape.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAddShape.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -439,12 +424,7 @@ public class UnitTest
         Assert.Equal("slicer x does not exist", err.Message);
         err = Assert.Throws<RuntimeError>(() => f.AddTable("Sheet1", new Table { }));
         Assert.Equal("parameter is invalid", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddSlicer.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAddSlicer.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -470,12 +450,7 @@ public class UnitTest
             f.AddSparkline("SheetN", new SparklineOptions { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddSparkline.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAddSparkline.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -501,12 +476,7 @@ public class UnitTest
             f.AutoFilter("SheetN", "L1:N4", new AutoFilterOptions[] { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAutoFilter.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAutoFilter.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -516,6 +486,22 @@ public class UnitTest
         File f = Excelize.NewFile();
         RuntimeError err = Assert.Throws<RuntimeError>(() => f.CalcCellValue("SheetN", "A1"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
+    }
+
+    [Fact]
+    public void TestCalcProps()
+    {
+        File f = Excelize.NewFile();
+        CalcPropsOptions opts = new CalcPropsOptions
+        {
+            FullCalcOnLoad = true,
+            CalcID = 122211,
+            ConcurrentManualCount = 5,
+            IterateCount = 10,
+            ConcurrentCalc = true,
+        };
+        Assert.Null(Record.Exception(() => f.SetCalcProps(opts)));
+        Assert.Equal(opts, f.GetCalcProps());
     }
 
     [Fact]
@@ -573,12 +559,7 @@ public class UnitTest
             f.SetHeaderFooter("SheetN", new HeaderFooterOptions { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestHeaderFooter.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestHeaderFooter.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -622,12 +603,7 @@ public class UnitTest
             f.AddHeaderFooterImage("SheetN", new HeaderFooterImageOptions { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddHeaderFooterImage.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAddHeaderFooterImage.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -797,12 +773,7 @@ public class UnitTest
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
 
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestAddPivotTable.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestAddPivotTable.xlsx")));
         Assert.Empty(f.Close());
     }
 
@@ -840,12 +811,7 @@ public class UnitTest
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() => f.NewStreamWriter("SheetN"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        Assert.Null(
-            Record.Exception(() =>
-            {
-                f.SaveAs("TestStreamWriter.xlsx");
-            })
-        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestStreamWriter.xlsx")));
         Assert.Empty(f.Close());
 
         const string errStreamWriterPtr = "can not find stream writer pointer";
@@ -1050,6 +1016,8 @@ public class UnitTest
         Assert.Equal(0, f.GetActiveSheetIndex());
         err = Assert.Throws<RuntimeError>(() => f.GetAppProps());
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCalcProps());
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
@@ -1063,6 +1031,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.Save());
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetAppProps(new AppProperties()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCalcProps(new CalcPropsOptions()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetActiveSheet(1));
         Assert.Equal(expected, err.Message);
@@ -1156,5 +1126,6 @@ public class UnitTest
         sbyte value = -42;
         IntPtr intPtr = (IntPtr)(&value);
         Assert.Null(Lib.UnmarshalPrimitiveValue(intPtr, typeof(string)));
+        Assert.Null(Lib.UnmarshalPrimitiveValue(IntPtr.Zero, typeof(string)));
     }
 }

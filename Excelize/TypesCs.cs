@@ -268,6 +268,27 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// CalcPropsOptions defines the collection of properties the application
+    /// uses to record calculation status and details.
+    /// </summary>
+    public struct CalcPropsOptions
+    {
+        public uint? CalcID;
+        public string? CalcMode;
+        public bool? FullCalcOnLoad;
+        public string? RefMode;
+        public bool? Iterate;
+        public uint? IterateCount;
+        public float? IterateDelta;
+        public bool? FullPrecision;
+        public bool? CalcCompleted;
+        public bool? CalcOnSave;
+        public bool? ConcurrentCalc;
+        public uint? ConcurrentManualCount;
+        public bool? ForceFullCalc;
+    };
+
+    /// <summary>
     /// Alignment directly maps the alignment settings of the cells.
     /// </summary>
     public struct Alignment
