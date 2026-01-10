@@ -910,6 +910,9 @@ public class UnitTest
         Assert.Null(Record.Exception(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId)));
         Assert.Null(Record.Exception(() => f.UpdateLinkedValue()));
         Assert.Null(Record.Exception(() => f.SetCellInt("Sheet1", "A1", 100)));
+        Assert.Null(Record.Exception(() => f.SetCellBool("Sheet1", "A11", true)));
+        Assert.Null(Record.Exception(() => f.SetCellBool("Sheet1", "A12", false)));
+        Assert.Null(Record.Exception(() => f.SetCellDefault("Sheet1", "A13", "default")));
 
         List<object?> arr = new()
         {
@@ -960,6 +963,10 @@ public class UnitTest
                 new() { "123" },
                 new() { "12345" },
                 new() { "12" },
+                new() { },
+                new() { "TRUE" },
+                new() { "FALSE" },
+                new() { "default" },
             },
             f.GetRows("Sheet1")
         );
@@ -1033,6 +1040,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetAppProps(new AppProperties()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCalcProps(new CalcPropsOptions()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellBool("Sheet1", "A1", true));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellDefault("Sheet1", "A13", "default"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetActiveSheet(1));
         Assert.Equal(expected, err.Message);

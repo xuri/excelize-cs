@@ -364,6 +364,22 @@ namespace ExcelizeCs
         internal static extern IntPtr SetCalcProps(long fileIdx, ref TypesC.CalcPropsOptions opts);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCellBool(
+            long fileIdx,
+            string sheet,
+            string cell,
+            bool value
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCellDefault(
+            long fileIdx,
+            string sheet,
+            string cell,
+            string value
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellInt(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -3043,6 +3059,38 @@ namespace ExcelizeCs
         {
             var options = (TypesC.CalcPropsOptions)Lib.CsToC(opts, new TypesC.CalcPropsOptions());
             string err = Marshal.PtrToStringUTF8(Lib.SetCalcProps(FileIdx, ref options));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set bool type value of a cell by given worksheet name, cell
+        /// reference and cell value.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="value">The cell value</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCellBool(string sheet, string cell, bool value)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.SetCellBool(FileIdx, sheet, cell, value));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set string type value of a cell as default format without escaping
+        /// the cell.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="value">The cell value</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCellDefault(string sheet, string cell, string value)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.SetCellDefault(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
