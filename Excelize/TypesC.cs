@@ -163,6 +163,13 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct FormulaOpts
+    {
+        public sbyte** Type;
+        public sbyte** Ref;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct HeaderFooterOptions
     {
         public bool* AlignWithMargins;
@@ -219,6 +226,7 @@ namespace ExcelizeCs.TypesC
     public unsafe struct GraphicOptions
     {
         public sbyte* AltText;
+        public sbyte* Name;
         public bool* PrintObject;
         public bool* Locked;
 
@@ -309,6 +317,12 @@ namespace ExcelizeCs.TypesC
     {
         [MarshalAs(UnmanagedType.I1)]
         public bool None;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool DropLines;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool HighLowLines;
 
         [MarshalAs(UnmanagedType.I1)]
         public bool MajorGridLines;

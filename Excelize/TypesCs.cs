@@ -364,6 +364,15 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// FormulaOpts can be passed to SetCellFormula to use other formula types.
+    /// </summary>
+    public struct FormulaOpts
+    {
+        public string? Type;
+        public string? Ref;
+    }
+
+    /// <summary>
     /// HeaderFooterOptions directly maps the settings of header and footer.
     /// </summary>
     public struct HeaderFooterOptions
@@ -417,6 +426,7 @@ namespace ExcelizeCs
     public struct GraphicOptions
     {
         public string AltText;
+        public string Name;
         public bool? PrintObject;
         public bool? Locked;
         public bool LockAspectRatio;
@@ -503,6 +513,8 @@ namespace ExcelizeCs
     public struct ChartAxis
     {
         public bool None;
+        public bool DropLines;
+        public bool HighLowLines;
         public bool MajorGridLines;
         public bool MinorGridLines;
         public double MajorUnit;

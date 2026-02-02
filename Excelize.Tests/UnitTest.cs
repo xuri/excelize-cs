@@ -484,8 +484,67 @@ public class UnitTest
     public void TestCalcCellValue()
     {
         File f = Excelize.NewFile();
-        RuntimeError err = Assert.Throws<RuntimeError>(() => f.CalcCellValue("SheetN", "A1"));
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetSheetRow("Sheet1", "A1", new List<object> { 1, 2 });
+                f.SetCellFormula("Sheet1", "C1", "A1+B1");
+                Assert.Equal("3", f.CalcCellValue("Sheet1", "C1"));
+                Assert.Equal("A1+B1", f.GetCellFormula("Sheet1", "C1"));
+                f.NewSheet("Sheet2");
+                f.SetCellFormula("Sheet2", "A3", "{1;2;3}");
+                f.NewSheet("Sheet3");
+                f.SetCellFormula("Sheet3", "A3", "{\"a\",\"b\",\"c\"}");
+                f.NewSheet("Sheet4");
+                f.SetCellFormula(
+                    "Sheet4",
+                    "A3",
+                    "{1,2;\"a\",\"b\"}",
+                    new FormulaOpts { Ref = "A3:A3", Type = Excelize.STCellFormulaTypeArray }
+                );
+                f.NewSheet("Sheet5");
+                f.SetCellFormula(
+                    "Sheet5",
+                    "A3",
+                    "A1:A2",
+                    new FormulaOpts { Ref = "A3:A3", Type = Excelize.STCellFormulaTypeArray }
+                );
+                f.NewSheet("Sheet6");
+                f.SetCellFormula(
+                    "Sheet6",
+                    "C1",
+                    "A1+B1",
+                    new FormulaOpts { Ref = "C1:C5", Type = Excelize.STCellFormulaTypeShared }
+                );
+                f.NewSheet("Sheet7");
+                f.SetSheetRow("Sheet7", "A1", new List<object> { "A", "B", "C" });
+                f.SetSheetRow("Sheet7", "A2", new List<object> { 1, 2 });
+                f.AddTable(
+                    "Sheet7",
+                    new Table
+                    {
+                        Range = "A1:C2",
+                        Name = "Table1",
+                        StyleName = "TableStyleMedium2",
+                    }
+                );
+                f.SetCellFormula(
+                    "Sheet7",
+                    "C2",
+                    "SUM(Table1[[A]:[B]])",
+                    new FormulaOpts { Type = Excelize.STCellFormulaTypeDataTable }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.SetCellFormula("SheetN", "C1", "A1+B1")
+        );
         Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.CalcCellValue("SheetN", "A1"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCellFormula("SheetN", "A1"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestCalcCellValue.xlsx")));
     }
 
     [Fact]
@@ -1025,6 +1084,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCalcProps());
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCellFormula("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
@@ -1037,6 +1098,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.Save());
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetActiveSheet(1));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetAppProps(new AppProperties()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCalcProps(new CalcPropsOptions()));
@@ -1045,7 +1108,7 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellDefault("Sheet1", "A13", "default"));
         Assert.Equal(expected, err.Message);
-        err = Assert.Throws<RuntimeError>(() => f.SetActiveSheet(1));
+        err = Assert.Throws<RuntimeError>(() => f.SetCellFormula("Sheet1", "A1", "=A2"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId));
         Assert.Equal(expected, err.Message);

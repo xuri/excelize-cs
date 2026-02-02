@@ -282,6 +282,13 @@ namespace ExcelizeCs
         internal static extern TypesC.GetCalcPropsResult GetCalcProps(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.StringErrorResult GetCellFormula(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult JoinCellName(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
             int row
@@ -377,6 +384,15 @@ namespace ExcelizeCs
             string sheet,
             string cell,
             string value
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCellFormula(
+            long fileIdx,
+            string sheet,
+            string cell,
+            string formula,
+            ref TypesC.FormulaOpts opts
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -1117,6 +1133,29 @@ namespace ExcelizeCs
 
     public static class Excelize
     {
+        /// <summary>
+        /// STCellFormulaTypeArray defined the formula is an array formula.
+        /// </summary>
+        public const string STCellFormulaTypeArray = "array";
+
+        /// <summary>
+        /// STCellFormulaTypeDataTable defined the formula is a data table
+        /// formula.
+        /// </summary>
+        public const string STCellFormulaTypeDataTable = "dataTable";
+
+        /// <summary>
+        /// STCellFormulaTypeNormal defined the formula is a regular cell
+        /// formula.
+        /// </summary>
+        public const string STCellFormulaTypeNormal = "normal";
+
+        /// <summary>
+        /// STCellFormulaTypeShared defined the formula is part of a shared
+        /// formula.
+        /// </summary>
+        public const string STCellFormulaTypeShared = "shared";
+
         /// <summary>
         /// Converts alphanumeric cell name to [X, Y] coordinates or returns an
         /// error.
@@ -2735,6 +2774,25 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// GetCellFormula provides a function to get formula from cell by given
+        /// worksheet name and cell reference in spreadsheet.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <returns>Return the cell value if no error occurred, otherwise raise
+        /// a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe string GetCellFormula(string sheet, string cell)
+        {
+            TypesC.StringErrorResult res = Lib.GetCellFormula(FileIdx, sheet, cell);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return new(res.val);
+        }
+
+        /// <summary>
         /// Get formatted value from cell by given worksheet name and cell
         /// reference in spreadsheet. The return value is converted to the
         /// <c>string</c> data type. If the cell format can be applied to the
@@ -3091,6 +3149,183 @@ namespace ExcelizeCs
         public void SetCellDefault(string sheet, string cell, string value)
         {
             string err = Marshal.PtrToStringUTF8(Lib.SetCellDefault(FileIdx, sheet, cell, value));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetCellFormula provides a function to set formula on the cell is
+        /// taken according to the given worksheet name and cell formula
+        /// settings. The result of the formula cell can be calculated when the
+        /// worksheet is opened by the Office Excel application or can be using
+        /// the "CalcCellValue" function also can get the calculated cell
+        /// value. If the Excel application doesn't calculate the formula
+        /// automatically when the workbook has been opened, please call
+        /// <c>UpdateLinkedValue</c> after setting the cell formula functions.
+        /// <example>
+        /// Example 1, set normal formula <c>SUM(A1,B1)</c> for the cell
+        /// <c>A3</c> on <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetCellFormula("Sheet1", "A3", "SUM(A1,B1)");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 2, set one-dimensional vertical constant array (column
+        /// array) formula <c>1,2,3</c> for the cell <c>A3</c> on <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetCellFormula("Sheet1", "A3", "{1;2;3}");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 3, set one-dimensional horizontal constant array (row array)
+        /// formula <c>"a","b","c"</c> for the cell <c>A3</c> on <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetCellFormula("Sheet1", "A3", "{\"a\",\"b\",\"c\"}");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 4, set two-dimensional constant array formula
+        /// <c>{1,2,"a","b"}</c> for the cell <c>A3</c> on <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetCellFormula(
+        ///         "Sheet1",
+        ///         "A3",
+        ///         "{1,2;\"a\",\"b\"}",
+        ///         new FormulaOpts
+        ///         {
+        ///             Ref = "A3:A3",
+        ///             Type = Excelize.STCellFormulaTypeArray,
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 5, set range array formula <c>A1:A2</c> for the cell
+        /// <c>A3</c> on <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetCellFormula(
+        ///         "Sheet1",
+        ///         "A3",
+        ///         "A1:A2",
+        ///         new FormulaOpts
+        ///         {
+        ///             Ref = "A3:A3",
+        ///             Type = Excelize.STCellFormulaTypeArray,
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 6, set shared formula <c>A1+B1</c> for the cell <c>C1:C5</c>
+        /// on <c>Sheet1</c>, <c>C1</c> is the master cell:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetCellFormula(
+        ///         "Sheet1",
+        ///         "C1",
+        ///         "A1+B1",
+        ///         new FormulaOpts
+        ///         {
+        ///             Ref = "C1:C5",
+        ///             Type = Excelize.STCellFormulaTypeShared,
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 7, set table formula <c>SUM(Table1[[A]:[B]])</c> for the
+        /// cell <c>C2</c> on <c>Sheet1</c>:
+        /// <code><![CDATA[
+        /// using ExcelizeCs;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         ExcelizeCs.File f = Excelize.NewFile();
+        ///         try
+        ///         {
+        ///             f.SetSheetRow("Sheet1", "A1", new List<object> { "A", "B", "C" });
+        ///             f.SetSheetRow("Sheet1", "A2", new List<object> { 1, 2 });
+        ///             f.AddTable(
+        ///                 "Sheet1",
+        ///                 new Table
+        ///                 {
+        ///                     Range = "A1:C2",
+        ///                     Name = "Table1",
+        ///                     StyleName = "TableStyleMedium2",
+        ///                 }
+        ///             );
+        ///             f.SetCellFormula(
+        ///                 "Sheet1",
+        ///                 "C2",
+        ///                 "SUM(Table1[[A]:[B]])",
+        ///                 new FormulaOpts { Type = Excelize.STCellFormulaTypeDataTable }
+        ///             );
+        ///             f.SaveAs("Book1.xlsx");
+        ///         }
+        ///         catch (RuntimeError err)
+        ///         {
+        ///             Console.WriteLine(err.Message);
+        ///         }
+        ///         finally
+        ///         {
+        ///             string err = f.Close();
+        ///             if (!string.IsNullOrEmpty(err))
+        ///                 Console.WriteLine(err);
+        ///         }
+        ///     }
+        /// }]]>
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="formula">The cell formula</param>
+        /// <param name="options">Optional parameters for set cell formula</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCellFormula(
+            string sheet,
+            string cell,
+            string formula,
+            FormulaOpts? options = null
+        )
+        {
+            var opts = (TypesC.FormulaOpts)
+                Lib.CsToC(options ?? new FormulaOpts(), new TypesC.FormulaOpts());
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetCellFormula(FileIdx, sheet, cell, formula, ref opts)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
