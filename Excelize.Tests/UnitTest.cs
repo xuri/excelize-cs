@@ -837,6 +837,47 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestSheetView()
+    {
+        File f = Excelize.NewFile();
+        ViewOptions option = new ViewOptions
+        {
+            DefaultGridColor = false,
+            RightToLeft = false,
+            ShowFormulas = false,
+            ShowGridLines = false,
+            ShowRowColHeaders = false,
+            ShowRuler = false,
+            ShowZeros = false,
+            TopLeftCell = "A1",
+            View = "normal",
+            ZoomScale = 120,
+        };
+        Assert.Null(Record.Exception(() => f.SetSheetView("Sheet1", 0, option)));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.SetSheetView("SheetN", 0, option));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestSheetView.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
+    public void TestSheetVisible()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.NewSheet("Sheet2");
+                f.SetSheetVisible("Sheet2", false, true);
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.SetSheetVisible("Sheet:1", true));
+        Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestSheetVisible.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestSplitCellName()
     {
         Assert.Equal(("AK", 74), Excelize.SplitCellName("AK74"));
@@ -1119,6 +1160,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() =>
             f.SetSheetRow("Sheet1", "A1", new List<object> { 1 })
         );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetSheetView("Sheet1", -1, null));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetSheetVisible("Sheet1", true));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.UpdateLinkedValue());
         Assert.Equal(expected, err.Message);

@@ -87,7 +87,7 @@ namespace ExcelizeCs
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Chart[] chart,
-            int length
+            long length
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -95,7 +95,7 @@ namespace ExcelizeCs
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Chart[] chart,
-            int length
+            long length
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -195,7 +195,7 @@ namespace ExcelizeCs
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string range,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.AutoFilterOptions[] options,
-            int length
+            long length
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -440,7 +440,23 @@ namespace ExcelizeCs
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Interface[] row,
-            int length
+            long length
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetSheetView(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            long viewIndex,
+            ref TypesC.ViewOptions opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetSheetVisible(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            bool visible,
+            bool veryHidden
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -451,7 +467,7 @@ namespace ExcelizeCs
             long swIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Interface[] row,
-            int length
+            long length
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -3519,6 +3535,47 @@ namespace ExcelizeCs
             }
             string err = Marshal.PtrToStringUTF8(
                 Lib.SetSheetRow(FileIdx, sheet, cell, arr, values.Count)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetSheetView sets sheet view options. The viewIndex may be negative
+        /// and if so is counted backward (-1 is the last view).
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="viewIndex">The view index</param>
+        /// <param name="options">The view options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetSheetView(string sheet, int viewIndex, ViewOptions? options = null)
+        {
+            var opts = (TypesC.ViewOptions)
+                Lib.CsToC(options ?? new ViewOptions(), new TypesC.ViewOptions());
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetSheetView(FileIdx, sheet, viewIndex, ref opts)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetSheetVisible provides a function to set worksheet visible by
+        /// given worksheet name. A workbook must contain at least one visible
+        /// worksheet. If the given worksheet has been activated, this setting
+        /// will be invalidated. The third optional <c>veryHidden</c> parameter
+        /// only works when visible was <c>false</c>.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="visible">The worksheet visibility</param>
+        /// <param name="veryHidden">Optional boolean very hidden parameter</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetSheetVisible(string sheet, bool visible, bool? veryHidden = false)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetSheetVisible(FileIdx, sheet, visible, veryHidden ?? false)
             );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);

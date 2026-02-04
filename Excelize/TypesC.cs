@@ -709,6 +709,21 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct ViewOptions
+    {
+        public bool* DefaultGridColor;
+        public bool* RightToLeft;
+        public bool* ShowFormulas;
+        public bool* ShowGridLines;
+        public bool* ShowRowColHeaders;
+        public bool* ShowRuler;
+        public bool* ShowZeros;
+        public sbyte** TopLeftCell;
+        public sbyte** View;
+        public double* ZoomScale;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct StringErrorResult
     {
         public sbyte* val;

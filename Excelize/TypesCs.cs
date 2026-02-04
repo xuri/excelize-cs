@@ -887,6 +887,23 @@ namespace ExcelizeCs
         public bool? ShowRowStripes;
     }
 
+    /// <summary>
+    /// ViewOptions directly maps the settings of sheet view.
+    /// </summary>
+    public struct ViewOptions
+    {
+        public bool? DefaultGridColor;
+        public bool? RightToLeft;
+        public bool? ShowFormulas;
+        public bool? ShowGridLines;
+        public bool? ShowRowColHeaders;
+        public bool? ShowRuler;
+        public bool? ShowZeros;
+        public string? TopLeftCell;
+        public string? View;
+        public double? ZoomScale;
+    }
+
     public struct Cells
     {
         public string[]? Cell;
