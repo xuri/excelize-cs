@@ -904,6 +904,16 @@ namespace ExcelizeCs
         public double? ZoomScale;
     }
 
+    /// <summary>
+    /// WorkbookPropsOptions directly maps the settings of workbook proprieties.
+    /// </summary>
+    public struct WorkbookPropsOptions
+    {
+        public bool? Date1904;
+        public bool? FilterPrivacy;
+        public string? CodeName;
+    }
+
     public struct Cells
     {
         public string[]? Cell;

@@ -837,6 +837,18 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestSetSheetName()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(Record.Exception(() => f.SetSheetName("Sheet1", "Sheet2")));
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.SetSheetName("Sheet2", "[Rename]:\\/?* Maximum 31 characters allowed in sheet title.")
+        );
+        Assert.Equal("the sheet name length exceeds the 31 characters limit", err.Message);
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestSheetView()
     {
         File f = Excelize.NewFile();
@@ -1157,6 +1169,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellValue("Sheet1", "A1", 100));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetSheetName("Sheet1", "Sheet2"));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() =>
             f.SetSheetRow("Sheet1", "A1", new List<object> { 1 })
         );
@@ -1164,6 +1178,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetSheetView("Sheet1", -1, null));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetSheetVisible("Sheet1", true));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetWorkbookProps(new WorkbookPropsOptions()));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.UpdateLinkedValue());
         Assert.Equal(expected, err.Message);
@@ -1246,5 +1262,20 @@ public class UnitTest
         IntPtr intPtr = (IntPtr)(&value);
         Assert.Null(Lib.UnmarshalPrimitiveValue(intPtr, typeof(string)));
         Assert.Null(Lib.UnmarshalPrimitiveValue(IntPtr.Zero, typeof(string)));
+    }
+
+    [Fact]
+    public void TestWorkbookProps()
+    {
+        File f = Excelize.NewFile();
+        WorkbookPropsOptions opts = new WorkbookPropsOptions
+        {
+            Date1904 = true,
+            FilterPrivacy = true,
+            CodeName = "code",
+        };
+        Assert.Null(Record.Exception(() => f.SetWorkbookProps(opts)));
+        Assert.Null(Record.Exception(() => f.SaveAs("TestWorkbookProps.xlsx")));
+        Assert.Empty(f.Close());
     }
 }

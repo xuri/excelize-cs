@@ -724,6 +724,14 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct WorkbookPropsOptions
+    {
+        public bool* Date1904;
+        public bool* FilterPrivacy;
+        public sbyte** CodeName;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct StringErrorResult
     {
         public sbyte* val;

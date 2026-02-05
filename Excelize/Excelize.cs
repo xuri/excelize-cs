@@ -421,6 +421,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetSheetName(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string source,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string target
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetSheetProps(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -457,6 +464,12 @@ namespace ExcelizeCs
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             bool visible,
             bool veryHidden
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetWorkbookProps(
+            long fileIdx,
+            ref TypesC.WorkbookPropsOptions opts
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -3404,6 +3417,24 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// Set the worksheet name by given source and target worksheet names.
+        /// Maximum 31 characters are allowed in sheet title and this function
+        /// only changes the name of the sheet and will not update the sheet
+        /// name in the formula or reference associated with the cell. So there
+        /// may be problem formula error or reference missing.
+        /// </summary>
+        /// <param name="source">The source sheet name</param>
+        /// <param name="target">The target sheet name</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetSheetName(string source, string target)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.SetSheetName(FileIdx, source, target));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
         /// SetSheetProps provides a function to set worksheet properties.
         /// <example>
         /// There 4 kinds of presets "Custom Scaling Options" in the spreadsheet
@@ -3577,6 +3608,19 @@ namespace ExcelizeCs
             string err = Marshal.PtrToStringUTF8(
                 Lib.SetSheetVisible(FileIdx, sheet, visible, veryHidden ?? false)
             );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetWorkbookProps provides a function to sets workbook properties.
+        /// </summary>
+        /// <param name="options">The workbook property optionsr</param>
+        /// <exception cref="RuntimeError">Return None if no error occur
+        public void SetWorkbookProps(WorkbookPropsOptions options)
+        {
+            var opts = (TypesC.WorkbookPropsOptions)Lib.CsToC(options, new TypesC.WorkbookPropsOptions());
+            string err = Marshal.PtrToStringUTF8(Lib.SetWorkbookProps(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
