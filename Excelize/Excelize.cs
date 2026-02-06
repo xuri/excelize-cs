@@ -318,6 +318,21 @@ namespace ExcelizeCs
         internal static extern TypesC.GetStyleResult GetStyle(long fileIdx, long styleID);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr MergeCell(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string topLeftCell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string bottomRightCell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr MoveSheet(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string source,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string target
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern long NewFile();
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -2920,6 +2935,89 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// MergeCell provides a function to merge cells by the given range
+        /// reference and sheet name. Merging cells only keeps the upper-left
+        /// cell value and discards all other values.
+        /// <example>
+        /// For example:
+        /// <code>
+        /// try
+        /// {
+        ///     f.MergeCell("Sheet1", "D3", "E9")
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <remarks>
+        /// If you create a merged cell that overlaps with another existing
+        /// merged cell, the existing merged cells will be removed. After
+        /// merging, the resulting cell reference tuples will be:
+        /// <c>A1(x3,y1) D1(x2,y1) A8(x3,y4) D8(x2,y4)</c>
+        /// <code>
+        ///                  B1(x1,y1)      D1(x2,y1)
+        ///                +------------------------+
+        ///                |                        |
+        ///     A4(x3,y3)  |    C4(x4,y3)           |
+        ///     +------------------------+          |
+        ///     |          |             |          |
+        ///     |          | B5(x1,y2)   | D5(x2,y2)|
+        ///     |          +------------------------+
+        ///     |                        |
+        ///     | A8(x3,y4)     C8(x4,y4)|
+        ///     +------------------------+
+        /// </code>
+        /// </remarks>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="topLeftCell">The cell reference</param>
+        /// <param name="bottomRightCell">The cell value</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void MergeCell(string sheet, string topLeftCell, string bottomRightCell)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.MergeCell(FileIdx, sheet, topLeftCell, bottomRightCell)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// MoveSheet moves a sheet to a specified position in the workbook.
+        /// The function moves the source sheet before the target sheet. After
+        /// moving, other sheets will be shifted to the left or right. If the
+        /// sheet is already at the target position, the function will not
+        /// perform any action. Not that this function will be ungroup all
+        /// sheets after moving.
+        /// <example>
+        /// For example, move Sheet2 before Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.MoveSheet("Sheet2", "Sheet1")
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="source">The source worksheet name</param>
+        /// <param name="target">The target worksheet name</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void MoveSheet(string source, string target)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.MoveSheet(FileIdx, source, target));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
         /// Create a new sheet by given a worksheet name and returns the index
         /// of the sheets in the workbook after it appended. Note that when
         /// creating a new workbook, the default worksheet named <c>Sheet1</c>
@@ -3619,7 +3717,8 @@ namespace ExcelizeCs
         /// <exception cref="RuntimeError">Return None if no error occur
         public void SetWorkbookProps(WorkbookPropsOptions options)
         {
-            var opts = (TypesC.WorkbookPropsOptions)Lib.CsToC(options, new TypesC.WorkbookPropsOptions());
+            var opts = (TypesC.WorkbookPropsOptions)
+                Lib.CsToC(options, new TypesC.WorkbookPropsOptions());
             string err = Marshal.PtrToStringUTF8(Lib.SetWorkbookProps(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);

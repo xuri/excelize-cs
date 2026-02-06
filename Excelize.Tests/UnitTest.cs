@@ -675,6 +675,22 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestMergeCells()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.MergeCell("Sheet1", "A1", "B2");
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.MergeCell("SheetN", "A1", "B2"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestMergeCells.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestOpenFile()
     {
         Assert.Null(
@@ -1055,6 +1071,8 @@ public class UnitTest
                 Assert.Equal("100", f.CalcCellValue("Sheet1", "A4"));
                 f.SetActiveSheet(f.NewSheet("Sheet2"));
                 Assert.Equal(1, f.GetActiveSheetIndex());
+                f.MoveSheet("Sheet2", "Sheet1");
+                Assert.Equal(0, f.GetActiveSheetIndex());
             })
         );
         Assert.Null(
@@ -1144,6 +1162,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetStyle(1));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.MergeCell("Sheet1", "A1", "B2"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.MoveSheet("Sheet2", "Sheet1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.NewSheet("Sheet1"));
         Assert.Equal(expected, err.Message);
