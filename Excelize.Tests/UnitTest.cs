@@ -721,6 +721,24 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestOutlineLevel()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetColOutlineLevel("Sheet1", "D", 2);
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.SetColOutlineLevel("SheetN", "D", 2)
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestOutlineLevel.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestPivotTable()
     {
         File f = Excelize.NewFile();
@@ -1035,12 +1053,20 @@ public class UnitTest
         Style style = f.GetStyle(styleId);
         Assert.Equivalent(s, style);
 
-        Assert.Null(Record.Exception(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId)));
-        Assert.Null(Record.Exception(() => f.UpdateLinkedValue()));
-        Assert.Null(Record.Exception(() => f.SetCellInt("Sheet1", "A1", 100)));
-        Assert.Null(Record.Exception(() => f.SetCellBool("Sheet1", "A11", true)));
-        Assert.Null(Record.Exception(() => f.SetCellBool("Sheet1", "A12", false)));
-        Assert.Null(Record.Exception(() => f.SetCellDefault("Sheet1", "A13", "default")));
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetCellStyle("Sheet1", "A1", "B2", styleId);
+                f.SetColStyle("Sheet1", "H", styleId);
+                f.UpdateLinkedValue();
+                f.SetCellInt("Sheet1", "A1", 100);
+                f.SetCellBool("Sheet1", "A11", true);
+                f.SetCellBool("Sheet1", "A12", false);
+                f.SetCellDefault("Sheet1", "A13", "default");
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.SetColStyle("SheetN", "H", styleId));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
 
         List<object?> arr = new()
         {
@@ -1104,7 +1130,7 @@ public class UnitTest
         Assert.Null(Record.Exception(() => f.DeleteSheet("Sheet3")));
         Assert.Null(Record.Exception(() => f.DuplicateRow("Sheet2", 2)));
         Assert.Null(Record.Exception(() => f.DuplicateRowTo("Sheet2", 2, 7)));
-        RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet:1"));
+        err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet:1"));
         Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
         Assert.Empty(f.Close());
@@ -1190,6 +1216,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetCellInt("Sheet1", "A1", 100));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellValue("Sheet1", "A1", 100));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetColOutlineLevel("Sheet1", "A", 1));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetColStyle("Sheet1", "H", 1));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetSheetName("Sheet1", "Sheet2"));
         Assert.Equal(expected, err.Message);

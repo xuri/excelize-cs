@@ -436,6 +436,29 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetColOutlineLevel(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
+            long level
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetColStyle(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string columns,
+            long styleID
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetHeaderFooter(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            ref TypesC.HeaderFooterOptions opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetSheetName(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string source,
@@ -447,13 +470,6 @@ namespace ExcelizeCs
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.SheetPropsOptions options
-        );
-
-        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern IntPtr SetHeaderFooter(
-            long fileIdx,
-            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
-            ref TypesC.HeaderFooterOptions opts
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -2943,7 +2959,7 @@ namespace ExcelizeCs
         /// <code>
         /// try
         /// {
-        ///     f.MergeCell("Sheet1", "D3", "E9")
+        ///     f.MergeCell("Sheet1", "D3", "E9");
         /// }
         /// catch (RuntimeError err)
         /// {
@@ -2997,7 +3013,7 @@ namespace ExcelizeCs
         /// <code>
         /// try
         /// {
-        ///     f.MoveSheet("Sheet2", "Sheet1")
+        ///     f.MoveSheet("Sheet2", "Sheet1");
         /// }
         /// catch (RuntimeError err)
         /// {
@@ -3515,6 +3531,123 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// SetColOutlineLevel provides a function to set outline level of a
+        /// single column by given worksheet name and column name.
+        /// <example>
+        /// For example, set outline level of column D in Sheet1 to 2:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetColOutlineLevel("Sheet1", "D", 2);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="col">The column name</param>
+        /// <param name="level">The out level, acceptable value from 1 to 7</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetColOutlineLevel(string sheet, string col, int level)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetColOutlineLevel(FileIdx, sheet, col, level)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetColStyle provides a function to set style of columns by given
+        /// worksheet name, columns range and style ID. Note that this will
+        /// overwrite the existing styles for the columns, it won't append or
+        /// merge style with existing styles.
+        /// <example>
+        /// For example set style of column <c>H</c> on <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetColStyle("Sheet1", "H", style);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Set style of columns <c>C:F</c> on <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetColStyle("Sheet1", "C:F", style)
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="columns">The columns range</param>
+        /// <param name="styleID">The style ID</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetColStyle(string sheet, string columns, int styleID)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetColOutlineLevel(FileIdx, sheet, columns, styleID)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set headers and footers by given worksheet name and the control
+        /// characters.
+        /// <example>
+        /// For example:
+        /// <code><![CDATA[
+        /// try
+        /// {
+        ///     f.SetHeaderFooter(
+        ///         "Sheet1",
+        ///         new HeaderFooterOptions
+        ///         {
+        ///             DifferentFirst = true,
+        ///             DifferentOddEven = true,
+        ///             OddHeader = "&R&P",
+        ///             OddFooter = "&C&F",
+        ///             EvenHeader = "&L&P",
+        ///             EvenFooter = "&L&D&R&T",
+        ///             FirstHeader = "&CCenter &\"-,Bold\"Bold&\"-,Regular\"HeaderU+000A&D",
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }]]>
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="options">The header footer options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetHeaderFooter(string sheet, HeaderFooterOptions? options)
+        {
+            var opts = (TypesC.HeaderFooterOptions)
+                Lib.CsToC(options ?? new HeaderFooterOptions(), new TypesC.HeaderFooterOptions());
+            string err = Marshal.PtrToStringUTF8(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
         /// Set the worksheet name by given source and target worksheet names.
         /// Maximum 31 characters are allowed in sheet title and this function
         /// only changes the name of the sheet and will not update the sheet
@@ -3598,48 +3731,6 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.SheetPropsOptions)Lib.CsToC(options, new TypesC.SheetPropsOptions());
             string err = Marshal.PtrToStringUTF8(Lib.SetSheetProps(FileIdx, sheet, ref opts));
-            if (!string.IsNullOrEmpty(err))
-                throw new RuntimeError(err);
-        }
-
-        /// <summary>
-        /// Set headers and footers by given worksheet name and the control
-        /// characters.
-        /// <example>
-        /// For example:
-        /// <code><![CDATA[
-        /// try
-        /// {
-        ///     f.SetHeaderFooter(
-        ///         "Sheet1",
-        ///         new HeaderFooterOptions
-        ///         {
-        ///             DifferentFirst = true,
-        ///             DifferentOddEven = true,
-        ///             OddHeader = "&R&P",
-        ///             OddFooter = "&C&F",
-        ///             EvenHeader = "&L&P",
-        ///             EvenFooter = "&L&D&R&T",
-        ///             FirstHeader = "&CCenter &\"-,Bold\"Bold&\"-,Regular\"HeaderU+000A&D",
-        ///         }
-        ///     );
-        /// }
-        /// catch (RuntimeError err)
-        /// {
-        ///     Console.WriteLine(err.Message);
-        /// }]]>
-        /// </code>
-        /// </example>
-        /// </summary>
-        /// <param name="sheet">The worksheet name</param>
-        /// <param name="options">The header footer options</param>
-        /// <exception cref="RuntimeError">Return None if no error occurred,
-        /// otherwise raise a RuntimeError with the message.</exception>
-        public void SetHeaderFooter(string sheet, HeaderFooterOptions? options)
-        {
-            var opts = (TypesC.HeaderFooterOptions)
-                Lib.CsToC(options ?? new HeaderFooterOptions(), new TypesC.HeaderFooterOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
