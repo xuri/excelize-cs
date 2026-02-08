@@ -564,6 +564,42 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestCellHyperlink()
+    {
+        File f = Excelize.NewFile();
+        string display = "https://github.com/xuri/excelize";
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetCellStr("Sheet1", "A3", "HyperLink");
+                f.SetCellHyperLink(
+                    "Sheet1",
+                    "A3",
+                    display,
+                    "External",
+                    new HyperlinkOpts { Display = display, Tooltip = "Excelize on GitHub" }
+                );
+                // Set underline and font color style for the cell.
+                int style = f.NewStyle(
+                    new Style
+                    {
+                        Font = new Font { Color = "1265BE", Underline = "single" },
+                    }
+                );
+                f.SetCellStyle("Sheet1", "A3", "A3", style);
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.SetCellStr("SheetN", "A3", ""));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.SetCellHyperLink("SheetN", "A3", display, "External")
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestCellHyperLink.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestCoordinates()
     {
         var (col, row) = Excelize.CellNameToCoordinates("Z3");
@@ -1210,6 +1246,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetCellDefault("Sheet1", "A13", "default"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellFormula("Sheet1", "A1", "=A2"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellHyperLink("Sheet1", "A1", "", "External"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellStr("Sheet1", "A1", ""));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId));
         Assert.Equal(expected, err.Message);

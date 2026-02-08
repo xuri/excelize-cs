@@ -390,6 +390,16 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// HyperlinkOpts can be passed to SetCellHyperlink to set optional
+    /// hyperlink attributes (e.g. display value)
+    /// </summary>
+    public struct HyperlinkOpts
+    {
+        public string? Display;
+        public string? Tooltip;
+    }
+
+    /// <summary>
     /// HeaderFooterImageOptions defines the settings for an image to be
     ///  accessible from the worksheet header and footer options.
     /// </summary>

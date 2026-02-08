@@ -206,6 +206,13 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct HyperlinkOpts
+    {
+        public sbyte** Display;
+        public sbyte** Tooltip;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Style
     {
         public int BorderLen;

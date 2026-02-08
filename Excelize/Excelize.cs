@@ -411,11 +411,29 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCellHyperLink(
+            long fileIdx,
+            string sheet,
+            string cell,
+            string link,
+            string linkType,
+            ref TypesC.HyperlinkOpts opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellInt(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             long value
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCellStr(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string value
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -3474,6 +3492,81 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// SetCellHyperLink provides a function to set cell hyperlink by given
+        /// worksheet name and link URL address. LinkType defines three types
+        /// of hyperlink <c>External</c> for website or <c>Location</c> for
+        /// moving to one of cell in this workbook or <c>None</c> for remove
+        /// hyperlink. Maximum limit hyperlinks in a worksheet is 65530. This
+        /// function is only used to set the hyperlink of the cell and doesn't
+        /// affect the value of the cell. If you need to set the value of the
+        /// cell, please use the other functions such as <c>SetCellStyle</c> or
+        /// <c>SetSheetRow</c>.
+        /// <example>
+        /// The below is example for external link:
+        /// <code>
+        /// string display = "https://github.com/xuri/excelize";
+        /// string tooltip = "Excelize on GitHub";
+        /// try
+        /// {
+        ///     f.SetCellHyperLink(
+        ///         "Sheet1",
+        ///         "A3",
+        ///         display,
+        ///         "External",
+        ///         new HyperlinkOpts { Display = display, Tooltip = tooltip }
+        ///     );
+        ///     // Set underline and font color style for the cell.
+        ///     int style = f.NewStyle(
+        ///         new Style
+        ///         {
+        ///             Font = new Font { Color = "1265BE", Underline = "single" },
+        ///         }
+        ///     );
+        ///     f.SetCellStyle("Sheet1", "A3", "A3", style);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// This is another example for <c>Location</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetCellHyperLink("Sheet1", "A3", "Sheet1!A40", "Location");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="link">The hyperlink</param>
+        /// <param name="linkType">The hyperlink type</param>
+        /// <param name="options">The hyperlink options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCellHyperLink(
+            string sheet,
+            string cell,
+            string link,
+            string linkType,
+            HyperlinkOpts? options = null
+        )
+        {
+            var opts = (TypesC.HyperlinkOpts)
+                Lib.CsToC(options ?? new HyperlinkOpts(), new TypesC.HyperlinkOpts());
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetCellHyperLink(FileIdx, sheet, cell, link, linkType, ref opts)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
         /// Set int type value of a cell by given worksheet name, cell reference
         /// and cell value.
         /// </summary>
@@ -3485,6 +3578,22 @@ namespace ExcelizeCs
         public void SetCellInt(string sheet, string cell, long value)
         {
             string err = Marshal.PtrToStringUTF8(Lib.SetCellInt(FileIdx, sheet, cell, value));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetCellStr provides a function to set string type value of a cell.
+        /// Total number of characters that a cell can contain 32767 characters.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="value">The cell value</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCellStr(string sheet, string cell, string value)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.SetCellStr(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
