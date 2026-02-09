@@ -402,6 +402,16 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCellFloat(
+            long fileIdx,
+            string sheet,
+            string cell,
+            double value,
+            long precision,
+            long bitSize
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetCellFormula(
             long fileIdx,
             string sheet,
@@ -426,6 +436,15 @@ namespace ExcelizeCs
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             long value
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCellRichText(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
+            [In, MarshalAs(UnmanagedType.LPArray)] TypesC.RichTextRun[] options,
+            long length
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -3315,6 +3334,35 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// SetCellFloat sets a floating point value into a cell. The precision
+        /// parameter specifies how many places after the decimal will be shown
+        /// while -1 is a special value that will use as many decimal places as
+        /// necessary to represent the number. bitSize is 32 or 64 depending on
+        /// if a float32 or float64 was originally used for the value.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="value">The cell value</param>
+        /// <param name="precision">The cell value precision</param>
+        /// <param name="bitSize">The cell value bit size</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCellFloat(
+            string sheet,
+            string cell,
+            double value,
+            int precision,
+            int bitSize
+        )
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetCellFloat(FileIdx, sheet, cell, value, precision, bitSize)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
         /// SetCellFormula provides a function to set formula on the cell is
         /// taken according to the given worksheet name and cell formula
         /// settings. The result of the formula cell can be calculated when the
@@ -3578,6 +3626,166 @@ namespace ExcelizeCs
         public void SetCellInt(string sheet, string cell, long value)
         {
             string err = Marshal.PtrToStringUTF8(Lib.SetCellInt(FileIdx, sheet, cell, value));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetCellRichText provides a function to set cell with rich text by
+        /// given worksheet name, cell reference and rich text runs.
+        /// <example>
+        /// For example, set rich text on the A1 cell of the worksheet named
+        /// Sheet1:
+        /// <code>
+        /// using ExcelizeCs;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         ExcelizeCs.File f = Excelize.NewFile();
+        ///         try
+        ///         {
+        ///             f.SetCellRichText(
+        ///                 "Sheet1",
+        ///                 "A1",
+        ///                 new RichTextRun[]
+        ///                 {
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = "bold",
+        ///                         Font = new Font
+        ///                         {
+        ///                             Bold = true,
+        ///                             Color = "2354E8",
+        ///                             Family = "Times New Roman",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = " and ",
+        ///                         Font = new Font 
+        ///                         {
+        ///                             Family = "Times New Roman",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = "italic ",
+        ///                         Font = new Font
+        ///                         {
+        ///                             Bold = true,
+        ///                             Color = "E83723",
+        ///                             Italic = true,
+        ///                             Family = "Times New Roman",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = "text with color and font-family,",
+        ///                         Font = new Font
+        ///                         {
+        ///                             Bold = true,
+        ///                             Color = "2354E8",
+        ///                             Family = "Times New Roman",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = "\r\nlarge text with ",
+        ///                         Font = new Font 
+        ///                         {
+        ///                             Size = 14,
+        ///                             Color = "AD23E8",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = "strike",
+        ///                         Font = new Font 
+        ///                         {
+        ///                             Color = "E89923",
+        ///                             Strike = true,
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = " superscript",
+        ///                         Font = new Font 
+        ///                         {
+        ///                             Color = "DBC21F",
+        ///                             VertAlign = "superscript",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = " and ",
+        ///                         Font = new Font
+        ///                         {
+        ///                             Size = 14,
+        ///                             Color = "AD23E8",
+        ///                             VertAlign = "baseline",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = "underline",
+        ///                         Font = new Font
+        ///                         {
+        ///                             Color = "23E833",
+        ///                             Underline = "single",
+        ///                         },
+        ///                     },
+        ///                     new RichTextRun
+        ///                     {
+        ///                         Text = " subscript.",
+        ///                         Font = new Font
+        ///                         {
+        ///                             Color = "017505",
+        ///                             VertAlign = "subscript",
+        ///                         },
+        ///                     },
+        ///                 }
+        ///             );
+        ///             int style = f.NewStyle(
+        ///                 new Style 
+        ///                 {
+        ///                     Alignment = new Alignment { WrapText = true },
+        ///                 }
+        ///             );
+        ///             f.SetCellStyle("Sheet1", "A1", "A1", style);
+        ///             f.SaveAs("Book1.xlsx");
+        ///         }
+        ///         catch (RuntimeError err)
+        ///         {
+        ///             Console.WriteLine(err.Message);
+        ///         }
+        ///         finally
+        ///         {
+        ///             string err = f.Close();
+        ///             if (!string.IsNullOrEmpty(err))
+        ///                 Console.WriteLine(err);
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <param name="runs">The rich text runs</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetCellRichText(string sheet, string cell, RichTextRun[] runs)
+        {
+            TypesC.RichTextRun[] arr = new TypesC.RichTextRun[runs.Length];
+            for (int i = 0; i < runs.Length; i++)
+            {
+                arr[i] = (TypesC.RichTextRun)Lib.CsToC(runs[i], new TypesC.RichTextRun());
+            }
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetCellRichText(FileIdx, sheet, cell, arr, arr.Length)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

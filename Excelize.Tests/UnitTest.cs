@@ -600,6 +600,100 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestCellRichText()
+    {
+        File f = Excelize.NewFile();
+        RichTextRun[] expected = new RichTextRun[]
+        {
+            new RichTextRun
+            {
+                Text = "bold",
+                Font = new Font
+                {
+                    Bold = true,
+                    Color = "2354E8",
+                    Family = "Times New Roman",
+                },
+            },
+            new RichTextRun
+            {
+                Text = " and ",
+                Font = new Font { Family = "Times New Roman" },
+            },
+            new RichTextRun
+            {
+                Text = "italic ",
+                Font = new Font
+                {
+                    Bold = true,
+                    Color = "E83723",
+                    Italic = true,
+                    Family = "Times New Roman",
+                },
+            },
+            new RichTextRun
+            {
+                Text = "text with color and font-family,",
+                Font = new Font
+                {
+                    Bold = true,
+                    Color = "2354E8",
+                    Family = "Times New Roman",
+                },
+            },
+            new RichTextRun
+            {
+                Text = "\r\nlarge text with ",
+                Font = new Font { Size = 14, Color = "AD23E8" },
+            },
+            new RichTextRun
+            {
+                Text = "strike",
+                Font = new Font { Color = "E89923", Strike = true },
+            },
+            new RichTextRun
+            {
+                Text = " superscript",
+                Font = new Font { Color = "DBC21F", VertAlign = "superscript" },
+            },
+            new RichTextRun
+            {
+                Text = " and ",
+                Font = new Font
+                {
+                    Size = 14,
+                    Color = "AD23E8",
+                    VertAlign = "baseline",
+                },
+            },
+            new RichTextRun
+            {
+                Text = "underline",
+                Font = new Font { Color = "23E833", Underline = "single" },
+            },
+            new RichTextRun
+            {
+                Text = " subscript.",
+                Font = new Font { Color = "017505", VertAlign = "subscript" },
+            },
+        };
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.SetCellRichText("Sheet1", "A1", expected);
+                int style = f.NewStyle(new Style { Alignment = new Alignment { WrapText = true } });
+                f.SetCellStyle("Sheet1", "A1", "A1", style);
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.SetCellRichText("SheetN", "A1", new RichTextRun[] { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestCellRichText.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestCoordinates()
     {
         var (col, row) = Excelize.CellNameToCoordinates("Z3");
@@ -1130,16 +1224,12 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
+                f.SetCellFloat("Sheet1", "A14", 1.325, 2, 32);
                 Assert.Equal("100", f.CalcCellValue("Sheet1", "A4"));
                 f.SetActiveSheet(f.NewSheet("Sheet2"));
                 Assert.Equal(1, f.GetActiveSheetIndex());
                 f.MoveSheet("Sheet2", "Sheet1");
                 Assert.Equal(0, f.GetActiveSheetIndex());
-            })
-        );
-        Assert.Null(
-            Record.Exception(() =>
-            {
                 Assert.Equal("100", f.GetCellValue("Sheet1", "A4"));
             })
         );
@@ -1159,6 +1249,7 @@ public class UnitTest
                 new() { "TRUE" },
                 new() { "FALSE" },
                 new() { "default" },
+                new() { "1.33" },
             },
             f.GetRows("Sheet1")
         );
@@ -1245,6 +1336,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellDefault("Sheet1", "A13", "default"));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellFloat("Sheet1", "A1", 1.325, 2, 32));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellFormula("Sheet1", "A1", "=A2"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellHyperLink("Sheet1", "A1", "", "External"));
@@ -1254,6 +1347,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetCellStyle("Sheet1", "A1", "B2", styleId));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellInt("Sheet1", "A1", 100));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.SetCellRichText("Sheet1", "A1", new RichTextRun[] { })
+        );
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCellValue("Sheet1", "A1", 100));
         Assert.Equal(expected, err.Message);
