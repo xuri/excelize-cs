@@ -489,6 +489,23 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetColVisible(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string columns,
+            bool visible
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetColWidth(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string startCol,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string endCol,
+            double width
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetHeaderFooter(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -3664,7 +3681,7 @@ namespace ExcelizeCs
         ///                     new RichTextRun
         ///                     {
         ///                         Text = " and ",
-        ///                         Font = new Font 
+        ///                         Font = new Font
         ///                         {
         ///                             Family = "Times New Roman",
         ///                         },
@@ -3693,7 +3710,7 @@ namespace ExcelizeCs
         ///                     new RichTextRun
         ///                     {
         ///                         Text = "\r\nlarge text with ",
-        ///                         Font = new Font 
+        ///                         Font = new Font
         ///                         {
         ///                             Size = 14,
         ///                             Color = "AD23E8",
@@ -3702,7 +3719,7 @@ namespace ExcelizeCs
         ///                     new RichTextRun
         ///                     {
         ///                         Text = "strike",
-        ///                         Font = new Font 
+        ///                         Font = new Font
         ///                         {
         ///                             Color = "E89923",
         ///                             Strike = true,
@@ -3711,7 +3728,7 @@ namespace ExcelizeCs
         ///                     new RichTextRun
         ///                     {
         ///                         Text = " superscript",
-        ///                         Font = new Font 
+        ///                         Font = new Font
         ///                         {
         ///                             Color = "DBC21F",
         ///                             VertAlign = "superscript",
@@ -3748,7 +3765,7 @@ namespace ExcelizeCs
         ///                 }
         ///             );
         ///             int style = f.NewStyle(
-        ///                 new Style 
+        ///                 new Style
         ///                 {
         ///                     Alignment = new Alignment { WrapText = true },
         ///                 }
@@ -3915,8 +3932,80 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetColStyle(string sheet, string columns, int styleID)
         {
+            string err = Marshal.PtrToStringUTF8(Lib.SetColStyle(FileIdx, sheet, columns, styleID));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetColVisible provides a function to set visible columns by given
+        /// worksheet name, columns range and visibility.
+        /// <example>
+        /// For example hide column D on Sheet1:
+        /// <code><![CDATA[
+        /// try
+        /// {
+        ///     f.SetColVisible("Sheet1", "D", false);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }]]>
+        /// </code>
+        /// Hide the columns from D to F (included):
+        /// <code><![CDATA[
+        /// try
+        /// {
+        ///     f.SetColVisible("Sheet1", "D:F", false);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }]]>
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="columns">The columns range</param>
+        /// <param name="visible">The column visible</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetColVisible(string sheet, string columns, bool visible)
+        {
             string err = Marshal.PtrToStringUTF8(
-                Lib.SetColOutlineLevel(FileIdx, sheet, columns, styleID)
+                Lib.SetColVisible(FileIdx, sheet, columns, visible)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetColVisible provides a function to set visible columns by given
+        /// worksheet name, columns range and visibility.
+        /// <example>
+        /// For example set column width for column A to H on Sheet1:
+        /// <code><![CDATA[
+        /// try
+        /// {
+        ///     f.SetColWidth("Sheet1", "A", "H", 20);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }]]>
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="startCol">The start column name</param>
+        /// <param name="endCol">The end column name</param>
+        /// <param name="width">The column width</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetColWidth(string sheet, string startCol, string endCol, double width)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetColWidth(FileIdx, sheet, startCol, endCol, width)
             );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);

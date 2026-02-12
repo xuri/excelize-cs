@@ -1188,6 +1188,8 @@ public class UnitTest
             {
                 f.SetCellStyle("Sheet1", "A1", "B2", styleId);
                 f.SetColStyle("Sheet1", "H", styleId);
+                f.SetColVisible("Sheet1", "D:F", false);
+                f.SetColWidth("Sheet1", "A", "A", 44.5);
                 f.UpdateLinkedValue();
                 f.SetCellInt("Sheet1", "A1", 100);
                 f.SetCellBool("Sheet1", "A11", true);
@@ -1357,6 +1359,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetColOutlineLevel("Sheet1", "A", 1));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetColStyle("Sheet1", "H", 1));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetColVisible("Sheet1", "H", false));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetColWidth("Sheet1", "A", "H", 20));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetSheetName("Sheet1", "Sheet2"));
         Assert.Equal(expected, err.Message);
