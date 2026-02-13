@@ -486,6 +486,38 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// ConditionalFormatOptions directly maps the conditional format settings
+    /// of the cells.
+    /// </summary>
+    public struct ConditionalFormatOptions
+    {
+        public string Type;
+        public bool AboveAverage;
+        public bool Percent;
+        public int? Format;
+        public string Criteria;
+        public string Value;
+        public string MinType;
+        public string MidType;
+        public string MaxType;
+        public string MinValue;
+        public string MidValue;
+        public string MaxValue;
+        public string MinColor;
+        public string MidColor;
+        public string MaxColor;
+        public string BarColor;
+        public string BarBorderColor;
+        public string BarDirection;
+        public bool BarOnly;
+        public bool BarSolid;
+        public string IconStyle;
+        public bool ReverseIcons;
+        public bool IconsOnly;
+        public bool StopIfTrue;
+    }
+
+    /// <summary>
     /// FormControl directly maps the form controls information.
     /// </summary>
     public struct FormControl

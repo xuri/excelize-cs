@@ -336,6 +336,12 @@ namespace ExcelizeCs
         internal static extern long NewFile();
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.IntErrorResult NewConditionalStyle(
+            long fileIdx,
+            ref TypesC.Style style
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.IntErrorResult NewSheet(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet
@@ -503,6 +509,15 @@ namespace ExcelizeCs
             [MarshalAs(UnmanagedType.LPUTF8Str)] string startCol,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string endCol,
             double width
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetConditionalFormat(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string rangeRef,
+            [In, MarshalAs(UnmanagedType.LPArray)] TypesC.ConditionalFormatOptions[] options,
+            long length
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -3088,6 +3103,26 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// NewConditionalStyle provides a function to create style for
+        /// conditional format by given style format. The parameters are the
+        /// same with the <c>NewStyle</c> function.
+        /// </summary>
+        /// <param name="style">The style options</param>
+        /// <returns>Return the style index if no error occurred, otherwise
+        /// raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe int NewConditionalStyle(Style style)
+        {
+            var options = (TypesC.Style)Lib.CsToC(style, new TypesC.Style());
+            var res = Lib.NewConditionalStyle(FileIdx, ref options);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return res.val;
+        }
+
+        /// <summary>
         /// Create a new sheet by given a worksheet name and returns the index
         /// of the sheets in the workbook after it appended. Note that when
         /// creating a new workbook, the default worksheet named <c>Sheet1</c>
@@ -4006,6 +4041,568 @@ namespace ExcelizeCs
         {
             string err = Marshal.PtrToStringUTF8(
                 Lib.SetColWidth(FileIdx, sheet, startCol, endCol, width)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetConditionalFormat provides a function to create conditional
+        /// formatting rule for cell value. Conditional formatting is a feature
+        /// of Excel which allows you to apply a format to a cell or a range of
+        /// cells based on certain criteria.
+        /// <para>
+        /// The <c>Type</c> option is a required parameter and it has no default
+        /// value. Allowable type values and their associated parameters are:
+        /// </para>
+        /// <code>
+        ///	 Type          | Parameters
+        ///	---------------+------------------------------------
+        ///	 cell          | Criteria
+        ///	               | Value
+        ///	               | MinValue
+        ///	               | MaxValue
+        ///	 time_period   | Criteria
+        ///	 text          | Criteria
+        ///	               | Value
+        ///	 average       | Criteria
+        ///	 duplicate     | (none)
+        ///	 unique        | (none)
+        ///	 top           | Criteria
+        ///	               | Value
+        ///	 bottom        | Criteria
+        ///	               | Value
+        ///	 blanks        | (none)
+        ///	 no_blanks     | (none)
+        ///	 errors        | (none)
+        ///	 no_errors     | (none)
+        ///	 2_color_scale | MinType
+        ///	               | MaxType
+        ///	               | MinValue
+        ///	               | MaxValue
+        ///	               | MinColor
+        ///	               | MaxColor
+        ///	 3_color_scale | MinType
+        ///	               | MidType
+        ///	               | MaxType
+        ///	               | MinValue
+        ///	               | MidValue
+        ///	               | MaxValue
+        ///	               | MinColor
+        ///	               | MidColor
+        ///	               | MaxColor
+        ///	 data_bar      | MinType
+        ///	               | MaxType
+        ///	               | MinValue
+        ///	               | MaxValue
+        ///	               | BarBorderColor
+        ///	               | BarColor
+        ///	               | BarDirection
+        ///	               | BarOnly
+        ///	               | BarSolid
+        ///	 icon_set      | IconStyle
+        ///	               | ReverseIcons
+        ///	               | IconsOnly
+        ///	 formula       | Criteria
+        /// </code>
+        /// <para>
+        /// The <c>Criteria</c> parameter is used to set the criteria by which
+        /// the cell data will be evaluated. It has no default value. The most
+        /// common criteria as applied to <c>Type: "cell"</c> are:
+        /// </para>
+        /// <code>
+        /// between                      |
+        /// not between                  |
+        /// equal to                     | ==
+        /// not equal to                 | !=
+        /// greater than                 | >
+        /// less than                    | &lt;
+        /// greater than or equal to     | >=
+        /// less than or equal to        | &lt;=
+        /// </code>
+        /// <para>
+        /// You can either use Excel's textual description strings, in the first
+        /// column above, or the more common symbolic alternatives.
+        /// </para>
+        /// <para>
+        /// Additional criteria which are specific to other conditional format
+        /// types are shown in the relevant sections below.
+        /// </para>
+        /// <para>
+        /// <c>Value</c>: The value is generally used along with the criteria
+        /// parameter to set the rule by which the cell data will be evaluated:
+        /// </para>
+        /// <code><![CDATA[
+        /// f.SetConditionalFormat("Sheet1", "D1:D10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "cell",
+        ///             Criteria = ">",
+        ///             Format = format,
+        ///             Value = "6",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// The value property can also be an cell reference:
+        /// </para>
+        /// <code><![CDATA[
+        /// f.SetConditionalFormat("Sheet1", "D1:D10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "cell",
+        ///             Criteria = ">",
+        ///             Format = format,
+        ///             Value = "$C$1",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// <c>Format</c>: The format parameter is used to specify the format
+        /// that will be applied to the cell when the conditional formatting
+        /// criterion is met. The format is created using the
+        /// <c>NewConditionalStyle</c> function in the same way as cell formats:
+        /// </para>
+        /// <code><![CDATA[
+        /// int format = f.NewConditionalStyle(
+        ///     new Style
+        ///     {
+        ///         Font = new Font { Color = "9A0511" },
+        ///         Fill = new Fill
+        ///         {
+        ///             Type = "pattern",
+        ///             Color = new string[] { "FEC7CE" },
+        ///             Pattern = 1,
+        ///         },
+        ///     }
+        /// );
+        /// f.SetConditionalFormat("Sheet1", "D1:D10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "cell",
+        ///             Criteria = ">",
+        ///             Format = format,
+        ///             Value = "6",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// Note: In Excel, a conditional format is superimposed over the
+        /// existing cell format and not all cell format properties can be
+        /// modified. Properties that cannot be modified in a conditional
+        /// format are font name, font size, superscript and subscript, diagonal
+        /// borders, all alignment properties and all protection properties.
+        /// </para>
+        /// <para>
+        /// Excel specifies some default formats to be used with conditional
+        /// formatting. These can be replicated using the following excelize
+        /// formats:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Rose format for bad conditional.
+        /// int format1 = f.NewConditionalStyle(
+        ///     new Style
+        ///     {
+        ///         Font = new Font { Color = "9A0511" },
+        ///         Fill = new Fill
+        ///         {
+        ///             Type = "pattern",
+        ///             Color = new string[] { "FEC7CE" },
+        ///             Pattern = 1,
+        ///         },
+        ///     }
+        /// );
+        /// // Light yellow format for neutral conditional.
+        /// int format2 = f.NewConditionalStyle(
+        ///     new Style
+        ///     {
+        ///         Font = new Font { Color = "9B5713" },
+        ///         Fill = new Fill
+        ///         {
+        ///             Type = "pattern",
+        ///             Color = new string[] { "FEEAA0" },
+        ///             Pattern = 1,
+        ///         },
+        ///     }
+        /// );
+        /// // Light green format for good conditional.
+        /// int format3 = f.NewConditionalStyle(
+        ///     new Style
+        ///     {
+        ///         Font = new Font { Color = "09600B" },
+        ///         Fill = new Fill
+        ///         {
+        ///             Type = "pattern",
+        ///             Color = new string[] { "C7EECF" },
+        ///             Pattern = 1,
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// <c>MinValue</c>: The MinValue parameter is used to set the lower
+        /// limiting value when the criteria is either "between" or
+        /// "not between".
+        /// </para>
+        /// <code><![CDATA[
+        /// // Highlight cells rules: between...
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "cell",
+        ///             Criteria = "between",
+        ///             Format = format,
+        ///             MinValue = "6",
+        ///             MaxValue = "8",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// <c>MaxValue</c>: The MaxValue parameter is used to set the upper
+        /// limiting value when the criteria is either "between" or
+        /// "not between". See the previous example.
+        /// </para>
+        /// <para>
+        /// <c>Average</c>: The average type is used to specify Excel's
+        /// "Average" style conditional format:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Top/Bottom rules: Above Average...
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "average",
+        ///             Criteria = "=",
+        ///             Format = format1,
+        ///             AboveAverage = true,
+        ///         },
+        ///     }
+        /// );
+        /// // Top/Bottom rules: Below Average...
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "average",
+        ///             Criteria = "=",
+        ///             Format = format2,
+        ///             AboveAverage = false,
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// type: <c>duplicate</c>: The duplicate type is used to highlight duplicate
+        /// cells in a range:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Highlight cells rules: Duplicate Values...
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "duplicate",
+        ///             Criteria = "=",
+        ///             Format = format,
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// type: <c>unique</c>: The unique type is used to highlight unique cells in
+        /// a range:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Highlight cells rules: Not Equal To...
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "unique",
+        ///             Criteria = "=",
+        ///             Format = format,
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// type: <c>top</c>: The top type is used to specify the top n values
+        /// by number or percentage in a range:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Top/Bottom rules: Top 10.
+        /// f.SetConditionalFormat("Sheet1", "H1:H10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "top",
+        ///             Criteria = "=",
+        ///             Format = format,
+        ///             Value = "6",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// The criteria can be used to indicate that a percentage condition is
+        /// required:
+        /// </para>
+        /// <code><![CDATA[
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "top",
+        ///             Criteria = "=",
+        ///             Format = format,
+        ///             Value = "6",
+        ///             Percent = true,
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// type: <code>2_color_scale</code> - The 2_color_scale type is used to
+        /// specify Excel's "2 Color Scale" style conditional format:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Color scales: 2 color.
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "2_color_scale",
+        ///             Criteria = "=",
+        ///             MinType = "min",
+        ///             MaxType = "max",
+        ///             MinColor = "#F8696B",
+        ///             MaxColor = "#63BE7B",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// This conditional type can be modified with MinType, MaxType,
+        /// MinValue, MaxValue, MinColor and MaxColor, see below.
+        /// </para>
+        /// <para>
+        /// type: <code>3_color_scale</code> - The 3_color_scale type is used to
+        /// specify Excel's "3 Color Scale" style conditional format:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Color scales: 3 color.
+        /// f.SetConditionalFormat("Sheet1", "A1:A10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "3_color_scale",
+        ///             Criteria = "=",
+        ///             MinType = "min",
+        ///             MidType = "percentile",
+        ///             MaxType = "max",
+        ///             MinColor = "#F8696B",
+        ///             MidColor = "#FFEB84",
+        ///             MaxColor = "#63BE7B",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// This conditional type can be modified with MinType, MidType,
+        /// MaxType, MinValue, MidValue, MaxValue, MinColor, MidColor and
+        /// MaxColor, see below.
+        /// </para>
+        /// <para>
+        /// type: <c>data_bar</c> - The data_bar type is used to specify Excel's
+        /// "Data Bar" style conditional format.
+        /// </para>
+        /// <para>
+        /// MinType - The MinType and MaxType properties are available when the
+        /// conditional formatting type is 2_color_scale, 3_color_scale or
+        /// data_bar. The MidType is available for 3_color_scale. The properties
+        /// are used as follows:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Data Bars: Gradient Fill.
+        /// f.SetConditionalFormat("Sheet1", "K1:K10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "data_bar",
+        ///             Criteria = "=",
+        ///             MinType = "min",
+        ///             MaxType = "max",
+        ///             BarColor = "#638EC6",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <para>
+        /// The available min/mid/max types are:
+        /// </para>
+        /// <code>
+        ///  min        (for MinType only)
+        ///  num
+        ///  percent
+        ///  percentile
+        ///  formula
+        ///  max        (for MaxType only)
+        /// </code>
+        /// <para>
+        /// <c>MidType</c> - Used for 3_color_scale. Same as <c>MinType</c>, see
+        /// above.
+        /// </para>
+        /// <para>
+        /// <c>MaxType</c> - Same as <c>MinType</c>, see above.
+        /// </para>
+        /// <para>
+        /// <c>MinValue</c> - The <c>MinValue</c> and <c>MaxValue</c> properties
+        /// are available when the conditional formatting type is 2_color_scale,
+        /// 3_color_scale or data_bar.
+        /// </para>
+        /// <para>
+        /// <c>MidValue</c> - The <c>MidValue</c> is available for
+        /// 3_color_scale. Same as <c>MinValue</c>, see above.
+        /// </para>
+        /// <para>
+        /// <c>MaxValue</c> - Same as <c>MinValue</c>, see above.
+        /// </para>
+        /// <para>
+        /// <c>MinColor</c> - The <c>MinColor</c> and <c>MaxColor</c> properties
+        /// are available when the conditional formatting type is 2_color_scale,
+        /// 3_color_scale or data_bar.
+        /// </para>
+        /// <para>
+        /// <c>MidColor</c> - The <c>MidColor</c> is available for 3_color_scale.
+        /// The properties are used as follows:
+        /// </para>
+        /// <code><![CDATA[
+        /// // Data Bars: Gradient Fill.
+        /// f.SetConditionalFormat("Sheet1", "B1:B10",
+        ///     new ConditionalFormatOptions[]
+        ///     {
+        ///         new ConditionalFormatOptions
+        ///         {
+        ///             Type = "3_color_scale",
+        ///             Criteria = "=",
+        ///             MinType = "min",
+        ///             MidType = "percentile",
+        ///             MaxType = "max",
+        ///             MinColor = "#F8696B",
+        ///             MidColor = "#FFEB84",
+        ///             MaxColor = "#63BE7B",
+        ///         },
+        ///     }
+        /// );]]>
+        /// </code>
+        /// <c>MaxColor</c> - Same as <c>MinColor</c>, see above.
+        /// <para>
+        /// <c>BarColor</c> - Used for data_bar. Same as <c>MinColor</c>,
+        /// see above.
+        /// </para>
+        /// <para>
+        /// <c>BarBorderColor</c> - Used for sets the color for the border line
+        /// of a data bar, this is only visible in Excel 2010 and later.
+        /// </para>
+        /// <para>
+        /// <c>BarDirection</c> - sets the direction for data bars. The available
+        /// options are:
+        /// </para>
+        /// <list type="bullet">
+        ///   <item><description>context – Data bar direction is set by spreadsheet application based on the context of the data displayed.</description></item>
+        ///   <item><description>leftToRight - Data bar direction is from right to left.</description></item>
+        ///   <item><description>rightToLeft - Data bar direction is from left to right.</description></item>
+        /// </list>
+        /// <para>
+        /// <c>BarOnly</c> - Used for set displays a bar data but not the data
+        /// in the cells.
+        /// </para>
+        /// <para>
+        /// <c>BarSolid</c> - Used for turns on a solid (non-gradient) fill for
+        /// data bars, this is only visible in Excel 2010 and later.
+        /// </para>
+        /// <para>
+        /// <c>IconStyle</c> - The available options are:
+        /// </para>
+        /// <code>
+        ///  3Arrows
+        ///  3ArrowsGray
+        ///  3Flags
+        ///  3Signs
+        ///  3Stars
+        ///  3Symbols
+        ///  3Symbols2
+        ///  3TrafficLights1
+        ///  3TrafficLights2
+        ///  3Triangles
+        ///  4Arrows
+        ///  4ArrowsGray
+        ///  4Rating
+        ///  4RedToBlack
+        ///  4TrafficLights
+        ///  5Arrows
+        ///  5ArrowsGray
+        ///  5Boxes
+        ///  5Quarters
+        ///  5Rating
+        /// </code>
+        /// <para>
+        /// <c>ReverseIcons</c> - Used for set reversed icons sets.
+        /// </para>
+        /// <para>
+        /// <c>IconsOnly</c> - Used for set displayed without the cell value.
+        /// </para>
+        /// <para>
+        /// <c>StopIfTrue</c> - used to set the "stop if true" feature of a
+        /// conditional formatting rule when more than one rule is applied to a
+        /// cell or a range of cells. When this parameter is set then subsequent
+        /// rules are not evaluated if the current rule is true.
+        /// </para>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="rangeRef">The top-left and right-bottom cell range
+        /// reference</param>
+        /// <param name="opts">The conditional format options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetConditionalFormat(
+            string sheet,
+            string rangeRef,
+            ConditionalFormatOptions[] opts
+        )
+        {
+            TypesC.ConditionalFormatOptions[] arr = new TypesC.ConditionalFormatOptions[
+                opts.Length
+            ];
+            for (int i = 0; i < opts.Length; i++)
+            {
+                arr[i] = (TypesC.ConditionalFormatOptions)
+                    Lib.CsToC(opts[i], new TypesC.ConditionalFormatOptions());
+            }
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetConditionalFormat(FileIdx, sheet, rangeRef, arr, arr.Length)
             );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);

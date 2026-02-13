@@ -694,6 +694,50 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestConditionalFormat()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                int format = f.NewConditionalStyle(
+                    new Style
+                    {
+                        Font = new Font { Color = "9A0511" },
+                        Fill = new Fill
+                        {
+                            Type = "pattern",
+                            Color = new string[] { "FEC7CE" },
+                            Pattern = 1,
+                        },
+                    }
+                );
+                f.SetConditionalFormat(
+                    "Sheet1",
+                    "A1:A10",
+                    new ConditionalFormatOptions[]
+                    {
+                        new ConditionalFormatOptions
+                        {
+                            Type = "cell",
+                            Criteria = "between",
+                            Format = format,
+                            MinValue = "6",
+                            MaxValue = "8",
+                        },
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.SetConditionalFormat("SheetN", "A1", new ConditionalFormatOptions[] { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(Record.Exception(() => f.SaveAs("TestConditionalFormat.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestCoordinates()
     {
         var (col, row) = Excelize.CellNameToCoordinates("Z3");
@@ -1322,6 +1366,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.MoveSheet("Sheet2", "Sheet1"));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.NewConditionalStyle(new Style()));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.NewSheet("Sheet1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.NewStyle(s));
@@ -1363,6 +1409,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetColVisible("Sheet1", "H", false));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetColWidth("Sheet1", "A", "H", 20));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.SetConditionalFormat("Sheet1", "A1:A10", new ConditionalFormatOptions[] { })
+        );
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetSheetName("Sheet1", "Sheet2"));
         Assert.Equal(expected, err.Message);

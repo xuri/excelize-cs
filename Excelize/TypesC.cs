@@ -285,6 +285,49 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct ConditionalFormatOptions
+    {
+        public sbyte* Type;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool AboveAverage;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Percent;
+        public int* Format;
+        public sbyte* Criteria;
+        public sbyte* Value;
+        public sbyte* MinType;
+        public sbyte* MidType;
+        public sbyte* MaxType;
+        public sbyte* MinValue;
+        public sbyte* MidValue;
+        public sbyte* MaxValue;
+        public sbyte* MinColor;
+        public sbyte* MidColor;
+        public sbyte* MaxColor;
+        public sbyte* BarColor;
+        public sbyte* BarBorderColor;
+        public sbyte* BarDirection;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool BarOnly;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool BarSolid;
+        public sbyte* IconStyle;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool ReverseIcons;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool IconsOnly;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool StopIfTrue;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct FormControl
     {
         public sbyte* Cell;
