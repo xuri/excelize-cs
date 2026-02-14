@@ -8,7 +8,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.25.x]
+        go-version: [1.26.x]
         os: [ubuntu-24.04, macos-latest, windows-latest]
         targetplatform: [x64]
 
@@ -119,8 +119,8 @@ jobs:
         run: |
           docker run --rm -v $PWD:/src -w /src quay.io/pypa/manylinux2014_x86_64 bash -c "
             yum install -y wget || true
-            wget https://go.dev/dl/go1.25.5.linux-amd64.tar.gz && \
-            tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz && \
+            wget https://go.dev/dl/go1.26.0.linux-amd64.tar.gz && \
+            tar -C /usr/local -xzf go1.26.0.linux-amd64.tar.gz && \
             export PATH=/usr/local/go/bin:\$PATH && \
             CGO_ENABLED=1 CC=gcc GOOS=linux GOARCH=amd64 \
             go build -buildmode=c-shared -ldflags='-s -w' -trimpath \
@@ -130,8 +130,8 @@ jobs:
 
           docker run --rm -v $PWD:/src -w /src quay.io/pypa/manylinux2014_i686 bash -c "
             yum install -y wget || true
-            wget https://go.dev/dl/go1.25.5.linux-386.tar.gz && \
-            tar -C /usr/local -xzf go1.25.5.linux-386.tar.gz && \
+            wget https://go.dev/dl/go1.26.0.linux-386.tar.gz && \
+            tar -C /usr/local -xzf go1.26.0.linux-386.tar.gz && \
             export PATH=/usr/local/go/bin:\$PATH && \
             CGO_ENABLED=1 CC=gcc GOOS=linux GOARCH=386 \
             go build -buildmode=c-shared -ldflags='-s -w' -trimpath \
@@ -146,8 +146,8 @@ jobs:
         run: |
           docker run --rm -v $PWD:/src -w /src quay.io/pypa/manylinux2014_aarch64 bash -c "
             yum install -y wget || true
-            wget https://go.dev/dl/go1.25.5.linux-arm64.tar.gz && \
-            tar -C /usr/local -xzf go1.25.5.linux-arm64.tar.gz && \
+            wget https://go.dev/dl/go1.26.0.linux-arm64.tar.gz && \
+            tar -C /usr/local -xzf go1.26.0.linux-arm64.tar.gz && \
             export PATH=/usr/local/go/bin:\$PATH && \
             CGO_ENABLED=1 CC=gcc GOOS=linux GOARCH=arm64 \
             go build -buildmode=c-shared -ldflags='-s -w' -trimpath \

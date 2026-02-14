@@ -239,6 +239,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeleteFormControl(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr DeletePicture(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -581,6 +588,13 @@ namespace ExcelizeCs
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             [In, MarshalAs(UnmanagedType.LPArray)] TypesC.Interface[] row,
             long length
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr UnsetConditionalFormat(
+            long swIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string rangeRef
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -2763,6 +2777,34 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// DeleteFormControl provides the method to delete form control in a
+        /// worksheet by given worksheet name and cell reference.
+        /// <example>
+        /// For example, delete the form control in Sheet1!$A$1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteFormControl("Sheet1", "A1");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeleteFormControl(string sheet, string cell)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.DeleteFormControl(FileIdx, sheet, cell));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
         /// Delete all pictures in a cell by given worksheet name and cell
         /// reference.
         /// </summary>
@@ -4814,6 +4856,24 @@ namespace ExcelizeCs
             var opts = (TypesC.WorkbookPropsOptions)
                 Lib.CsToC(options, new TypesC.WorkbookPropsOptions());
             string err = Marshal.PtrToStringUTF8(Lib.SetWorkbookProps(FileIdx, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// UnsetConditionalFormat provides a function to unset the conditional
+        /// format by given worksheet name and range reference.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="rangeRef">The top-left and right-bottom cell range
+        /// reference</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void UnsetConditionalFormat(string sheet, string rangeRef)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.UnsetConditionalFormat(FileIdx, sheet, rangeRef)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

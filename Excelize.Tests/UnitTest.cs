@@ -210,11 +210,14 @@ public class UnitTest
                         Path.GetFullPath(Path.Combine("..", "..", "..", "vbaProject.bin"))
                     )
                 );
+                f.DeleteFormControl("Sheet1", "B3");
             })
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
             f.AddFormControl("SheetN", new FormControl { })
         );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteFormControl("SheetN", "A1"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
         err = Assert.Throws<RuntimeError>(() =>
             f.SetSheetProps("SheetN", new SheetPropsOptions { })
@@ -727,11 +730,14 @@ public class UnitTest
                         },
                     }
                 );
+                f.UnsetConditionalFormat("Sheet1", "A5:A10");
             })
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            f.SetConditionalFormat("SheetN", "A1", new ConditionalFormatOptions[] { })
+            f.SetConditionalFormat("SheetN", "A1:A10", new ConditionalFormatOptions[] { })
         );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.UnsetConditionalFormat("SheetN", "A1:A10"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("TestConditionalFormat.xlsx")));
         Assert.Empty(f.Close());
@@ -1339,6 +1345,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.DeleteComment("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.DeleteFormControl("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.DeletePicture("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet1"));
@@ -1425,6 +1433,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetSheetVisible("Sheet1", true));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetWorkbookProps(new WorkbookPropsOptions()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.UnsetConditionalFormat("Sheet1", "A1:A10"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.UpdateLinkedValue());
         Assert.Equal(expected, err.Message);
