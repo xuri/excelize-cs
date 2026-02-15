@@ -668,6 +668,58 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct SheetProtectionOptions
+    {
+        public sbyte* AlgorithmName;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool AutoFilter;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool DeleteColumns;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool DeleteRows;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool EditObjects;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool EditScenarios;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool FormatCells;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool FormatColumns;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool FormatRows;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool InsertColumns;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool InsertHyperlinks;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool InsertRows;
+        public sbyte* Password;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool PivotTables;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool SelectLockedCells;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool SelectUnlockedCells;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Sort;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct SlicerOptions
     {
         public sbyte* Name;
@@ -779,6 +831,19 @@ namespace ExcelizeCs.TypesC
         public bool* Date1904;
         public bool* FilterPrivacy;
         public sbyte** CodeName;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct WorkbookProtectionOptions
+    {
+        public sbyte* AlgorithmName;
+        public sbyte* Password;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool LockStructure;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool LockWindows;
     }
 
     [StructLayout(LayoutKind.Sequential)]

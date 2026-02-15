@@ -1051,6 +1051,46 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestProtectSheet()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.ProtectSheet(
+                    "Sheet1",
+                    new SheetProtectionOptions
+                    {
+                        AlgorithmName = "SHA-512",
+                        Password = "password",
+                        SelectLockedCells = true,
+                        SelectUnlockedCells = true,
+                        EditScenarios = true,
+                    }
+                );
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.ProtectSheet("SheetN", new SheetProtectionOptions { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+    }
+
+    [Fact]
+    public void TestProtectWorkbook()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.ProtectWorkbook(
+                    new WorkbookProtectionOptions { Password = "password", LockStructure = true }
+                );
+            })
+        );
+    }
+
+    [Fact]
     public void TestSetSheetName()
     {
         File f = Excelize.NewFile();
@@ -1379,6 +1419,14 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.NewSheet("Sheet1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.NewStyle(s));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.ProtectSheet("Sheet1", new SheetProtectionOptions { })
+        );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.ProtectWorkbook(new WorkbookProtectionOptions { })
+        );
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.Save());
         Assert.Equal(expected, err.Message);

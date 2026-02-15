@@ -836,6 +836,31 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// SheetProtectionOptions directly maps the settings of worksheet
+    /// protection.
+    /// </summary>
+    public struct SheetProtectionOptions
+    {
+        public string AlgorithmName;
+        public bool AutoFilter;
+        public bool DeleteColumns;
+        public bool DeleteRows;
+        public bool EditObjects;
+        public bool EditScenarios;
+        public bool FormatCells;
+        public bool FormatColumns;
+        public bool FormatRows;
+        public bool InsertColumns;
+        public bool InsertHyperlinks;
+        public bool InsertRows;
+        public string Password;
+        public bool PivotTables;
+        public bool SelectLockedCells;
+        public bool SelectUnlockedCells;
+        public bool Sort;
+    }
+
+    /// <summary>
     /// Represents the settings of the slicer.
     /// </summary>
     /// <remarks>
@@ -954,6 +979,18 @@ namespace ExcelizeCs
         public bool? Date1904;
         public bool? FilterPrivacy;
         public string? CodeName;
+    }
+
+    /// <summary>
+    /// WorkbookProtectionOptions directly maps the settings of workbook
+    /// protection.
+    /// </summary>
+    public struct WorkbookProtectionOptions
+    {
+        public string AlgorithmName;
+        public string Password;
+        public bool LockStructure;
+        public bool LockWindows;
     }
 
     public struct Cells

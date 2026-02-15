@@ -364,6 +364,19 @@ namespace ExcelizeCs
         internal static extern TypesC.IntErrorResult NewStyle(long fileIdx, ref TypesC.Style style);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr ProtectSheet(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            ref TypesC.SheetProtectionOptions opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr ProtectWorkbook(
+            long fileIdx,
+            ref TypesC.WorkbookProtectionOptions opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.IntErrorResult OpenFile(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string filename,
             ref TypesC.Options options
@@ -3230,6 +3243,90 @@ namespace ExcelizeCs
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
             return res.val;
+        }
+
+        /// <summary>
+        /// ProtectSheet provides a function to prevent other users from
+        /// accidentally or deliberately changing, moving, or deleting data in a
+        /// worksheet. The optional field AlgorithmName specified hash
+        /// algorithm, support XOR, MD4, MD5, SHA-1, SHA2-56, SHA-384, and
+        /// SHA-512 currently, if no hash algorithm specified, will be using the
+        /// XOR algorithm as default.
+        /// <example>
+        /// For example, protect Sheet1 with protection settings:
+        /// <code>
+        /// try
+        /// {
+        ///     f.ProtectSheet(
+        ///         "Sheet1",
+        ///         new SheetProtectionOptions
+        ///         {
+        ///             AlgorithmName = "SHA-512",
+        ///             Password = "password",
+        ///             SelectLockedCells = true,
+        ///             SelectUnlockedCells = true,
+        ///             EditScenarios = true,
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="opts">The sheet protection options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void ProtectSheet(string sheet, SheetProtectionOptions opts)
+        {
+            var options = (TypesC.SheetProtectionOptions)
+                Lib.CsToC(opts, new TypesC.SheetProtectionOptions());
+            string err = Marshal.PtrToStringUTF8(Lib.ProtectSheet(FileIdx, sheet, ref options));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// ProtectWorkbook provides a function to prevent other users from
+        /// viewing hidden worksheets, adding, moving, deleting, or hiding
+        /// worksheets, and renaming worksheets in a workbook. The optional
+        /// field AlgorithmName specified hash algorithm, support XOR, MD4, MD5,
+        /// SHA-1, SHA2-56, SHA-384, and SHA-512 currently, if no hash algorithm
+        /// specified, will be using the XOR algorithm as default. The generated
+        /// workbook only works on Microsoft Office 2007 and later.
+        /// <example>
+        /// For example, protect workbook with protection settings:
+        /// <code>
+        /// try
+        /// {
+        ///     f.ProtectWorkbook(
+        ///         new WorkbookProtectionOptions
+        ///         {
+        ///             Password = "password",
+        ///             LockStructure = true,
+        ///         }
+        ///     );
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="opts">The workbook protection options</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void ProtectWorkbook(WorkbookProtectionOptions opts)
+        {
+            var options = (TypesC.WorkbookProtectionOptions)
+                Lib.CsToC(opts, new TypesC.WorkbookProtectionOptions());
+            string err = Marshal.PtrToStringUTF8(Lib.ProtectWorkbook(FileIdx, ref options));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
         }
 
         /// <summary>
