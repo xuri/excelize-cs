@@ -224,7 +224,9 @@ namespace ExcelizeCs
     }
 
     /// <summary>
-    ///
+    /// Interface is a struct that can be used to represent any of the supported
+    /// value types in the library, including int, string, double, bool,
+    /// DateTime.DateTime or null.
     /// </summary>
     public struct Interface
     {
@@ -286,6 +288,17 @@ namespace ExcelizeCs
         public bool? ConcurrentCalc;
         public uint? ConcurrentManualCount;
         public bool? ForceFullCalc;
+    };
+
+    /// <summary>
+    /// CustomProperty directly maps the custom property of the workbook. The
+    /// value date type may be one of the following: int, string, double, bool,
+    /// DateTime.DateTime or null.
+    /// </summary>
+    public struct CustomProperty
+    {
+        public string Name;
+        public object? Value;
     };
 
     /// <summary>

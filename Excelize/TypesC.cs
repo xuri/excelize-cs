@@ -81,6 +81,13 @@ namespace ExcelizeCs.TypesC
     };
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct CustomProperty
+    {
+        public sbyte* Name;
+        public Interface Value;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Border
     {
         public sbyte* Type;
@@ -910,5 +917,13 @@ namespace ExcelizeCs.TypesC
     {
         public Style style;
         public sbyte* err;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct GetCustomPropsResult
+    {
+        public int CustomPropsLen;
+        public CustomProperty* CustomProps;
+        public sbyte* Err;
     }
 }

@@ -225,6 +225,17 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.StringErrorResult JoinCellName(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
+            int row
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.StringIntErrorResult SplitCellName(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr DeleteChart(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -296,23 +307,15 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern TypesC.StringErrorResult JoinCellName(
-            [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
-            int row
-        );
-
-        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern TypesC.StringIntErrorResult SplitCellName(
-            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
-        );
-
-        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult GetCellValue(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell,
             ref TypesC.Options opts
         );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.GetCustomPropsResult GetCustomProps(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringMatrixErrorResult GetRows(
@@ -541,6 +544,9 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetCustomProps(long fileIdx, ref TypesC.CustomProperty prop);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetHeaderFooter(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -648,17 +654,41 @@ namespace ExcelizeCs
             return CsToC(
                 value switch
                 {
-                    int _ => new Interface { Type = 1, Integer = (int)value },
+                    int _ => new Interface { Type = 2, Integer32 = (int)value },
                     string _ => new Interface { Type = 3, String = (string)value },
                     double _ => new Interface { Type = 4, Float = (double)value },
                     float _ => new Interface { Type = 4, Float = (float)value },
                     long _ => new Interface { Type = 4, Float = (long)value },
-                    short _ => new Interface { Type = 4, Float = (short)value },
+                    short _ => new Interface { Type = 2, Integer32 = (short)value },
                     bool _ => new Interface { Type = 5, Boolean = (bool)value },
+                    DateTime _ => new Interface
+                    {
+                        Type = 6,
+                        Integer = (int)new DateTimeOffset((DateTime)value).ToUnixTimeSeconds(),
+                    },
                     _ => new Interface { Type = 0 },
                 },
                 new TypesC.Interface()
             );
+        }
+
+        /// <summary>
+        /// Convert a C Interface struct to a C# value.
+        /// </summary>
+        /// <param name="value">The value to convert</param>
+        /// <returns>The converted C# value</returns>
+        public static unsafe object CInterfaceToCsVal(TypesC.Interface value)
+        {
+            return value.Type switch
+            {
+                1 => value.Integer,
+                2 => value.Integer32,
+                3 => value.String != null ? new string(value.String) : "",
+                4 => value.Float,
+                5 => value.Boolean,
+                6 => DateTimeOffset.FromUnixTimeSeconds(value.Integer).LocalDateTime,
+                _ => null,
+            };
         }
 
         /// <summary>
@@ -3002,6 +3032,37 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// GetCustomProps provides a function to get custom file properties.
+        /// </summary>
+        /// <returns>Return the custom file properties if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return the custom file properties if
+        /// no error occurred, otherwise raise a RuntimeError with the message.
+        /// </exception>
+        public unsafe List<CustomProperty> GetCustomProps()
+        {
+            TypesC.GetCustomPropsResult res = Lib.GetCustomProps(FileIdx);
+            string err = new(res.Err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            List<CustomProperty> arr = new List<CustomProperty>();
+            if (res.CustomProps != null)
+            {
+                for (int i = 0; i < res.CustomPropsLen; i++)
+                {
+                    arr.Add(
+                        new CustomProperty
+                        {
+                            Name = new string(res.CustomProps[i].Name),
+                            Value = Lib.CInterfaceToCsVal(res.CustomProps[i].Value),
+                        }
+                    );
+                }
+            }
+            return arr;
+        }
+
+        /// <summary>
         /// Return all the rows in a sheet by given worksheet name, returned as
         /// a two-dimensional array, where the value of the cell is converted to
         /// the string type. If the cell format can be applied to the value of
@@ -4743,6 +4804,29 @@ namespace ExcelizeCs
             string err = Marshal.PtrToStringUTF8(
                 Lib.SetConditionalFormat(FileIdx, sheet, rangeRef, arr, arr.Length)
             );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// SetCustomProps provides a function to set custom file properties by
+        /// given property name and value. If the property name already exists,
+        /// it will be updated, otherwise a new property will be added. The
+        /// value can be of type int, string, double, bool, DateTime.DateTime or
+        /// null. The property will be delete if the value is null. The function
+        /// returns an error if the property value is not of the correct type.
+        /// </summary>
+        /// <param name="prop">The custom file property</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe void SetCustomProps(CustomProperty prop)
+        {
+            var options = new TypesC.CustomProperty
+            {
+                Value = (TypesC.Interface)Lib.CsValToCInterface(prop.Value),
+                Name = (sbyte*)Marshal.StringToCoTaskMemUTF8(prop.Name).ToPointer(),
+            };
+            string err = Marshal.PtrToStringUTF8(Lib.SetCustomProps(FileIdx, ref options));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

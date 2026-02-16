@@ -764,6 +764,33 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestCustomProps()
+    {
+        File f = Excelize.NewFile();
+        List<CustomProperty> props = new List<CustomProperty>
+        {
+            new CustomProperty { Name = "Text Prop", Value = "text" },
+            new CustomProperty { Name = "Boolean Prop 1", Value = true },
+            new CustomProperty { Name = "Boolean Prop 2", Value = false },
+            new CustomProperty { Name = "Number Prop 1", Value = -123.456 },
+            new CustomProperty { Name = "Number Prop 2", Value = 1 },
+            new CustomProperty { Name = "Date Prop", Value = new DateTime(2016, 8, 30, 11, 51, 0) },
+        };
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                foreach (var prop in props)
+                {
+                    f.SetCustomProps(prop);
+                }
+            })
+        );
+        Assert.Equal(props, f.GetCustomProps());
+        Assert.Null(Record.Exception(() => f.SaveAs("TestSetCustomProps.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestDllImportResolver()
     {
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
@@ -1406,6 +1433,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCustomProps());
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetStyle(1));
@@ -1469,6 +1498,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() =>
             f.SetConditionalFormat("Sheet1", "A1:A10", new ConditionalFormatOptions[] { })
         );
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCustomProps(new CustomProperty { }));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetSheetName("Sheet1", "Sheet2"));
         Assert.Equal(expected, err.Message);
@@ -1565,6 +1596,9 @@ public class UnitTest
         IntPtr intPtr = (IntPtr)(&value);
         Assert.Null(Lib.UnmarshalPrimitiveValue(intPtr, typeof(string)));
         Assert.Null(Lib.UnmarshalPrimitiveValue(IntPtr.Zero, typeof(string)));
+        Assert.Equal(42, Lib.CInterfaceToCsVal(new TypesC.Interface { Type = 1, Integer = 42 }));
+        Assert.Equal("", Lib.CInterfaceToCsVal(new TypesC.Interface { Type = 3, String = null }));
+        Assert.Null(Lib.CInterfaceToCsVal(new TypesC.Interface { Type = -1 }));
     }
 
     [Fact]
