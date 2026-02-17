@@ -661,10 +661,13 @@ namespace ExcelizeCs
                     long _ => new Interface { Type = 4, Float = (long)value },
                     short _ => new Interface { Type = 2, Integer32 = (short)value },
                     bool _ => new Interface { Type = 5, Boolean = (bool)value },
-                    DateTime _ => new Interface
+                    DateTime dt => new Interface
                     {
                         Type = 6,
-                        Integer = (int)new DateTimeOffset((DateTime)value).ToUnixTimeSeconds(),
+                        Integer = (int)
+                            new DateTimeOffset(
+                                DateTime.SpecifyKind(dt, DateTimeKind.Utc)
+                            ).ToUnixTimeSeconds(),
                     },
                     _ => new Interface { Type = 0 },
                 },
@@ -686,7 +689,10 @@ namespace ExcelizeCs
                 3 => value.String != null ? new string(value.String) : "",
                 4 => value.Float,
                 5 => value.Boolean,
-                6 => DateTimeOffset.FromUnixTimeSeconds(value.Integer).LocalDateTime,
+                6 => DateTime.SpecifyKind(
+                    DateTimeOffset.FromUnixTimeSeconds(value.Integer).DateTime,
+                    DateTimeKind.Utc
+                ),
                 _ => null,
             };
         }
