@@ -544,7 +544,7 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern IntPtr SetCustomProps(long fileIdx, ref TypesC.CustomProperty prop);
+        internal static extern IntPtr SetCustomProps(long fileIdx, TypesC.CustomProperty prop);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetHeaderFooter(
@@ -661,13 +661,10 @@ namespace ExcelizeCs
                     long _ => new Interface { Type = 4, Float = (long)value },
                     short _ => new Interface { Type = 2, Integer32 = (short)value },
                     bool _ => new Interface { Type = 5, Boolean = (bool)value },
-                    DateTime dt => new Interface
+                    DateTime _ => new Interface
                     {
                         Type = 6,
-                        Integer = (int)
-                            new DateTimeOffset(
-                                DateTime.SpecifyKind(dt, DateTimeKind.Utc)
-                            ).ToUnixTimeSeconds(),
+                        Integer = (int)new DateTimeOffset((DateTime)value).ToUnixTimeSeconds(),
                     },
                     _ => new Interface { Type = 0 },
                 },
@@ -689,10 +686,7 @@ namespace ExcelizeCs
                 3 => value.String != null ? new string(value.String) : "",
                 4 => value.Float,
                 5 => value.Boolean,
-                6 => DateTime.SpecifyKind(
-                    DateTimeOffset.FromUnixTimeSeconds(value.Integer).DateTime,
-                    DateTimeKind.Utc
-                ),
+                6 => DateTimeOffset.FromUnixTimeSeconds(value.Integer).LocalDateTime,
                 _ => null,
             };
         }
@@ -4832,7 +4826,7 @@ namespace ExcelizeCs
                 Value = (TypesC.Interface)Lib.CsValToCInterface(prop.Value),
                 Name = (sbyte*)Marshal.StringToCoTaskMemUTF8(prop.Name).ToPointer(),
             };
-            string err = Marshal.PtrToStringUTF8(Lib.SetCustomProps(FileIdx, ref options));
+            string err = Marshal.PtrToStringUTF8(Lib.SetCustomProps(FileIdx, options));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
