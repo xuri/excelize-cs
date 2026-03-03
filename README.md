@@ -17,7 +17,7 @@ Package excelize-cs is a C# port of Go [Excelize](https://github.com/xuri/exceli
 ### Installation
 
 ```bash
-dotnet add package ExcelizeCs --version 0.0.4
+dotnet add package ExcelizeCs --version 0.0.5
 ```
 
 ### Create spreadsheet
@@ -262,4 +262,4 @@ This program is under the terms of the BSD 3-Clause License. See [https://openso
 
 The Excel logo is a trademark of [Microsoft Corporation](https://aka.ms/trademarks-usage). This artwork is an adaptation.
 
-The Go gopher was created by [Renee French](https://go.dev/doc/gopher/README). Licensed under the [Creative Commons 4.0 Attributions license](http://creativecommons.org/licenses/by/4.0/).
+The Go gopher was created by [Renee French](https://go.dev/doc/gopher/README). Licensed under the [Creative Commons 4.0 Attributions license](https://creativecommons.org/licenses/by/4.0/).
