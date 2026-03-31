@@ -370,6 +370,22 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct ChartTitle
+    {
+        public Fill Fill;
+        public LineOptions Border;
+        public int ParagraphLen;
+        public RichTextRun* Paragraph;
+        public int OffsetX;
+        public int OffsetY;
+        public int Width;
+        public int Height;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Overlay;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ChartAxis
     {
         [MarshalAs(UnmanagedType.I1)]
@@ -401,8 +417,7 @@ namespace ExcelizeCs.TypesC
         public Font Font;
         public double LogBase;
         public ChartNumFmt NumFmt;
-        public int TitleLen;
-        public RichTextRun* Title;
+        public ChartTitle Title;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -421,22 +436,10 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct ChartLine
-    {
-        public byte Type;
-        public byte Dash;
-        public Fill Fill;
-
-        [MarshalAs(UnmanagedType.I1)]
-        public bool Smooth;
-        public double Width;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ChartUpDownBar
+    public struct ChartUpDownBar
     {
         public Fill Fill;
-        public ChartLine Border;
+        public LineOptions Border;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -486,7 +489,7 @@ namespace ExcelizeCs.TypesC
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ChartMarker
     {
-        public ChartLine Border;
+        public LineOptions Border;
         public Fill Fill;
         public sbyte* Symbol;
         public int Size;
@@ -508,7 +511,7 @@ namespace ExcelizeCs.TypesC
         public sbyte* Sizes;
         public Fill Fill;
         public ChartLegend Legend;
-        public ChartLine Line;
+        public LineOptions Line;
         public ChartMarker Marker;
         public ChartDataLabel DataLabel;
         public byte DataLabelPosition;
@@ -525,15 +528,13 @@ namespace ExcelizeCs.TypesC
         public GraphicOptions Format;
         public ChartDimension Dimension;
         public ChartLegend Legend;
-        public int TitleLen;
-        public RichTextRun* Title;
-
+        public ChartTitle Title;
         public bool* VaryColors;
         public ChartAxis XAxis;
         public ChartAxis YAxis;
         public ChartPlotArea PlotArea;
         public Fill Fill;
-        public ChartLine Border;
+        public LineOptions Border;
         public sbyte* ShowBlanksAs;
         public int BubbleSize;
         public int HoleSize;
@@ -562,6 +563,8 @@ namespace ExcelizeCs.TypesC
         [MarshalAs(UnmanagedType.I1)]
         public bool DefaultSubtotal;
         public int NumFmt;
+        public int SelectedItemsLen;
+        public sbyte** SelectedItems;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -630,13 +633,6 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct ShapeLine
-    {
-        public sbyte* Color;
-        public double* Width;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Shape
     {
         public sbyte* Cell;
@@ -646,7 +642,7 @@ namespace ExcelizeCs.TypesC
         public uint Height;
         public GraphicOptions Format;
         public Fill Fill;
-        public ShapeLine Line;
+        public LineOptions Line;
         public int ParagraphLen;
         public RichTextRun* Paragraph;
     }
@@ -742,6 +738,20 @@ namespace ExcelizeCs.TypesC
         [MarshalAs(UnmanagedType.I1)]
         public bool ItemDesc;
         public GraphicOptions Format;
+        public int SelectedItemsLen;
+        public sbyte** SelectedItems;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LineOptions
+    {
+        public byte Type;
+        public byte Dash;
+        public Fill Fill;
+
+        [MarshalAs(UnmanagedType.I1)]
+        public bool Smooth;
+        public double Width;
     }
 
     [StructLayout(LayoutKind.Sequential)]

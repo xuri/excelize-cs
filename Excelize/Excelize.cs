@@ -2007,8 +2007,8 @@ namespace ExcelizeCs
         /// and Filter fields at the same time.
         /// <example>
         /// For example, create a pivot table on the range reference
-        /// Sheet1!G2:M34 with the range reference Sheet1!A1:E31 as the data
-        /// source, summarize by sum for sales:
+        /// Sheet1!G4:M31 with the range reference Sheet1!A1:E31 as the data
+        /// source, summarize by sum for revenue:
         /// <code><![CDATA[
         /// using ExcelizeCs;
         ///
@@ -2034,44 +2034,60 @@ namespace ExcelizeCs
         ///         };
         ///         List<int> year = new List<int> { 2017, 2018, 2019 };
         ///         List<string> types = new List<string> { "Meat", "Dairy", "Beverages", "Produce" };
+        ///         List<int> revenue = new List<int>
+        ///         {
+        ///             3217,
+        ///             4512,
+        ///             3891,
+        ///             4738,
+        ///             3054,
+        ///             4265,
+        ///             3643,
+        ///             4901,
+        ///             3378,
+        ///             4126,
+        ///         };
         ///         List<string> region = new List<string> { "East", "West", "North", "South" };
-        ///         Random random = new Random();
         ///         try
         ///         {
         ///             f.SetSheetRow(
         ///                 "Sheet1",
         ///                 "A1",
-        ///                 new List<object> { "Month", "Year", "Type", "Sales", "Region" }
+        ///                 new List<object> { "Month", "Year", "Type", "Revenue", "Region" }
         ///             );
         ///             for (int row = 2; row < 32; row++)
         ///             {
         ///                 f.SetCellValue(
         ///                     "Sheet1",
         ///                     Excelize.CoordinatesToCellName(1, row),
-        ///                     months[random.Next(12)]
+        ///                     months[(row - 2) % months.Count]
         ///                 );
         ///                 f.SetCellValue(
         ///                     "Sheet1",
         ///                     Excelize.CoordinatesToCellName(2, row),
-        ///                     year[random.Next(3)]
+        ///                     year[(row - 2) % year.Count]
         ///                 );
         ///                 f.SetCellValue(
         ///                     "Sheet1",
         ///                     Excelize.CoordinatesToCellName(3, row),
-        ///                     types[random.Next(4)]
+        ///                     types[(row - 2) % types.Count]
         ///                 );
-        ///                 f.SetCellValue("Sheet1", Excelize.CoordinatesToCellName(4, row), random.Next(5000));
+        ///                 f.SetCellValue(
+        ///                     "Sheet1",
+        ///                     Excelize.CoordinatesToCellName(4, row),
+        ///                     revenue[(row - 2) % revenue.Count]
+        ///                 );
         ///                 f.SetCellValue(
         ///                     "Sheet1",
         ///                     Excelize.CoordinatesToCellName(5, row),
-        ///                     region[random.Next(4)]
+        ///                     region[(row - 2) % region.Count]
         ///                 );
         ///             }
         ///             f.AddPivotTable(
         ///                 new PivotTableOptions
         ///                 {
         ///                     DataRange = "Sheet1!A1:E31",
-        ///                     PivotTableRange = "Sheet1!G2:M34",
+        ///                     PivotTableRange = "Sheet1!G4:M31",
         ///                     Rows = new PivotTableField[]
         ///                     {
         ///                         new() { Data = "Month", DefaultSubtotal = true },
@@ -2086,7 +2102,7 @@ namespace ExcelizeCs
         ///                     {
         ///                         new()
         ///                         {
-        ///                             Data = "Sales",
+        ///                             Data = "Revenue",
         ///                             Name = "Summarize",
         ///                             Subtotal = "sum",
         ///                         },
@@ -2367,7 +2383,16 @@ namespace ExcelizeCs
         ///                 {
         ///                     Cell = "G6",
         ///                     Type = "rect",
-        ///                     Line = new ShapeLine { Color = "4286F4", Width = 1.2 },
+        ///                     Line = new LineOptions
+        ///                     {
+        ///                         Fill = new Fill
+        ///                         {
+        ///                             Type = "pattern",
+        ///                             Color = new string[] { "4286F4" },
+        ///                             Pattern = 1,
+        ///                         },
+        ///                         Width = 1.2,
+        ///                     },
         ///                     Fill = new Fill { Color = new string[] { "8EB9FF" }, Pattern = 1 },
         ///                     Paragraph = new RichTextRun[]
         ///                     {

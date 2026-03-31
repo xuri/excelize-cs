@@ -131,7 +131,6 @@ class Program
             new() { "Normal", 5, 2, 4 },
             new() { "Large", 6, 7, 8 },
         };
-        var text = "Fruit 3D Clustered Column Chart";
         try
         {
             foreach (var row in data)
@@ -166,7 +165,13 @@ class Program
                         Values = "Sheet1!$B$4:$D$4",
                     },
                 },
-                Title = new RichTextRun[] { new() { Text = text } },
+                Title = new ChartTitle
+                {
+                    Paragraph = new RichTextRun[]
+                    {
+                        new() { Text = "Fruit 3D Clustered Column Chart" },
+                    },
+                },
             };
             f.AddChart("Sheet1", "E1", chart);
             // Save spreadsheet by the given path.

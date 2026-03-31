@@ -59,35 +59,35 @@ namespace ExcelizeCs
     }
 
     /// <summary>
-    /// ChartDashType defines the currently supported chart dash types
+    /// LineDashType defines the currently supported line dash types
     /// enumeration.
     /// </summary>
-    public enum ChartDashType : byte
+    public enum LineDashType : byte
     {
-        ChartDashUnset = 0,
-        ChartDashSolid = 1,
-        ChartDashDot = 2,
-        ChartDashDash = 3,
-        ChartDashLgDash = 4,
-        ChartDashSashDot = 5,
-        ChartDashLgDashDot = 6,
-        ChartDashLgDashDotDot = 7,
-        ChartDashSysDash = 8,
-        ChartDashSysDot = 9,
-        ChartDashSysDashDot = 10,
-        ChartDashSysDashDotDot = 11,
+        LineDashUnset = 0,
+        LineDashSolid = 1,
+        LineDashDot = 2,
+        LineDashDash = 3,
+        LineDashLgDash = 4,
+        LineDashSashDot = 5,
+        LineDashLgDashDot = 6,
+        LineDashLgDashDotDot = 7,
+        LineDashSysDash = 8,
+        LineDashSysDot = 9,
+        LineDashSysDashDot = 10,
+        LineDashSysDashDotDot = 11,
     }
 
     /// <summary>
-    /// ChartLineType defines the currently supported chart line types
+    /// LineType defines the currently supported line types
     /// enumeration.
     /// </summary>
-    public enum ChartLineType : byte
+    public enum LineType : byte
     {
-        ChartLineUnset = 0,
-        ChartLineSolid = 1,
-        ChartLineNone = 2,
-        ChartLineAutomatic = 3,
+        LineUnset = 0,
+        LineSolid = 1,
+        LineNone = 2,
+        LineAutomatic = 3,
     }
 
     /// <summary>
@@ -563,6 +563,22 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// ChartTitle directly maps the format settings of the chart title.
+    /// </summary>
+    public struct ChartTitle
+    {
+        public Fill Fill;
+        public LineOptions Border;
+        public int ParagraphLen;
+        public RichTextRun[]? Paragraph;
+        public int OffsetX;
+        public int OffsetY;
+        public int Width;
+        public int Height;
+        public bool Overlay;
+    }
+
+    /// <summary>
     /// ChartAxis directly maps the format settings of the chart axis.
     /// </summary>
     public struct ChartAxis
@@ -583,7 +599,7 @@ namespace ExcelizeCs
         public Font Font;
         public double LogBase;
         public ChartNumFmt NumFmt;
-        public RichTextRun[]? Title;
+        public ChartTitle Title;
     }
 
     /// <summary>
@@ -606,25 +622,13 @@ namespace ExcelizeCs
     }
 
     /// <summary>
-    /// ChartLine directly maps the format settings of the chart line.
-    /// </summary>
-    public struct ChartLine
-    {
-        public ChartLineType Type;
-        public ChartDashType Dash;
-        public Fill Fill;
-        public bool Smooth;
-        public double Width;
-    }
-
-    /// <summary>
     /// ChartUpDownBar directly maps the format settings of the stock chart up
     /// bars and down bars.
     /// </summary>
     public struct ChartUpDownBar
     {
         public Fill Fill;
-        public ChartLine Border;
+        public LineOptions Border;
     }
 
     /// <summary>
@@ -662,7 +666,7 @@ namespace ExcelizeCs
     /// </summary>
     public struct ChartMarker
     {
-        public ChartLine Border;
+        public LineOptions Border;
         public Fill Fill;
         public string Symbol;
         public int Size;
@@ -689,7 +693,7 @@ namespace ExcelizeCs
         public string Sizes;
         public Fill Fill;
         public ChartLegend Legend;
-        public ChartLine Line;
+        public LineOptions Line;
         public ChartMarker Marker;
         public ChartDataLabel DataLabel;
         public ChartDataLabelPositionType DataLabelPosition;
@@ -706,13 +710,13 @@ namespace ExcelizeCs
         public GraphicOptions Format;
         public ChartDimension Dimension;
         public ChartLegend Legend;
-        public RichTextRun[]? Title;
+        public ChartTitle Title;
         public bool? VaryColors;
         public ChartAxis XAxis;
         public ChartAxis YAxis;
         public ChartPlotArea PlotArea;
         public Fill Fill;
-        public ChartLine Border;
+        public LineOptions Border;
         public string ShowBlanksAs;
         public int BubbleSize;
         public int HoleSize;
@@ -746,6 +750,10 @@ namespace ExcelizeCs
     /// NumFmt specifies the number format ID of the data field, this filed only
     /// accepts built-in number format ID and does not support custom number
     /// format expression currently.
+    ///
+    /// SelectedItems specifies the default selected items in a pivot table
+    /// field. The selected items must be values within the cell range
+    /// referenced by that field.
     /// </remarks>
     public struct PivotTableField
     {
@@ -758,6 +766,7 @@ namespace ExcelizeCs
         public string Subtotal;
         public bool DefaultSubtotal;
         public int NumFmt;
+        public string[]? SelectedItems;
     }
 
     /// <summary>
@@ -799,15 +808,6 @@ namespace ExcelizeCs
     }
 
     /// <summary>
-    /// ShapeLine directly maps the line settings of the shape.
-    /// </summary>
-    public struct ShapeLine
-    {
-        public string Color;
-        public double? Width;
-    }
-
-    /// <summary>
     /// Shape directly maps the format settings of the shape.
     /// </summary>
     public struct Shape
@@ -819,7 +819,7 @@ namespace ExcelizeCs
         public uint Height;
         public GraphicOptions Format;
         public Fill Fill;
-        public ShapeLine Line;
+        public LineOptions Line;
         public RichTextRun[]? Paragraph;
     }
 
@@ -902,6 +902,13 @@ namespace ExcelizeCs
     /// (ascending).</para>
     /// <para><b>Format</b> specifies the format of the slicer. This setting is
     /// optional.</para>
+    /// <para><b>SelectedItems</b> option is used to specify the default
+    /// selected items in a slicer. It is currently only supported for slicers
+    /// in pivot tables. The selected items must fall within the range of items
+    /// selected in the pivot table. If the pivot table is created using the
+    /// <c>AddPivotTable</c> function, the same field must also have its
+    /// selected item range specified at the time the pivot table is created.
+    /// </para>
     /// </remarks>
     public struct SlicerOptions
     {
@@ -916,6 +923,19 @@ namespace ExcelizeCs
         public bool? DisplayHeader;
         public bool ItemDesc;
         public GraphicOptions Format;
+        public string[]? SelectedItems;
+    }
+
+    /// <summary>
+    /// LineOptions directly maps the format settings of the line.
+    /// </summary>
+    public struct LineOptions
+    {
+        public LineType Type;
+        public LineDashType Dash;
+        public Fill Fill;
+        public bool Smooth;
+        public double Width;
     }
 
     /// <summary>

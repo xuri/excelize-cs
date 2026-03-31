@@ -66,7 +66,13 @@ public class UnitTest
                     Values = "Sheet1!$B$4:$D$4",
                 },
             },
-            Title = new RichTextRun[] { new() { Text = "Fruit 3D Clustered Column Chart" } },
+            Title = new ChartTitle
+            {
+                Paragraph = new RichTextRun[]
+                {
+                    new() { Text = "Fruit 3D Clustered Column Chart" },
+                },
+            },
         };
         Assert.Null(
             Record.Exception(() =>
@@ -335,7 +341,16 @@ public class UnitTest
                     {
                         Cell = "G6",
                         Type = "rect",
-                        Line = new ShapeLine { Color = "4286F4", Width = 1.2 },
+                        Line = new LineOptions
+                        {
+                            Fill = new Fill
+                            {
+                                Type = "pattern",
+                                Color = new string[] { "4286F4" },
+                                Pattern = 1,
+                            },
+                            Width = 1.2,
+                        },
                         Fill = new Fill { Color = new string[] { "8EB9FF" }, Pattern = 1 },
                         Paragraph = new RichTextRun[]
                         {
@@ -966,49 +981,61 @@ public class UnitTest
         };
         List<int> year = new List<int> { 2017, 2018, 2019 };
         List<string> types = new List<string> { "Meat", "Dairy", "Beverages", "Produce" };
+        List<int> revenue = new List<int>
+        {
+            3217,
+            4512,
+            3891,
+            4738,
+            3054,
+            4265,
+            3643,
+            4901,
+            3378,
+            4126,
+        };
         List<string> region = new List<string> { "East", "West", "North", "South" };
-        Random random = new Random();
         Assert.Null(
             Record.Exception(() =>
             {
                 f.SetSheetRow(
                     "Sheet1",
                     "A1",
-                    new List<object> { "Month", "Year", "Type", "Sales", "Region" }
+                    new List<object> { "Month", "Year", "Type", "Revenue", "Region" }
                 );
                 for (int row = 2; row < 32; row++)
                 {
                     f.SetCellValue(
                         "Sheet1",
                         Excelize.CoordinatesToCellName(1, row),
-                        months[random.Next(12)]
+                        months[(row - 2) % months.Count]
                     );
                     f.SetCellValue(
                         "Sheet1",
                         Excelize.CoordinatesToCellName(2, row),
-                        year[random.Next(3)]
+                        year[(row - 2) % year.Count]
                     );
                     f.SetCellValue(
                         "Sheet1",
                         Excelize.CoordinatesToCellName(3, row),
-                        types[random.Next(4)]
+                        types[(row - 2) % types.Count]
                     );
                     f.SetCellValue(
                         "Sheet1",
                         Excelize.CoordinatesToCellName(4, row),
-                        random.Next(5000)
+                        revenue[(row - 2) % revenue.Count]
                     );
                     f.SetCellValue(
                         "Sheet1",
                         Excelize.CoordinatesToCellName(5, row),
-                        region[random.Next(4)]
+                        region[(row - 2) % region.Count]
                     );
                 }
                 f.AddPivotTable(
                     new PivotTableOptions
                     {
                         DataRange = "Sheet1!A1:E31",
-                        PivotTableRange = "Sheet1!G2:M34",
+                        PivotTableRange = "Sheet1!G4:M31",
                         Name = "PivotTable1",
                         Rows = new PivotTableField[]
                         {
@@ -1024,7 +1051,7 @@ public class UnitTest
                         {
                             new()
                             {
-                                Data = "Sales",
+                                Data = "Revenue",
                                 Name = "Summarize",
                                 Subtotal = "sum",
                             },
