@@ -1333,6 +1333,7 @@ public class UnitTest
                 f.SetCellStyle("Sheet1", "A1", "B2", styleId);
                 f.SetColStyle("Sheet1", "H", styleId);
                 f.SetColVisible("Sheet1", "D:F", false);
+                f.AutoFitColWidth("Sheet1", "A");
                 f.SetColWidth("Sheet1", "A", "A", 44.5);
                 f.UpdateLinkedValue();
                 f.SetCellInt("Sheet1", "A1", 100);
@@ -1432,6 +1433,8 @@ public class UnitTest
         );
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.AddVBAProject(Array.Empty<byte>()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.AutoFitColWidth("Sheet1", "D"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.CopySheet(1, 2));
         Assert.Equal(expected, err.Message);

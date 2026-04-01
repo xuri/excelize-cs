@@ -199,6 +199,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr AutoFitColWidth(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string columns
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.CellNameToCoordinatesResult CellNameToCoordinates(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
         );
@@ -2765,6 +2772,55 @@ namespace ExcelizeCs
             string err = Marshal.PtrToStringUTF8(
                 Lib.AutoFilter(FileIdx, sheet, range, arr, arr.Length)
             );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// AutoFitColWidth provides a function to auto fit columns width
+        /// according to their text content with font format. If the selected
+        /// range contains hidden columns and those columns have content, this
+        /// function will unhide the hidden columns. Note that this function
+        /// calculates the width of the text approximately based on the font
+        /// format, currently does not support merged cells, the actual width
+        /// may be different when you open the workbook in Office applications.
+        /// This process can be relatively slow on large worksheets, so this
+        /// should normally only be called once per column, at the end of your
+        /// processing.
+        /// <example>
+        /// For example, auto fit column width for column <c>D</c> on
+        /// <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.AutoFitColWidth("Sheet1", "D");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Auto fit column width for columns <c>D</c> to <c>F</c> on
+        /// <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.AutoFitColWidth("Sheet1", "D:F");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="columns">The columns range</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void AutoFitColWidth(string sheet, string columns)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.AutoFitColWidth(FileIdx, sheet, columns));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
