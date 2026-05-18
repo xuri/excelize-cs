@@ -571,6 +571,8 @@ namespace ExcelizeCs
         public LineOptions Border;
         public int ParagraphLen;
         public RichTextRun[]? Paragraph;
+        public Font? Font;
+        public string Formula;
         public int OffsetX;
         public int OffsetY;
         public int Width;
