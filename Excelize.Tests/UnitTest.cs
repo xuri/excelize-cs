@@ -605,6 +605,12 @@ public class UnitTest
                     }
                 );
                 f.SetCellStyle("Sheet1", "A3", "A3", style);
+                var (link, target) = f.GetCellHyperLink("Sheet1", "A3");
+                Assert.True(link);
+                Assert.Equal(display, target);
+                (link, target) = f.GetCellHyperLink("Sheet1", "A4");
+                Assert.False(link);
+                Assert.Empty(target);
             })
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() => f.SetCellStr("SheetN", "A3", ""));
@@ -1460,6 +1466,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetCalcProps());
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellFormula("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCellHyperLink("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);

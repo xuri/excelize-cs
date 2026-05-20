@@ -314,6 +314,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.GetCellHyperLinkResult GetCellHyperLink(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult GetCellValue(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -1576,6 +1583,634 @@ namespace ExcelizeCs
         /// <summary>
         /// Add chart in a sheet by given chart format set (such as offset,
         /// scale, aspect ratio setting and print settings) and properties set.
+        /// <example>
+        /// For example, create 3D clustered column chart with data
+        /// <c>Sheet1!$E$1:$L$15</c>:
+        /// <code><![CDATA[
+        /// using ExcelizeCs;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         ExcelizeCs.File f = Excelize.NewFile();
+        ///         try
+        ///         {
+        ///             var rows = new List<List<object>>
+        ///             {
+        ///                 new List<object> { null, "Apple", "Orange", "Pear" },
+        ///                 new List<object> { "Small", 2, 3, 3 },
+        ///                 new List<object> { "Normal", 5, 2, 4 },
+        ///                 new List<object> { "Large", 6, 7, 8 },
+        ///             };
+        ///             for (int idx = 0; idx < rows.Count; idx++)
+        ///             {
+        ///                 string cell = Excelize.CoordinatesToCellName(1, idx + 1);
+        ///                 f.SetSheetRow("Sheet1", cell, rows[idx]);
+        ///             }
+        ///             f.AddChart(
+        ///                 "Sheet1",
+        ///                 "E1",
+        ///                 new Chart
+        ///                 {
+        ///                     Type = ChartType.Col3DClustered,
+        ///                     Series = new ChartSeries[]
+        ///                     {
+        ///                         new()
+        ///                         {
+        ///                             Name = "Sheet1!$A$2",
+        ///                             Categories = "Sheet1!$B$1:$D$1",
+        ///                             Values = "Sheet1!$B$2:$D$2",
+        ///                         },
+        ///                         new()
+        ///                         {
+        ///                             Name = "Sheet1!$A$3",
+        ///                             Categories = "Sheet1!$B$1:$D$1",
+        ///                             Values = "Sheet1!$B$3:$D$3",
+        ///                         },
+        ///                         new()
+        ///                         {
+        ///                             Name = "Sheet1!$A$4",
+        ///                             Categories = "Sheet1!$B$1:$D$1",
+        ///                             Values = "Sheet1!$B$4:$D$4",
+        ///                         },
+        ///                     },
+        ///                     Title = new ChartTitle
+        ///                     {
+        ///                         Paragraph = new RichTextRun[]
+        ///                         {
+        ///                             new() { Text = "Fruit 3D Clustered Column Chart" },
+        ///                         },
+        ///                     },
+        ///                     Legend = new ChartLegend { ShowLegendKey = false },
+        ///                     PlotArea = new ChartPlotArea
+        ///                     {
+        ///                         ShowBubbleSize = true,
+        ///                         ShowCatName = false,
+        ///                         ShowLeaderLines = false,
+        ///                         ShowPercent = true,
+        ///                         ShowSerName = true,
+        ///                         ShowVal = true,
+        ///                     },
+        ///                 }
+        ///             );
+        ///             f.SaveAs("Book1.xlsx");
+        ///         }
+        ///         catch (RuntimeError err)
+        ///         {
+        ///             Console.WriteLine(err.Message);
+        ///         }
+        ///         finally
+        ///         {
+        ///             string err = f.Close();
+        ///             if (!string.IsNullOrEmpty(err))
+        ///                 Console.WriteLine(err);
+        ///         }
+        ///     }
+        /// }
+        /// ]]></code>
+        /// </example>
+        /// The following shows the type of chart supported by excelize:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>ID | Enumeration</term>
+        ///         <description>Chart</description>
+        ///     </listheader>
+        ///     <item><term>0  | Area</term><description>2D area chart</description></item>
+        ///     <item><term>1  | AreaStacked</term><description>2D stacked area chart</description></item>
+        ///     <item><term>2  | AreaPercentStacked</term><description>2D 100% stacked area chart</description></item>
+        ///     <item><term>3  | Area3D</term><description>3D area chart</description></item>
+        ///     <item><term>4  | Area3DStacked</term><description>3D stacked area chart</description></item>
+        ///     <item><term>5  | Area3DPercentStacked</term><description>3D 100% stacked area chart</description></item>
+        ///     <item><term>6  | Bar</term><description>2D clustered bar chart</description></item>
+        ///     <item><term>7  | BarStacked</term><description>2D stacked bar chart</description></item>
+        ///     <item><term>8  | BarPercentStacked</term><description>2D 100% stacked bar chart</description></item>
+        ///     <item><term>9  | Bar3DClustered</term><description>3D clustered bar chart</description></item>
+        ///     <item><term>10 | Bar3DStacked</term><description>3D stacked bar chart</description></item>
+        ///     <item><term>11 | Bar3DPercentStacked</term><description>3D 100% stacked bar chart</description></item>
+        ///     <item><term>12 | Bar3DConeClustered</term><description>3D cone clustered bar chart</description></item>
+        ///     <item><term>13 | Bar3DConeStacked</term><description>3D cone stacked bar chart</description></item>
+        ///     <item><term>14 | Bar3DConePercentStacked</term><description>3D cone percent bar chart</description></item>
+        ///     <item><term>15 | Bar3DPyramidClustered</term><description>3D pyramid clustered bar chart</description></item>
+        ///     <item><term>16 | Bar3DPyramidStacked</term><description>3D pyramid stacked bar chart</description></item>
+        ///     <item><term>17 | Bar3DPyramidPercentStacked</term><description>3D pyramid percent stacked bar chart</description></item>
+        ///     <item><term>18 | Bar3DCylinderClustered</term><description>3D cylinder clustered bar chart</description></item>
+        ///     <item><term>19 | Bar3DCylinderStacked</term><description>3D cylinder stacked bar chart</description></item>
+        ///     <item><term>20 | Bar3DCylinderPercentStacked</term><description>3D cylinder percent stacked bar chart</description></item>
+        ///     <item><term>21 | Col</term><description>2D clustered column chart</description></item>
+        ///     <item><term>22 | ColStacked</term><description>2D stacked column chart</description></item>
+        ///     <item><term>23 | ColPercentStacked</term><description>2D 100% stacked column chart</description></item>
+        ///     <item><term>24 | Col3DClustered</term><description>3D clustered column chart</description></item>
+        ///     <item><term>25 | Col3D</term><description>3D column chart</description></item>
+        ///     <item><term>26 | Col3DStacked</term><description>3D stacked column chart</description></item>
+        ///     <item><term>27 | Col3DPercentStacked</term><description>3D 100% stacked column chart</description></item>
+        ///     <item><term>28 | Col3DCone</term><description>3D cone column chart</description></item>
+        ///     <item><term>29 | Col3DConeClustered</term><description>3D cone clustered column chart</description></item>
+        ///     <item><term>30 | Col3DConeStacked</term><description>3D cone stacked column chart</description></item>
+        ///     <item><term>31 | Col3DConePercentStacked</term><description>3D cone percent stacked column chart</description></item>
+        ///     <item><term>32 | Col3DPyramid</term><description>3D pyramid column chart</description></item>
+        ///     <item><term>33 | Col3DPyramidClustered</term><description>3D pyramid clustered column chart</description></item>
+        ///     <item><term>34 | Col3DPyramidStacked</term><description>3D pyramid stacked column chart</description></item>
+        ///     <item><term>35 | Col3DPyramidPercentStacked</term><description>3D pyramid percent stacked column chart</description></item>
+        ///     <item><term>36 | Col3DCylinder</term><description>3D cylinder column chart</description></item>
+        ///     <item><term>37 | Col3DCylinderClustered</term><description>3D cylinder clustered column chart</description></item>
+        ///     <item><term>38 | Col3DCylinderStacked</term><description>3D cylinder stacked column chart</description></item>
+        ///     <item><term>39 | Col3DCylinderPercentStacked</term><description>3D cylinder percent stacked column chart</description></item>
+        ///     <item><term>40 | Doughnut</term><description>doughnut chart</description></item>
+        ///     <item><term>41 | Line</term><description>line chart</description></item>
+        ///     <item><term>42 | Line3D</term><description>3D line chart</description></item>
+        ///     <item><term>43 | Pie</term><description>pie chart</description></item>
+        ///     <item><term>44 | Pie3D</term><description>3D pie chart</description></item>
+        ///     <item><term>45 | PieOfPie</term><description>pie of pie chart</description></item>
+        ///     <item><term>46 | BarOfPie</term><description>bar of pie chart</description></item>
+        ///     <item><term>47 | Radar</term><description>radar chart</description></item>
+        ///     <item><term>48 | Scatter</term><description>scatter chart</description></item>
+        ///     <item><term>49 | Surface3D</term><description>3D surface chart</description></item>
+        ///     <item><term>50 | WireframeSurface3D</term><description>3D wireframe surface chart</description></item>
+        ///     <item><term>51 | Contour</term><description>contour chart</description></item>
+        ///     <item><term>52 | WireframeContour</term><description>wireframe contour chart</description></item>
+        ///     <item><term>53 | Bubble</term><description>bubble chart</description></item>
+        ///     <item><term>54 | Bubble3D</term><description>3D bubble chart</description></item>
+        ///     <item><term>55 | StockHighLowClose</term><description>High-Low-Close stock chart</description></item>
+        ///     <item><term>56 | StockOpenHighLowClose</term><description>Open-High-Low-Close stock chart</description></item>
+        /// </list>
+        /// In Excel a chart series is a collection of information that defines
+        /// which data is plotted such as values, axis labels and formatting.
+        /// The series options that can be set are:
+        /// <list type="bullet">
+        ///     <item><description>Name</description></item>
+        ///     <item><description>Categories</description></item>
+        ///     <item><description>Values</description></item>
+        ///     <item><description>Fill</description></item>
+        ///     <item><description>Legend</description></item>
+        ///     <item><description>Line</description></item>
+        ///     <item><description>Marker</description></item>
+        ///     <item><description>DataLabel</description></item>
+        ///     <item><description>DataLabelPosition</description></item>
+        ///     <item><description>DataPoint</description></item>
+        /// </list>
+        /// <para><c>Name</c>: Set the name for the series. The name is
+        /// displayed in the chart legend and in the formula bar. The
+        /// <c>Name</c> property is optional and if it isn't supplied it will
+        /// default to Series 1..n. The name can also be a formula such as
+        /// Sheet1!$A$1.</para>
+        ///
+        /// <para><c>Categories</c>: This sets the chart category labels. The
+        /// category is more or less the same as the X axis. In most chart
+        /// types the <c>Categories</c> property is optional and the chart
+        /// will just assume a sequential series from 1..n.</para>
+        ///
+        /// <para><c>Values</c>: This is the most important property of a
+        /// series and is the only mandatory option for every chart object.
+        /// This option links the chart with the worksheet data that it
+        /// displays.</para>
+        ///
+        /// <para><c>Sizes</c>: This sets the bubble size in a data series.
+        /// The <c>Sizes</c> property is optional and the default value was
+        /// same with <c>Values</c>.</para>
+        ///
+        /// <para><c>Fill</c>: This sets the format for the data series fill.
+        /// The <c>Fill</c> property is optional.</para>
+        ///
+        /// <para><c>Legend</c>: This sets the font of legend text for a data
+        /// series. The <c>Legend</c> property is optional.</para>
+        ///
+        /// <para><c>Line</c>: This sets the line format of the line chart.
+        /// The <c>Line</c> property is optional and if it isn't supplied it
+        /// will default style. The options that can be set are width and
+        /// color. The range of width is 0.25pt - 999pt. If the value of width
+        /// is outside the range, the default width of the line is 2pt.</para>
+        ///
+        /// <para><c>Marker</c>: This sets the marker of the line chart and
+        /// scatter chart. The range of optional field <c>Size</c> is 2-72
+        /// (default value is 5). The enumeration value of optional field
+        /// <c>Symbol</c> are (default value is <c>auto</c>): circle, dash,
+        /// diamond, dot, none, picture, plus, square, star, triangle, x,
+        /// auto.</para>
+        ///
+        /// <para><c>DataLabel</c>: This sets the format of the chart series
+        /// data label.</para>
+        ///
+        /// <para><c>DataLabelPosition</c>: This sets the position of the
+        /// chart series data label.</para>
+        ///
+        /// <para><c>DataPoint</c>: This sets the format for individual data
+        /// points in a doughnut, pie or 3D pie chart series. The
+        /// <c>DataPoint</c> property is optional.</para>
+        ///
+        /// <para>Set properties of the chart legend by <c>Legend</c> field with
+        /// <c>ChartLegend</c> data type. The options that can be set are:
+        /// <list type="bullet">
+        ///     <item><description>Position</description></item>
+        ///     <item><description>ShowLegendKey</description></item>
+        ///     <item><description>Font</description></item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para><c>Position</c>: Set the position of the chart legend. The
+        /// default legend position is bottom. The available positions are:
+        /// none, top, bottom, left, right, top_right.</para>
+        ///
+        /// <para><c>ShowLegendKey</c>: Set the legend keys shall be shown in
+        /// data labels. The default value is false.</para>
+        ///
+        /// <para><c>Font</c>: Set the font properties of the chart legend text.
+        /// The properties that can be set are the same as the font object that
+        /// is used for cell formatting. The font family, size, color, bold,
+        /// italic, underline, and strike properties can be set.</para>
+        ///
+        /// <para>Set properties of the chart title by <c>Title</c> field with
+        /// <c>ChartTitle</c> data type. The properties that can be set are:
+        /// <list type="bullet">
+        ///     <item><description>Fill</description></item>
+        ///     <item><description>Border</description></item>
+        ///     <item><description>Paragraph</description></item>
+        ///     <item><description>Font</description></item>
+        ///     <item><description>Formula</description></item>
+        ///     <item><description>OffsetX</description></item>
+        ///     <item><description>OffsetY</description></item>
+        ///     <item><description>Width</description></item>
+        ///     <item><description>Height</description></item>
+        ///     <item><description>Overlay</description></item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para><c>Fill</c>: Set fill color of the chart title. The
+        /// <c>Fill</c> property is optional.</para>
+        ///
+        /// <para><c>Border</c>: Set border of the chart title, the properties
+        /// that can be set are the same as the border object that is used for
+        /// cell formatting. The <c>Border</c> property is optional.</para>
+        ///
+        /// <para><c>Paragraph</c>: Set the rich text of the chart title text.
+        /// The <c>Paragraph</c> property is optional, and can not be set at the
+        /// same time with <c>Formula</c> property.</para>
+        ///
+        /// <para><c>Font</c>: Set the font properties of the chart title
+        /// formula text. The <c>Font</c> property is optional.</para>
+        ///
+        /// <para><c>Formula</c>: Set the formula of the chart title text. For
+        /// example: Sheet1!$A$1. The <c>Formula</c> property is optional, and
+        /// can not be set at the same time with <c>Paragraph</c> property.
+        /// </para>
+        ///
+        /// <para><c>OffsetX</c>: Set the horizontal offset of the chart title.
+        /// The <c>OffsetX</c> property is optional. The default value is 0, and
+        /// the value of <c>OffsetX</c> must be an integer from 0 to 100.</para>
+        ///
+        /// <para><c>OffsetY</c>: Set the vertical offset of the chart title.
+        /// The <c>OffsetY</c> property is optional. The default value is 0, and
+        /// the value of <c>OffsetY</c> must be an integer from 0 to 100.</para>
+        ///
+        /// <para><c>Width</c>: Set the width of the chart title. The
+        /// <c>Width</c> property is optional. The default value is 0, and the
+        /// value of <c>Width</c> must be an integer from 0 to 100.</para>
+        ///
+        /// <para><c>Height</c>: Set the height of the chart title. The
+        /// <c>Height</c> property is optional. The default value is 0, and the
+        /// value of <c>Height</c> must be an integer from 0 to 100.</para>
+        ///
+        /// <para><c>Overlay</c>: Set the chart title shall be overlaid on the
+        /// chart. The <c>Overlay</c> property is optional. The default value is
+        /// false.</para>
+        ///
+        /// <para>Specifies how blank cells are plotted on the chart by
+        /// <c>ShowBlanksAs</c>. The default value is gap. The options that can
+        /// be set are:
+        /// <list type="bullet">
+        ///     <item><description>gap: Specifies that blank values shall be left as a gap.</description></item>
+        ///     <item><description>span: Specifies that blank values shall be spanned with a line.</description></item>
+        ///     <item><description>zero: Specifies that blank values shall be treated as zero.</description></item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para>Specifies that each data marker in the series has a different
+        /// color by <c>VaryColors</c>. The default value is true.</para>
+        ///
+        /// <para>Set chart offset, scale, aspect ratio setting and print
+        /// settings by <c>Format</c>, same as function <c>AddPicture</c>.
+        /// </para>
+        ///
+        /// <para>Set the properties of the chart plot area by <c>PlotArea</c>
+        /// field with <c>ChartPlotArea</c> data type. The properties that can
+        /// be set are:
+        /// <list type="bullet">
+        ///     <item><description>SecondPlotValues</description></item>
+        ///     <item><description>ShowBubbleSize</description></item>
+        ///     <item><description>ShowCatName</description></item>
+        ///     <item><description>ShowDataTable</description></item>
+        ///     <item><description>ShowDataTableKeys</description></item>
+        ///     <item><description>ShowLeaderLines</description></item>
+        ///     <item><description>ShowPercent</description></item>
+        ///     <item><description>ShowSerName</description></item>
+        ///     <item><description>ShowVal</description></item>
+        ///     <item><description>Fill</description></item>
+        ///     <item><description>UpBars</description></item>
+        ///     <item><description>DownBars</description></item>
+        ///     <item><description>NumFmt</description></item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para><c>SecondPlotValues</c>: Specifies the values in second plot
+        /// for the <c>PieOfPie</c> and <c>BarOfPie</c> chart.</para>
+        ///
+        /// <para><c>ShowBubbleSize</c>: Specifies the bubble size shall be
+        /// shown in a data label. The <c>ShowBubbleSize</c> property is
+        /// optional. The default value is false.</para>
+        ///
+        /// <para><c>ShowCatName</c>: Specifies that the category name shall
+        /// be shown in the data label. The <c>ShowCatName</c> property is
+        /// optional. The default value is true.</para>
+        ///
+        /// <para><c>ShowDataTable</c>: Used for add data table under chart,
+        /// depending on the chart type, only available for area, bar, column
+        /// and line series type charts. The <c>ShowDataTable</c> property is
+        /// optional. The default value is false.</para>
+        ///
+        /// <para><c>ShowDataTableKeys</c>: Used for add legend key in data
+        /// table, only works on <c>ShowDataTable</c> is enabled. The
+        /// <c>ShowDataTableKeys</c> property is optional. The default value
+        /// is false.</para>
+        ///
+        /// <para><c>ShowLeaderLines</c>: Specifies leader lines shall be shown
+        /// for data labels. The <c>ShowLeaderLines</c> property is optional.
+        /// The default value is false.</para>
+        ///
+        /// <para><c>ShowPercent</c>: Specifies that the percentage shall be
+        /// shown in a data label. The <c>ShowPercent</c> property is optional.
+        /// The default value is false.</para>
+        ///
+        /// <para><c>ShowSerName</c>: Specifies that the series name shall be
+        /// shown in a data label. The <c>ShowSerName</c> property is optional.
+        /// The default value is false.</para>
+        ///
+        /// <para><c>ShowVal</c>: Specifies that the value shall be shown in a
+        /// data label. The <c>ShowVal</c> property is optional. The default
+        /// value is false.</para>
+        ///
+        /// <para><c>Fill</c>: Set fill color of the chart.</para>
+        ///
+        /// <para><c>UpBars</c>: Specifies the format for stock chart up bars.
+        /// The <c>UpBars</c> property is optional.</para>
+        ///
+        /// <para><c>DownBars</c>: Specifies the format for stock chart down
+        /// bars. The <c>DownBars</c> property is optional.</para>
+        ///
+        /// <para><c>NumFmt</c>: Specifies that if linked to source and set
+        /// custom number format code for data labels. The <c>NumFmt</c>
+        /// property is optional. The default format code is
+        /// <c>General</c>.</para>
+        ///
+        /// <para>Set the primary horizontal and vertical axis options by
+        /// <c>XAxis</c> and <c>YAxis</c> fields with <c>ChartAxis</c> data
+        /// type. The properties of <c>XAxis</c> that can be set are:
+        /// <list type="bullet">
+        ///     <item><description>None</description></item>
+        ///     <item><description>DropLines</description></item>
+        ///     <item><description>HighLowLines</description></item>
+        ///     <item><description>MajorGridLines</description></item>
+        ///     <item><description>MinorGridLines</description></item>
+        ///     <item><description>TickLabelSkip</description></item>
+        ///     <item><description>ReverseOrder</description></item>
+        ///     <item><description>Maximum</description></item>
+        ///     <item><description>Minimum</description></item>
+        ///     <item><description>Alignment</description></item>
+        ///     <item><description>Font</description></item>
+        ///     <item><description>NumFmt</description></item>
+        ///     <item><description>Title</description></item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para>The properties of <c>YAxis</c> that can be set are:
+        /// <list type="bullet">
+        ///     <item><description>None</description></item>
+        ///     <item><description>MajorGridLines</description></item>
+        ///     <item><description>MinorGridLines</description></item>
+        ///     <item><description>MajorUnit</description></item>
+        ///     <item><description>Secondary</description></item>
+        ///     <item><description>ReverseOrder</description></item>
+        ///     <item><description>Maximum</description></item>
+        ///     <item><description>Minimum</description></item>
+        ///     <item><description>Alignment</description></item>
+        ///     <item><description>Font</description></item>
+        ///     <item><description>LogBase</description></item>
+        ///     <item><description>NumFmt</description></item>
+        ///     <item><description>Title</description></item>
+        /// </list>
+        /// </para>
+        ///
+        /// <para><c>None</c>: Disable axes.</para>
+        ///
+        /// <para><c>DropLines</c>: Specifies drop lines for the 2D and 3D area
+        /// and line charts. Drop lines are vertical lines that connect data
+        /// points in a chart down to the horizontal (category) axis. They are
+        /// often used in Line or Area charts to make it easier to see the exact
+        /// category position of each point. The <c>DropLines</c> property is
+        /// optional. The default value is false.</para>
+        ///
+        /// <para><c>HighLowLines</c>: Specifies high low lines for the 2D line
+        /// chart. High low lines displayed by default in stock charts. They
+        /// extend from the highest value to the lowest value in each category.
+        /// The <c>HighLowLines</c> property is optional. The default value is
+        /// false.</para>
+        ///
+        /// <para><c>MajorGridLines</c>: Specifies major grid lines.</para>
+        ///
+        /// <para><c>MinorGridLines</c>: Specifies minor grid lines.</para>
+        ///
+        /// <para><c>MajorUnit</c>: Specifies the distance between major ticks.
+        /// Shall contain a positive floating-point number. The <c>MajorUnit</c>
+        /// property is optional. The default value is auto.</para>
+        ///
+        /// <para><c>Secondary</c>: Specifies the current series vertical axis
+        /// as the secondary axis, this only works for the second and later
+        /// chart in the combo chart. The default value is false.</para>
+        ///
+        /// <para><c>TickLabelSkip</c>: Specifies how many tick labels to skip
+        /// between label that is drawn. The <c>TickLabelSkip</c> property is
+        /// optional. The default value is auto.</para>
+        ///
+        /// <para><c>ReverseOrder</c>: Specifies that the categories or values
+        /// on reverse order (orientation of the chart). The <c>ReverseOrder</c>
+        /// property is optional. The default value is false.</para>
+        ///
+        /// <para><c>Maximum</c>: Specifies that the fixed maximum, 0 is auto.
+        /// The <c>Maximum</c> property is optional. The default value is auto.
+        /// </para>
+        ///
+        /// <para><c>Minimum</c>: Specifies that the fixed minimum, 0 is auto.
+        /// The <c>Minimum</c> property is optional. The default value is auto.
+        /// </para>
+        ///
+        /// <para><c>Alignment</c>: Specifies that the alignment of the
+        /// horizontal and vertical axis. The properties of alignment that can
+        /// be set are: TextRotation (value from -90 to 90) and Vertical
+        /// (horz, vert, vert270, wordArtVert, eaVert, mongolianVert,
+        /// wordArtVertRtl).</para>
+        ///
+        /// <para><c>Font</c>: Specifies that the font of the horizontal and
+        /// vertical axis. The properties of font that can be set are: Bold,
+        /// Italic, Underline, Family, Size, Strike, Color, VertAlign.</para>
+        ///
+        /// <para><c>LogBase</c>: Specifies logarithmic scale base number of
+        /// the vertical axis.</para>
+        ///
+        /// <para><c>NumFmt</c>: Specifies that if linked to source and set
+        /// custom number format code for axis. The <c>NumFmt</c> property is
+        /// optional. The default format code is <c>General</c>.</para>
+        ///
+        /// <para><c>Title</c>: Specifies that the primary horizontal or
+        /// vertical axis title by <c>Title</c> field with <c>ChartTitle</c>
+        /// data type. The <c>Title</c> property is optional.</para>
+        ///
+        /// <para>Set chart size by <c>Dimension</c> property with
+        /// <c>ChartDimension</c> data type. The <c>Dimension</c> property is
+        /// optional. The default width is 480, and height is 260.</para>
+        ///
+        /// <para>Set chart legend for all data series by <c>Legend</c> property
+        /// with <c>ChartLegend</c> data type. The <c>Legend</c> property is
+        /// optional.</para>
+        ///
+        /// <para>Set the bubble size in all data series for the bubble chart or
+        /// 3D bubble chart by <c>BubbleSizes</c> property. The
+        /// <c>BubbleSizes</c> property is optional. The default width is 100,
+        /// and the value should be great than 0 and less or equal than 300.
+        /// </para>
+        ///
+        /// <para>Set the doughnut hole size in all data series for the doughnut
+        /// chart by <c>HoleSize</c> property. The <c>HoleSize</c> property is
+        /// optional. The default width is 75, and the value should be great
+        /// than 0 and less or equal than 90.</para>
+        ///
+        /// <para>Set the gap width of the column and bar series chart by
+        /// <c>GapWidth</c> property. The <c>GapWidth</c> property is optional.
+        /// The default width is 150, and the value should be great or equal
+        /// than 0 and less or equal than 500.</para>
+        ///
+        /// <para>Set series overlap of the column and bar series chart by
+        /// <c>Overlap</c> property. The <c>Overlap</c> property is optional.
+        /// The default width is 0, and the value should be great or equal than
+        /// -100 and less or equal than 100.</para>
+        ///
+        /// <para><c>combo</c>: Specifies the create a chart that combines two
+        /// or more chart types in a single chart.</para>
+        /// <example>
+        /// For example, create a clustered column - line chart with data
+        /// <c>Sheet1!$E$1:$L$15</c>:
+        /// <code><![CDATA[
+        /// using ExcelizeCs;
+        ///
+        /// class Program
+        /// {
+        ///     static void Main()
+        ///     {
+        ///         ExcelizeCs.File f = Excelize.NewFile();
+        ///         try
+        ///         {
+        ///             var rows = new List<List<object>>
+        ///             {
+        ///                 new List<object> { null, "Apple", "Orange", "Pear" },
+        ///                 new List<object> { "Small", 2, 3, 3 },
+        ///                 new List<object> { "Normal", 5, 2, 4 },
+        ///                 new List<object> { "Large", 6, 7, 8 },
+        ///             };
+        ///             for (int idx = 0; idx < rows.Count; idx++)
+        ///             {
+        ///                 string cell = Excelize.CoordinatesToCellName(1, idx + 1);
+        ///                 f.SetSheetRow("Sheet1", cell, rows[idx]);
+        ///             }
+        ///             f.AddChart(
+        ///                 "Sheet1",
+        ///                 "E1",
+        ///                 new Chart
+        ///                 {
+        ///                     Type = ChartType.Col,
+        ///                     Series = new ChartSeries[]
+        ///                     {
+        ///                         new()
+        ///                         {
+        ///                             Name = "Sheet1!$A$2",
+        ///                             Categories = "Sheet1!$B$1:$D$1",
+        ///                             Values = "Sheet1!$B$2:$D$2",
+        ///                         },
+        ///                     },
+        ///                     Format = new GraphicOptions
+        ///                     {
+        ///                         ScaleX = 1,
+        ///                         ScaleY = 1,
+        ///                         OffsetX = 15,
+        ///                         OffsetY = 10,
+        ///                         PrintObject = true,
+        ///                         LockAspectRatio = false,
+        ///                         Locked = false,
+        ///                     },
+        ///                     Title = new ChartTitle
+        ///                     {
+        ///                         Paragraph = new RichTextRun[]
+        ///                         {
+        ///                             new() { Text = "Clustered Column - Line Chart" },
+        ///                         },
+        ///                     },
+        ///                     Legend = new ChartLegend { Position = "left", ShowLegendKey = false },
+        ///                     PlotArea = new ChartPlotArea
+        ///                     {
+        ///                         ShowCatName = false,
+        ///                         ShowLeaderLines = false,
+        ///                         ShowPercent = true,
+        ///                         ShowSerName = true,
+        ///                         ShowVal = true,
+        ///                     },
+        ///                 },
+        ///                 new Chart
+        ///                 {
+        ///                     Type = ChartType.Line,
+        ///                     Series = new ChartSeries[]
+        ///                     {
+        ///                         new()
+        ///                         {
+        ///                             Name = "Sheet1!$A$4",
+        ///                             Categories = "Sheet1!$B$1:$D$1",
+        ///                             Values = "Sheet1!$B$4:$D$4",
+        ///                             Marker = new ChartMarker { Symbol = "none", Size = 10 },
+        ///                         },
+        ///                     },
+        ///                     Format = new GraphicOptions
+        ///                     {
+        ///                         ScaleX = 1,
+        ///                         ScaleY = 1,
+        ///                         OffsetX = 15,
+        ///                         OffsetY = 10,
+        ///                         PrintObject = true,
+        ///                         LockAspectRatio = false,
+        ///                         Locked = false,
+        ///                     },
+        ///                     Legend = new ChartLegend { Position = "right", ShowLegendKey = false },
+        ///                     PlotArea = new ChartPlotArea
+        ///                     {
+        ///                         ShowCatName = false,
+        ///                         ShowLeaderLines = false,
+        ///                         ShowPercent = true,
+        ///                         ShowSerName = true,
+        ///                         ShowVal = true,
+        ///                     },
+        ///                 }
+        ///             );
+        ///             f.SaveAs("Book1.xlsx");
+        ///         }
+        ///         catch (RuntimeError err)
+        ///         {
+        ///             Console.WriteLine(err.Message);
+        ///         }
+        ///         finally
+        ///         {
+        ///             string err = f.Close();
+        ///             if (!string.IsNullOrEmpty(err))
+        ///                 Console.WriteLine(err);
+        ///         }
+        ///     }
+        /// }
+        /// ]]></code>
+        /// </example>
         /// </summary>
         /// <param name="sheet">The worksheet name</param>
         /// <param name="cell">The cell reference</param>
@@ -3085,6 +3720,40 @@ namespace ExcelizeCs
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
             return new(res.val);
+        }
+
+        /// <summary>
+        /// GetCellHyperLink gets a cell hyperlink based on the given worksheet
+        /// name and cell reference.
+        /// <example>
+        /// For example, get a hyperlink to a <c>H6</c> cell on a worksheet
+        /// named <c>Sheet1</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     var (link, target) = f.GetCellHyperLink("Sheet1", "H6");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <returns>If the cell has a hyperlink, it will return
+        /// <c>true</c> and the link address, otherwise it will return
+        /// <c>false</c> and an empty link address.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe (bool, string) GetCellHyperLink(string sheet, string cell)
+        {
+            TypesC.GetCellHyperLinkResult res = Lib.GetCellHyperLink(FileIdx, sheet, cell);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return (res.link, new(res.target));
         }
 
         /// <summary>

@@ -910,6 +910,15 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct GetCellHyperLinkResult
+    {
+        [MarshalAs(UnmanagedType.I1)]
+        public bool link;
+        public sbyte* target;
+        public sbyte* err;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Cells
     {
         public int CellLen;
