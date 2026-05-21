@@ -934,6 +934,14 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct GetCellRichTextResult
+    {
+        public int RunsLen;
+        public RichTextRun* Runs;
+        public sbyte* Err;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct GetStyleResult
     {
         public Style style;

@@ -613,7 +613,9 @@ public class UnitTest
                 Assert.Empty(target);
             })
         );
-        RuntimeError err = Assert.Throws<RuntimeError>(() => f.SetCellStr("SheetN", "A3", ""));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.GetCellHyperLink("SheetN", "A3"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetCellStr("SheetN", "A3", ""));
         Assert.Equal("sheet SheetN does not exist", err.Message);
         err = Assert.Throws<RuntimeError>(() =>
             f.SetCellHyperLink("SheetN", "A3", display, "External")
@@ -627,7 +629,7 @@ public class UnitTest
     public void TestCellRichText()
     {
         File f = Excelize.NewFile();
-        RichTextRun[] expected = new RichTextRun[]
+        RichTextRun[] runs = new RichTextRun[]
         {
             new RichTextRun
             {
@@ -704,7 +706,7 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
-                f.SetCellRichText("Sheet1", "A1", expected);
+                f.SetCellRichText("Sheet1", "A1", runs);
                 int style = f.NewStyle(new Style { Alignment = new Alignment { WrapText = true } });
                 f.SetCellStyle("Sheet1", "A1", "A1", style);
             })
@@ -713,6 +715,13 @@ public class UnitTest
             f.SetCellRichText("SheetN", "A1", new RichTextRun[] { })
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
+
+        Assert.Equal(runs, f.GetCellRichText("Sheet1", "A1"));
+        err = Assert.Throws<RuntimeError>(() =>
+            f.SetCellRichText("SheetN", "A1", new RichTextRun[] { })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+
         Assert.Null(Record.Exception(() => f.SaveAs("TestCellRichText.xlsx")));
         Assert.Empty(f.Close());
     }
@@ -1337,6 +1346,7 @@ public class UnitTest
             Record.Exception(() =>
             {
                 f.SetCellStyle("Sheet1", "A1", "B2", styleId);
+                Assert.Equal(styleId, f.GetCellStyle("Sheet1", "A2"));
                 f.SetColStyle("Sheet1", "H", styleId);
                 f.SetColVisible("Sheet1", "D:F", false);
                 f.AutoFitColWidth("Sheet1", "A");
@@ -1348,7 +1358,9 @@ public class UnitTest
                 f.SetCellDefault("Sheet1", "A13", "default");
             })
         );
-        RuntimeError err = Assert.Throws<RuntimeError>(() => f.SetColStyle("SheetN", "H", styleId));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.GetCellStyle("SheetN", "A2"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetColStyle("SheetN", "H", styleId));
         Assert.Equal("sheet SheetN does not exist", err.Message);
 
         List<object?> arr = new()
@@ -1468,6 +1480,10 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetCellFormula("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellHyperLink("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCellRichText("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetCellStyle("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);

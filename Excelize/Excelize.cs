@@ -321,6 +321,20 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.GetCellRichTextResult GetCellRichText(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.IntErrorResult GetCellStyle(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringErrorResult GetCellValue(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -3754,6 +3768,52 @@ namespace ExcelizeCs
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
             return (res.link, new(res.target));
+        }
+
+        /// <summary>
+        /// GetCellRichText provides a function to get rich text of cell by
+        /// given worksheet and cell reference.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <returns>Return the rich text runs of the cell if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe List<RichTextRun> GetCellRichText(string sheet, string cell)
+        {
+            TypesC.GetCellRichTextResult res = Lib.GetCellRichText(FileIdx, sheet, cell);
+            string err = new(res.Err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            var runs = new List<RichTextRun>();
+            if (res.Runs != null)
+            {
+                for (int i = 0; i < res.RunsLen; i++)
+                {
+                    runs.Add((RichTextRun)Lib.CToCs(res.Runs[i], new RichTextRun()));
+                }
+            }
+            return runs;
+        }
+
+        /// <summary>
+        /// GetCellStyle provides a function to get cell style index by given
+        /// worksheet name and cell reference.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The cell reference</param>
+        /// <returns>Return the cell style index if no error occurred, otherwise
+        /// raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe int GetCellStyle(string sheet, string cell)
+        {
+            TypesC.IntErrorResult res = Lib.GetCellStyle(FileIdx, sheet, cell);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return res.val;
         }
 
         /// <summary>
