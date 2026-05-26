@@ -627,6 +627,9 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr UngroupSheets(long fileIdx);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr StreamFlush(long swIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -5847,6 +5850,17 @@ namespace ExcelizeCs
             var opts = (TypesC.WorkbookPropsOptions)
                 Lib.CsToC(options, new TypesC.WorkbookPropsOptions());
             string err = Marshal.PtrToStringUTF8(Lib.SetWorkbookProps(FileIdx, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// UngroupSheets provides a function to ungroup worksheets.
+        /// </summary>
+        /// <exception cref="RuntimeError">Return None if no error occur
+        public void UngroupSheets()
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.UngroupSheets(FileIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

@@ -1351,6 +1351,7 @@ public class UnitTest
                 f.SetColVisible("Sheet1", "D:F", false);
                 f.AutoFitColWidth("Sheet1", "A");
                 f.SetColWidth("Sheet1", "A", "A", 44.5);
+                f.UngroupSheets();
                 f.UpdateLinkedValue();
                 f.SetCellInt("Sheet1", "A1", 100);
                 f.SetCellBool("Sheet1", "A11", true);
@@ -1566,6 +1567,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetSheetVisible("Sheet1", true));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetWorkbookProps(new WorkbookPropsOptions()));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.UngroupSheets());
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.UnsetConditionalFormat("Sheet1", "A1:A10"));
         Assert.Equal(expected, err.Message);
