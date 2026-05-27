@@ -830,6 +830,38 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestGroupSheets()
+    {
+        File f = Excelize.NewFile();
+        List<string> sheets = new List<string> { "Sheet2", "Sheet3" };
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                foreach (string sheet in sheets)
+                {
+                    f.NewSheet(sheet);
+                }
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.GroupSheets(new List<string> { "Sheet1", "SheetN" })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.GroupSheets(new List<string> { "Sheet2", "Sheet3" })
+        );
+        Assert.Equal("group worksheet must contain an active worksheet", err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.GroupSheets(new List<string> { "Sheet:1", "Sheet1" })
+        );
+        Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
+        Assert.Null(Record.Exception(() => f.GroupSheets(null)));
+        Assert.Null(Record.Exception(() => f.GroupSheets(new List<string> { "Sheet1", "Sheet2" })));
+        Assert.Null(Record.Exception(() => f.SaveAs("TestGroupSheets.xlsx")));
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestHeaderFooter()
     {
         File f = Excelize.NewFile();
@@ -1493,6 +1525,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetStyle(1));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GroupSheets(new List<string> { "Sheet1" }));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.MergeCell("Sheet1", "A1", "B2"));
         Assert.Equal(expected, err.Message);

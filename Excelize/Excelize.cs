@@ -356,6 +356,9 @@ namespace ExcelizeCs
         internal static extern TypesC.GetStyleResult GetStyle(long fileIdx, long styleID);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr GroupSheets(long fileIdx, [In] IntPtr[] sheets, long length);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr MergeCell(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -3946,6 +3949,34 @@ namespace ExcelizeCs
                 throw new RuntimeError(err);
             var style = (Style)Lib.CToCs(res.style, new Style());
             return style;
+        }
+
+        /// <summary>
+        /// GroupSheets provides a function to group worksheets by given
+        /// worksheets name. Group worksheets must contain an active worksheet.
+        /// </summary>
+        /// <param name="sheets">The worksheet names to be grouped</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void GroupSheets(List<string> sheets)
+        {
+            if (sheets == null)
+                return;
+            var ptrs = new IntPtr[sheets.Count];
+            try
+            {
+                for (int i = 0; i < sheets.Count; i++)
+                    ptrs[i] = Marshal.StringToCoTaskMemUTF8(sheets[i]);
+                string err = Marshal.PtrToStringUTF8(Lib.GroupSheets(FileIdx, ptrs, sheets.Count));
+                if (!string.IsNullOrEmpty(err))
+                    throw new RuntimeError(err);
+            }
+            finally
+            {
+                foreach (var ptr in ptrs)
+                    if (ptr != IntPtr.Zero)
+                        Marshal.FreeCoTaskMem(ptr);
+            }
         }
 
         /// <summary>
