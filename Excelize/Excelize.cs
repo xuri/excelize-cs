@@ -343,6 +343,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.IntErrorResult GetColOutlineLevel(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string col
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.GetCustomPropsResult GetCustomProps(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -3845,6 +3852,25 @@ namespace ExcelizeCs
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
             return new(res.val);
+        }
+
+        /// <summary>
+        /// Get outline level of a single column by given worksheet name and
+        /// column name.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="col">The column name</param>
+        /// <returns>Return the column outline level if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe int GetColOutlineLevel(string sheet, string col)
+        {
+            TypesC.IntErrorResult res = Lib.GetColOutlineLevel(FileIdx, sheet, col);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return res.val;
         }
 
         /// <summary>

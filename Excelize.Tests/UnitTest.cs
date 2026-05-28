@@ -996,12 +996,16 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
-                f.SetColOutlineLevel("Sheet1", "D", 2);
+                int level = 2;
+                f.SetColOutlineLevel("Sheet1", "D", level);
+                Assert.Equal(level, f.GetColOutlineLevel("Sheet1", "D"));
             })
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
             f.SetColOutlineLevel("SheetN", "D", 2)
         );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetColOutlineLevel("SheetN", "D"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("TestOutlineLevel.xlsx")));
         Assert.Empty(f.Close());
@@ -1519,6 +1523,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetCellStyle("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetColOutlineLevel("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCustomProps());
         Assert.Equal(expected, err.Message);
