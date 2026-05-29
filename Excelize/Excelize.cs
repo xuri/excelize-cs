@@ -353,6 +353,13 @@ namespace ExcelizeCs
         internal static extern TypesC.GetCustomPropsResult GetCustomProps(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern TypesC.IntErrorResult GetRowOutlineLevel(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            long row
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern TypesC.StringMatrixErrorResult GetRows(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -589,6 +596,14 @@ namespace ExcelizeCs
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
             ref TypesC.HeaderFooterOptions opts
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetRowOutlineLevel(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            long row,
+            long level
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -3905,6 +3920,25 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// Get outline level of a single row by given worksheet name and row
+        /// number.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="row">The row number</param>
+        /// <returns>Return the row outline level if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</returns>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public unsafe int GetRowOutlineLevel(string sheet, int row)
+        {
+            TypesC.IntErrorResult res = Lib.GetRowOutlineLevel(FileIdx, sheet, row);
+            string err = new(res.err);
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+            return res.val;
+        }
+
+        /// <summary>
         /// Return all the rows in a sheet by given worksheet name, returned as
         /// a two-dimensional array, where the value of the cell is converted to
         /// the string type. If the cell format can be applied to the value of
@@ -4988,7 +5022,8 @@ namespace ExcelizeCs
         /// </summary>
         /// <param name="sheet">The worksheet name</param>
         /// <param name="col">The column name</param>
-        /// <param name="level">The out level, acceptable value from 1 to 7</param>
+        /// <param name="level">The outline level, acceptable value from 1 to 7
+        /// </param>
         /// <exception cref="RuntimeError">Return None if no error occurred,
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetColOutlineLevel(string sheet, string col, int level)
@@ -5739,6 +5774,38 @@ namespace ExcelizeCs
             var opts = (TypesC.HeaderFooterOptions)
                 Lib.CsToC(options ?? new HeaderFooterOptions(), new TypesC.HeaderFooterOptions());
             string err = Marshal.PtrToStringUTF8(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set outline level number of a single row by given worksheet name and
+        /// row number. The range of `level` parameter value from 1 to 7.
+        /// <example>
+        /// For example, set outline level for row 2 on Sheet1 to 1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetRowOutlineLevel("Sheet1", 2, 1);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="row">The row number</param>
+        /// <param name="level">The outline level, acceptable value from 1 to 7
+        /// </param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetRowOutlineLevel(string sheet, long row, int level)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetRowOutlineLevel(FileIdx, sheet, row, level)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

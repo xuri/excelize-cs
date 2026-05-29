@@ -996,9 +996,10 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
-                int level = 2;
-                f.SetColOutlineLevel("Sheet1", "D", level);
-                Assert.Equal(level, f.GetColOutlineLevel("Sheet1", "D"));
+                f.SetColOutlineLevel("Sheet1", "D", 2);
+                Assert.Equal(2, f.GetColOutlineLevel("Sheet1", "D"));
+                f.SetRowOutlineLevel("Sheet1", 2, 1);
+                Assert.Equal(1, f.GetRowOutlineLevel("Sheet1", 2));
             })
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
@@ -1006,6 +1007,10 @@ public class UnitTest
         );
         Assert.Equal("sheet SheetN does not exist", err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetColOutlineLevel("SheetN", "D"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetRowOutlineLevel("SheetN", 2, 1));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetRowOutlineLevel("SheetN", 2));
         Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("TestOutlineLevel.xlsx")));
         Assert.Empty(f.Close());
@@ -1528,6 +1533,8 @@ public class UnitTest
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCustomProps());
         Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetRowOutlineLevel("Sheet1", 1));
+        Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRows("Sheet1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetStyle(1));
@@ -1595,6 +1602,8 @@ public class UnitTest
         );
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCustomProps(new CustomProperty { }));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetRowOutlineLevel("Sheet1", 2, 1));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetSheetName("Sheet1", "Sheet2"));
         Assert.Equal(expected, err.Message);
