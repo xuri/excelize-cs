@@ -794,6 +794,14 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestDefaultFont()
+    {
+        File f = Excelize.NewFile();
+        string fontName = "Arial";
+        Assert.Null(Record.Exception(() => f.SetDefaultFont(fontName)));
+    }
+
+    [Fact]
     public void TestCustomProps()
     {
         File f = Excelize.NewFile();
@@ -1602,6 +1610,8 @@ public class UnitTest
         );
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetCustomProps(new CustomProperty { }));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetDefaultFont(""));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetRowOutlineLevel("Sheet1", 2, 1));
         Assert.Equal(expected, err.Message);
