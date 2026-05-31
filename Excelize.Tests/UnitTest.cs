@@ -799,6 +799,7 @@ public class UnitTest
         File f = Excelize.NewFile();
         string fontName = "Arial";
         Assert.Null(Record.Exception(() => f.SetDefaultFont(fontName)));
+        Assert.Equal(fontName, f.GetDefaultFont());
     }
 
     [Fact]
@@ -1540,6 +1541,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetColOutlineLevel("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCustomProps());
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetDefaultFont());
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetRowOutlineLevel("Sheet1", 1));
         Assert.Equal(expected, err.Message);
