@@ -1469,10 +1469,16 @@ public class UnitTest
             },
             f.GetRows("Sheet1")
         );
-        Assert.Null(Record.Exception(() => f.CopySheet(0, f.NewSheet("Sheet3"))));
-        Assert.Null(Record.Exception(() => f.DeleteSheet("Sheet3")));
-        Assert.Null(Record.Exception(() => f.DuplicateRow("Sheet2", 2)));
-        Assert.Null(Record.Exception(() => f.DuplicateRowTo("Sheet2", 2, 7)));
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.CopySheet(0, f.NewSheet("Sheet3"));
+                f.DeleteSheet("Sheet3");
+                f.DuplicateRow("Sheet2", 2);
+                f.DuplicateRowTo("Sheet2", 2, 7);
+                f.InsertCols("Sheet1", "C", 2);
+            })
+        );
         err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet:1"));
         Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("Book1.xlsx")));
@@ -1551,6 +1557,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetStyle(1));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GroupSheets(new List<string> { "Sheet1" }));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.InsertCols("Sheet1", "C", 2));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.MergeCell("Sheet1", "A1", "B2"));
         Assert.Equal(expected, err.Message);

@@ -376,6 +376,14 @@ namespace ExcelizeCs
         internal static extern IntPtr GroupSheets(long fileIdx, [In] IntPtr[] sheets, long length);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr InsertCols(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string col,
+            long n
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr MergeCell(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -4063,6 +4071,42 @@ namespace ExcelizeCs
                     if (ptr != IntPtr.Zero)
                         Marshal.FreeCoTaskMem(ptr);
             }
+        }
+
+        /// <summary>
+        /// InsertCols provides a function to insert new columns before the
+        /// given column name and number of columns.
+        /// <example>
+        /// For example, create two columns before column C in Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.InsertCols("Sheet1", "C", 2);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <remarks>
+        /// Use this method with caution, which will affect changes in
+        /// references such as formulas, charts, and so on. If there is any
+        /// referenced value of the worksheet, it will cause a file error when
+        /// you open it. The excelize only partially updates these references
+        /// currently.
+        /// </remarks>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="col">The column name</param>
+        /// <param name="n">The columns</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void InsertCols(string sheet, string col, int n)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.InsertCols(FileIdx, sheet, col, n));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
         }
 
         /// <summary>
