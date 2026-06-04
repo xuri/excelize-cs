@@ -1170,6 +1170,28 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestPageBreak()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.InsertPageBreak("Sheet1", "A1");
+                f.InsertPageBreak("Sheet1", "B2");
+            })
+        );
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.InsertPageBreak("Sheet1", "A"));
+        Assert.Equal(
+            "cannot convert cell \"A\" to coordinates: invalid cell name \"A\"",
+            err.Message
+        );
+        err = Assert.Throws<RuntimeError>(() => f.InsertPageBreak("SheetN", "C3"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.InsertPageBreak("Sheet:1", "C3"));
+        Assert.Equal("the sheet can not contain any of the characters :\\/?*[or]", err.Message);
+    }
+
+    [Fact]
     public void TestProtectSheet()
     {
         File f = Excelize.NewFile();
@@ -1559,6 +1581,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GroupSheets(new List<string> { "Sheet1" }));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.InsertCols("Sheet1", "C", 2));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.InsertPageBreak("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.MergeCell("Sheet1", "A1", "B2"));
         Assert.Equal(expected, err.Message);

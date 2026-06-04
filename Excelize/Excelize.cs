@@ -384,6 +384,13 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr InsertPageBreak(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string cell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr MergeCell(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -4105,6 +4112,23 @@ namespace ExcelizeCs
         public void InsertCols(string sheet, string col, int n)
         {
             string err = Marshal.PtrToStringUTF8(Lib.InsertCols(FileIdx, sheet, col, n));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// InsertPageBreak create a page break to determine where the printed
+        /// page ends and where begins the next one by given worksheet name and
+        /// cell reference, so the content before the page break will be printed
+        /// on one page and after the page break on another.
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="cell">The column name</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void InsertPageBreak(string sheet, string cell)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.InsertPageBreak(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
