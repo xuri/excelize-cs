@@ -391,6 +391,14 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr InsertRows(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            long row,
+            long n
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr MergeCell(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -4129,6 +4137,42 @@ namespace ExcelizeCs
         public void InsertPageBreak(string sheet, string cell)
         {
             string err = Marshal.PtrToStringUTF8(Lib.InsertPageBreak(FileIdx, sheet, cell));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// InsertRows provides a function to insert new rows after the given
+        /// Excel row number starting from 1 and number of rows.
+        /// <example>
+        /// For example, create two rows before row 3 in Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.InsertRows("Sheet1", 3, 2);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <remarks>
+        /// Use this method with caution, which will affect changes in
+        /// references such as formulas, charts, and so on. If there is any
+        /// referenced value of the worksheet, it will cause a file error when
+        /// you open it. The excelize only partially updates these references
+        /// currently.
+        /// </remarks>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="row">The row number</param>
+        /// <param name="n">The rows</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void InsertRows(string sheet, long row, long n)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.InsertRows(FileIdx, sheet, row, n));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }

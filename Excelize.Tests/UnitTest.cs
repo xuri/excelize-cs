@@ -1499,6 +1499,7 @@ public class UnitTest
                 f.DuplicateRow("Sheet2", 2);
                 f.DuplicateRowTo("Sheet2", 2, 7);
                 f.InsertCols("Sheet1", "C", 2);
+                f.InsertRows("Sheet1", 20, 2);
             })
         );
         err = Assert.Throws<RuntimeError>(() => f.DeleteSheet("Sheet:1"));
@@ -1583,6 +1584,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.InsertCols("Sheet1", "C", 2));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.InsertPageBreak("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.InsertRows("Sheet1", 1, 1));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.MergeCell("Sheet1", "A1", "B2"));
         Assert.Equal(expected, err.Message);
