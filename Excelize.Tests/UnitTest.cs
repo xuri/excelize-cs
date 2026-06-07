@@ -1420,6 +1420,7 @@ public class UnitTest
                 f.SetCellStyle("Sheet1", "A1", "B2", styleId);
                 Assert.Equal(styleId, f.GetCellStyle("Sheet1", "A2"));
                 f.SetColStyle("Sheet1", "H", styleId);
+                Assert.Equal(styleId, f.GetColStyle("Sheet1", "H"));
                 f.SetColVisible("Sheet1", "D:F", false);
                 f.AutoFitColWidth("Sheet1", "A");
                 f.SetColWidth("Sheet1", "A", "A", 44.5);
@@ -1568,6 +1569,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.GetCellValue("Sheet1", "A1"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetColOutlineLevel("Sheet1", "A1"));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.GetColStyle("Sheet1", "A"));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.GetCustomProps());
         Assert.Equal(expected, err.Message);
