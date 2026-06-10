@@ -1422,6 +1422,7 @@ public class UnitTest
                 f.SetColStyle("Sheet1", "H", styleId);
                 Assert.Equal(styleId, f.GetColStyle("Sheet1", "H"));
                 f.SetColVisible("Sheet1", "D:F", false);
+                f.SetRowStyle("Sheet1", 1, 1, styleId);
                 f.AutoFitColWidth("Sheet1", "A");
                 f.SetColWidth("Sheet1", "A", "A", 44.5);
                 f.UngroupSheets();
@@ -1655,6 +1656,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetDefaultFont(""));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetRowOutlineLevel("Sheet1", 2, 1));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetRowStyle("Sheet1", 1, 1, 1));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetSheetName("Sheet1", "Sheet2"));
         Assert.Equal(expected, err.Message);

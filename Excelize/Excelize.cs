@@ -646,6 +646,15 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetRowStyle(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            long start,
+            long end,
+            long styleID
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetSheetName(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string source,
@@ -5982,6 +5991,39 @@ namespace ExcelizeCs
         {
             string err = Marshal.PtrToStringUTF8(
                 Lib.SetRowOutlineLevel(FileIdx, sheet, row, level)
+            );
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set the style of rows by given worksheet name, row range, and style
+        /// ID. Note that this will overwrite the existing styles for the rows,
+        /// it won't append or merge style with existing styles.
+        /// <example>
+        /// For example set style of row 1 on Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetRowStyle("Sheet1", 1, 1, styleID);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="start">The start row number</param>
+        /// <param name="end">The end row number</param>
+        /// <param name="styleID">The style ID</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetRowStyle(string sheet, long start, long end, int styleID)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.SetRowStyle(FileIdx, sheet, start, end, styleID)
             );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
