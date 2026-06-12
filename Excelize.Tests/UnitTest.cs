@@ -706,6 +706,7 @@ public class UnitTest
         Assert.Null(
             Record.Exception(() =>
             {
+                f.SetRowHeight("Sheet1", 1, 35);
                 f.SetCellRichText("Sheet1", "A1", runs);
                 int style = f.NewStyle(new Style { Alignment = new Alignment { WrapText = true } });
                 f.SetCellStyle("Sheet1", "A1", "A1", style);
@@ -1654,6 +1655,8 @@ public class UnitTest
         err = Assert.Throws<RuntimeError>(() => f.SetCustomProps(new CustomProperty { }));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetDefaultFont(""));
+        Assert.Equal(expected, err.Message);
+        err = Assert.Throws<RuntimeError>(() => f.SetRowHeight("Sheet1", 1, 20));
         Assert.Equal(expected, err.Message);
         err = Assert.Throws<RuntimeError>(() => f.SetRowOutlineLevel("Sheet1", 2, 1));
         Assert.Equal(expected, err.Message);

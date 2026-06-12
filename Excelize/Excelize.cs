@@ -638,6 +638,14 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr SetRowHeight(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            long row,
+            double height
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr SetRowOutlineLevel(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -5960,6 +5968,36 @@ namespace ExcelizeCs
             var opts = (TypesC.HeaderFooterOptions)
                 Lib.CsToC(options ?? new HeaderFooterOptions(), new TypesC.HeaderFooterOptions());
             string err = Marshal.PtrToStringUTF8(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Set the height of a single row. If the value of height is 0, will
+        /// hide the specified row, if the value of height is -1, will unset the
+        /// custom row height.
+        /// <example>
+        /// For example, set the height of the first row in Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.SetRowHeight("Sheet1", 1, 50);
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="row">The row number</param>
+        /// <param name="height">The row height</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void SetRowHeight(string sheet, long row, double height)
+        {
+            string err = Marshal.PtrToStringUTF8(Lib.SetRowHeight(FileIdx, sheet, row, height));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
