@@ -224,6 +224,28 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// PivotTableShowValuesAsType defines the calculation type enumeration.
+    /// </summary>
+    public enum PivotTableShowValuesAsType : byte
+    {
+        PivotTableShowValuesAsNoCalculation = 0,
+        PivotTableShowValuesAsPercentOfGrandTotal = 1,
+        PivotTableShowValuesAsPercentOfColumnTotal = 2,
+        PivotTableShowValuesAsPercentOfRowTotal = 3,
+        PivotTableShowValuesAsPercentOf = 4,
+        PivotTableShowValuesAsPercentOfParentRowTotal = 5,
+        PivotTableShowValuesAsPercentOfParentColumnTotal = 6,
+        PivotTableShowValuesAsPercentOfParentTotal = 7,
+        PivotTableShowValuesAsDifferenceFrom = 8,
+        PivotTableShowValuesAsPercentDifferenceFrom = 9,
+        PivotTableShowValuesAsRunningTotalIn = 10,
+        PivotTableShowValuesAsPercentRunningTotalIn = 11,
+        PivotTableShowValuesAsRankSmallestToLargest = 12,
+        PivotTableShowValuesAsRankLargestToSmallest = 13,
+        PivotTableShowValuesAsIndex = 14,
+    }
+
+    /// <summary>
     /// Interface is a struct that can be used to represent any of the supported
     /// value types in the library, including int, string, double, bool,
     /// DateTime.DateTime or null.
@@ -769,6 +791,7 @@ namespace ExcelizeCs
         public bool DefaultSubtotal;
         public int NumFmt;
         public string[]? SelectedItems;
+        public PivotTableShowValuesAs ShowValuesAs;
     }
 
     /// <summary>
@@ -876,6 +899,17 @@ namespace ExcelizeCs
     }
 
     /// <summary>
+    /// PivotTableShowValuesAs directly maps the show value as settings of the
+    /// pivot table.
+    /// </summary>
+    public struct PivotTableShowValuesAs
+    {
+        public PivotTableShowValuesAsType Type;
+        public string BaseField;
+        public string BaseItem;
+    }
+
+    /// <summary>
     /// Represents the settings of the slicer.
     /// </summary>
     /// <remarks>
@@ -910,6 +944,46 @@ namespace ExcelizeCs
     /// selected in the pivot table. If the pivot table is created using the
     /// <c>AddPivotTable</c> function, the same field must also have its
     /// selected item range specified at the time the pivot table is created.
+    /// </para>
+    /// <para><b>ShowValuesAs</b> specifies the calculation type for showing
+    /// values in a pivot table values fields. The possible values for the
+    /// <c>Type</c> field of <c>ShowValuesAs</c> are:
+    /// <list type="bullet">
+    /// <item><description><c>PivotTableShowValuesAsNoCalculation</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOfGrandTotal</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOfColumnTotal</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOfRowTotal</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOf</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOfParentRowTotal</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOfParentColumnTotal</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOfParentTotal</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsDifferenceFrom</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentDifferenceFrom</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsRunningTotalIn</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentRunningTotalIn</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsRankSmallestToLargest</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsRankLargestToSmallest</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsIndex</c></description></item>
+    /// </list>
+    /// Note that the base field and base item settings of <c>ShowValuesAs</c>
+    /// are only required for some calculation types, the calculation types
+    /// requires base field settings are:
+    /// <list type="bullet">
+    /// <item><description><c>PivotTableShowValuesAsPercentOf</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentOfParentTotal</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsDifferenceFrom</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentDifferenceFrom</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsRunningTotalIn</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentRunningTotalIn</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsRankSmallestToLargest</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsRankLargestToSmallest</c></description></item>
+    /// </list>
+    /// The supported calculation types requires base item settings are:
+    /// <list type="bullet">
+    /// <item><description><c>PivotTableShowValuesAsPercentOf</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsDifferenceFrom</c></description></item>
+    /// <item><description><c>PivotTableShowValuesAsPercentDifferenceFrom</c></description></item>
+    /// </list>
     /// </para>
     /// </remarks>
     public struct SlicerOptions

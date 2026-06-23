@@ -545,6 +545,14 @@ namespace ExcelizeCs.TypesC
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct PivotTableShowValuesAs
+    {
+        public byte Type;
+        public sbyte* BaseField;
+        public sbyte* BaseItem;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct PivotTableField
     {
         [MarshalAs(UnmanagedType.I1)]
@@ -567,6 +575,7 @@ namespace ExcelizeCs.TypesC
         public int NumFmt;
         public int SelectedItemsLen;
         public sbyte** SelectedItems;
+        public PivotTableShowValuesAs ShowValuesAs;
     }
 
     [StructLayout(LayoutKind.Sequential)]

@@ -22,10 +22,10 @@ jobs:
           cache: false
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout excelize-py
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: xuri/excelize-py
           path: excelize-py
@@ -104,7 +104,7 @@ jobs:
           cache: false
 
       - name: Checkout excelize-py
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: xuri/excelize-py
           path: .
@@ -208,7 +208,7 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v5
