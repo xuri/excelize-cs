@@ -9,14 +9,14 @@ jobs:
     strategy:
       matrix:
         go-version: [1.26.x]
-        os: [ubuntu-24.04, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-26, windows-latest]
         targetplatform: [x64]
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Install Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go-version }}
           cache: false
@@ -34,7 +34,7 @@ jobs:
         run: cd excelize-py && env GO111MODULE=on go vet ./...
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             6.x
@@ -70,7 +70,7 @@ jobs:
       - name: Test on macOS
         env:
           CGO_ENABLED: 1
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           cd excelize-py
           go build -buildmode=c-shared -o ../Excelize/libexcelize.arm64.darwin.dylib main.go
@@ -94,11 +94,11 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'published'
     strategy:
       matrix:
-        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-latest]
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-26]
 
     steps:
       - name: Install Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: 1.26.x
           cache: false
@@ -156,13 +156,13 @@ jobs:
           "
 
       - name: Build Shared Library
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-26'
         env:
           CGO_ENABLED: 1
         run: |
-          wget https://github.com/mstorsjo/llvm-mingw/releases/download/20260616/llvm-mingw-20260616-ucrt-macos-universal.tar.xz
-          tar -xzf llvm-mingw-20260616-ucrt-macos-universal.tar.xz
-          export PATH="$(pwd)/llvm-mingw-20260616-ucrt-macos-universal/bin:$PATH"
+          wget https://github.com/mstorsjo/llvm-mingw/releases/download/20260721/llvm-mingw-20260721-ucrt-macos-universal.tar.xz
+          tar -xzf llvm-mingw-20260721-ucrt-macos-universal.tar.xz
+          export PATH="$(pwd)/llvm-mingw-20260721-ucrt-macos-universal/bin:$PATH"
           CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -buildmode=c-shared -trimpath -o libexcelize.amd64.windows.dll main.go
           CC=i686-w64-mingw32-gcc GOOS=windows GOARCH=386 go build -ldflags "-s -w" -buildmode=c-shared -trimpath -o libexcelize.386.windows.dll main.go
           CC=aarch64-w64-mingw32-gcc GOOS=windows GOARCH=arm64 go build -ldflags "-s -w" -buildmode=c-shared -trimpath -o libexcelize.arm64.windows.dll main.go
@@ -188,7 +188,7 @@ jobs:
             libexcelize.arm64.linux.so
 
       - name: Upload Darwin Artifacts
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-26'
         uses: actions/upload-artifact@v7
         with:
           name: darwin-artifacts
@@ -211,7 +211,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             6.x
