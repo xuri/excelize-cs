@@ -257,6 +257,14 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeleteDataValidation(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [In, MarshalAs(UnmanagedType.LPArray)] IntPtr[] sqref,
+            long length
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr DeleteFormControl(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -3631,6 +3639,59 @@ namespace ExcelizeCs
             string err = Marshal.PtrToStringUTF8(Lib.DeleteComment(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// DeleteDataValidation provides a function to delete data validation
+        /// by given worksheet name and reference sequence. This function is
+        /// concurrency safe. All data validations in the worksheet will be
+        /// deleted if not specify reference sequence parameter.
+        /// <example>
+        /// For example, delete the data validation in Sheet1!$A$2:$B$3:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1", new List&lt;string&gt; { "A2:B3" });
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="sqref">The reference sequence</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeleteDataValidation(string sheet, List<string> sqref)
+        {
+            if (sqref == null || sqref.Count == 0)
+            {
+                string err = Marshal.PtrToStringUTF8(
+                    Lib.DeleteDataValidation(FileIdx, sheet, new IntPtr[0], 0)
+                );
+                if (!string.IsNullOrEmpty(err))
+                    throw new RuntimeError(err);
+                return;
+            }
+            var ptrs = new IntPtr[sqref.Count];
+            try
+            {
+                for (int i = 0; i < sqref.Count; i++)
+                    ptrs[i] = Marshal.StringToCoTaskMemUTF8(sqref[i]);
+                string err = Marshal.PtrToStringUTF8(
+                    Lib.DeleteDataValidation(FileIdx, sheet, ptrs, sqref.Count)
+                );
+                if (!string.IsNullOrEmpty(err))
+                    throw new RuntimeError(err);
+            }
+            finally
+            {
+                foreach (var ptr in ptrs)
+                    if (ptr != IntPtr.Zero)
+                        Marshal.FreeCoTaskMem(ptr);
+            }
         }
 
         /// <summary>

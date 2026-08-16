@@ -831,6 +831,50 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestDeleteDataValidation()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(
+            Record.Exception(() => f.DeleteDataValidation("Sheet1", new List<string> { }))
+        );
+        Assert.Null(
+            Record.Exception(() =>
+                f.DeleteDataValidation("Sheet1", new List<string> { "A2:B3" })
+            )
+        );
+        Assert.Null(
+            Record.Exception(() =>
+                f.DeleteDataValidation(
+                    "Sheet1",
+                    new List<string> { "A2:D2", "D3 D4" }
+                )
+            )
+        );
+        Assert.Null(Record.Exception(() => f.SaveAs("TestDeleteDataValidation.xlsx")));
+        Assert.Empty(f.Close());
+        f = Excelize.NewFile();
+        RuntimeError err = Assert.Throws<RuntimeError>(() =>
+            f.DeleteDataValidation("SheetN", new List<string> { "A2:B3" })
+        );
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        err = Assert.Throws<RuntimeError>(() =>
+            f.DeleteDataValidation("Sheet1", new List<string> { "A" })
+        );
+        Assert.Equal(
+            "cannot convert cell \"A\" to coordinates: invalid cell name \"A\"",
+            err.Message
+        );
+        err = Assert.Throws<RuntimeError>(() =>
+            f.DeleteDataValidation("Sheet1", new List<string> { "A1:A" })
+        );
+        Assert.Equal(
+            "cannot convert cell \"A\" to coordinates: invalid cell name \"A\"",
+            err.Message
+        );
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestDllImportResolver()
     {
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
