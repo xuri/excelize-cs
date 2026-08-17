@@ -260,7 +260,7 @@ namespace ExcelizeCs
         internal static extern IntPtr DeleteDataValidation(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
-            [In, MarshalAs(UnmanagedType.LPArray)] IntPtr[] sqref,
+            [In] IntPtr[] sqref,
             long length
         );
 
@@ -3642,16 +3642,51 @@ namespace ExcelizeCs
         }
 
         /// <summary>
-        /// DeleteDataValidation provides a function to delete data validation
-        /// by given worksheet name and reference sequence. This function is
-        /// concurrency safe. All data validations in the worksheet will be
-        /// deleted if not specify reference sequence parameter.
+        /// Delete data validation by given worksheet name and reference
+        /// sequence. All data validations in the worksheet will be deleted if
+        /// not specify reference sequence parameter.
         /// <example>
-        /// For example, delete the data validation in Sheet1!$A$2:$B$3:
+        /// Example 1, delete data validation on <c>Sheet1!A1:B2</c>:
         /// <code>
         /// try
         /// {
-        ///     f.DeleteDataValidation("Sheet1", new List&lt;string&gt; { "A2:B3" });
+        ///     f.DeleteDataValidation("Sheet1", "A1:B2");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 2, delete data validations on Sheet1 with multiple cell
+        /// ranges <c>A1:B2</c> and <c>C1:C3</c> with reference sequence slice:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1", "A1:B2", "C1:C3");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 3, delete data validations on Sheet1 with multiple cell
+        /// ranges <c>A1:B2</c> and <c>C1:C3</c> with blank separated reference
+        /// sequence string, the result same as example 2:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1", "A1:B2 C1:C3");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 4, delete all data validations on Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1");
         /// }
         /// catch (RuntimeError err)
         /// {
@@ -3664,24 +3699,20 @@ namespace ExcelizeCs
         /// <param name="sqref">The reference sequence</param>
         /// <exception cref="RuntimeError">Return None if no error occurred,
         /// otherwise raise a RuntimeError with the message.</exception>
-        public void DeleteDataValidation(string sheet, List<string> sqref)
+        public void DeleteDataValidation(string sheet, params string[] sqref)
         {
-            if (sqref == null || sqref.Count == 0)
+            var l = 0;
+            if (sqref != null)
             {
-                string err = Marshal.PtrToStringUTF8(
-                    Lib.DeleteDataValidation(FileIdx, sheet, new IntPtr[0], 0)
-                );
-                if (!string.IsNullOrEmpty(err))
-                    throw new RuntimeError(err);
-                return;
+                l = sqref.Length;
             }
-            var ptrs = new IntPtr[sqref.Count];
+            var ptrs = new IntPtr[l];
             try
             {
-                for (int i = 0; i < sqref.Count; i++)
+                for (int i = 0; i < l; i++)
                     ptrs[i] = Marshal.StringToCoTaskMemUTF8(sqref[i]);
                 string err = Marshal.PtrToStringUTF8(
-                    Lib.DeleteDataValidation(FileIdx, sheet, ptrs, sqref.Count)
+                    Lib.DeleteDataValidation(FileIdx, sheet, ptrs, l)
                 );
                 if (!string.IsNullOrEmpty(err))
                     throw new RuntimeError(err);

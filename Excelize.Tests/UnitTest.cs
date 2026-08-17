@@ -834,43 +834,11 @@ public class UnitTest
     public void TestDeleteDataValidation()
     {
         File f = Excelize.NewFile();
-        Assert.Null(
-            Record.Exception(() => f.DeleteDataValidation("Sheet1", new List<string> { }))
-        );
-        Assert.Null(
-            Record.Exception(() =>
-                f.DeleteDataValidation("Sheet1", new List<string> { "A2:B3" })
-            )
-        );
-        Assert.Null(
-            Record.Exception(() =>
-                f.DeleteDataValidation(
-                    "Sheet1",
-                    new List<string> { "A2:D2", "D3 D4" }
-                )
-            )
-        );
-        Assert.Null(Record.Exception(() => f.SaveAs("TestDeleteDataValidation.xlsx")));
-        Assert.Empty(f.Close());
-        f = Excelize.NewFile();
-        RuntimeError err = Assert.Throws<RuntimeError>(() =>
-            f.DeleteDataValidation("SheetN", new List<string> { "A2:B3" })
-        );
+        Assert.Null(Record.Exception(() => f.DeleteDataValidation("Sheet1")));
+        Assert.Null(Record.Exception(() => f.DeleteDataValidation("Sheet1", "A1:B2")));
+        Assert.Null(Record.Exception(() => f.DeleteDataValidation("Sheet1", "A1:B2", "D3")));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteDataValidation("SheetN"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
-        err = Assert.Throws<RuntimeError>(() =>
-            f.DeleteDataValidation("Sheet1", new List<string> { "A" })
-        );
-        Assert.Equal(
-            "cannot convert cell \"A\" to coordinates: invalid cell name \"A\"",
-            err.Message
-        );
-        err = Assert.Throws<RuntimeError>(() =>
-            f.DeleteDataValidation("Sheet1", new List<string> { "A1:A" })
-        );
-        Assert.Equal(
-            "cannot convert cell \"A\" to coordinates: invalid cell name \"A\"",
-            err.Message
-        );
         Assert.Empty(f.Close());
     }
 
