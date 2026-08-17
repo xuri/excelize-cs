@@ -257,6 +257,14 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr DeleteDataValidation(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [In] IntPtr[] sqref,
+            long length
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr DeleteFormControl(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
@@ -3631,6 +3639,90 @@ namespace ExcelizeCs
             string err = Marshal.PtrToStringUTF8(Lib.DeleteComment(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// Delete data validation by given worksheet name and reference
+        /// sequence. All data validations in the worksheet will be deleted if
+        /// not specify reference sequence parameter.
+        /// <example>
+        /// Example 1, delete data validation on <c>Sheet1!A1:B2</c>:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1", "A1:B2");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 2, delete data validations on Sheet1 with multiple cell
+        /// ranges <c>A1:B2</c> and <c>C1:C3</c> with reference sequence slice:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1", "A1:B2", "C1:C3");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 3, delete data validations on Sheet1 with multiple cell
+        /// ranges <c>A1:B2</c> and <c>C1:C3</c> with blank separated reference
+        /// sequence string, the result same as example 2:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1", "A1:B2 C1:C3");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// Example 4, delete all data validations on Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.DeleteDataValidation("Sheet1");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="sqref">The reference sequence</param>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void DeleteDataValidation(string sheet, params string[] sqref)
+        {
+            var l = 0;
+            if (sqref != null)
+            {
+                l = sqref.Length;
+            }
+            var ptrs = new IntPtr[l];
+            try
+            {
+                for (int i = 0; i < l; i++)
+                    ptrs[i] = Marshal.StringToCoTaskMemUTF8(sqref[i]);
+                string err = Marshal.PtrToStringUTF8(
+                    Lib.DeleteDataValidation(FileIdx, sheet, ptrs, l)
+                );
+                if (!string.IsNullOrEmpty(err))
+                    throw new RuntimeError(err);
+            }
+            finally
+            {
+                foreach (var ptr in ptrs)
+                    if (ptr != IntPtr.Zero)
+                        Marshal.FreeCoTaskMem(ptr);
+            }
         }
 
         /// <summary>

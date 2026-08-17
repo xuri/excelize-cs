@@ -831,6 +831,18 @@ public class UnitTest
     }
 
     [Fact]
+    public void TestDeleteDataValidation()
+    {
+        File f = Excelize.NewFile();
+        Assert.Null(Record.Exception(() => f.DeleteDataValidation("Sheet1")));
+        Assert.Null(Record.Exception(() => f.DeleteDataValidation("Sheet1", "A1:B2")));
+        Assert.Null(Record.Exception(() => f.DeleteDataValidation("Sheet1", "A1:B2", "D3")));
+        RuntimeError err = Assert.Throws<RuntimeError>(() => f.DeleteDataValidation("SheetN"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Empty(f.Close());
+    }
+
+    [Fact]
     public void TestDllImportResolver()
     {
         RuntimeError err = Assert.Throws<RuntimeError>(() =>
