@@ -977,6 +977,14 @@ public class UnitTest
         );
         RuntimeError err = Assert.Throws<RuntimeError>(() => f.MergeCell("SheetN", "A1", "B2"));
         Assert.Equal("sheet SheetN does not exist", err.Message);
+        Assert.Null(
+            Record.Exception(() =>
+            {
+                f.UnmergeCell("Sheet1", "D3", "E9");
+            })
+        );
+        err = Assert.Throws<RuntimeError>(() => f.UnmergeCell("SheetN", "A1", "B2"));
+        Assert.Equal("sheet SheetN does not exist", err.Message);
         Assert.Null(Record.Exception(() => f.SaveAs("TestMergeCells.xlsx")));
         Assert.Empty(f.Close());
     }

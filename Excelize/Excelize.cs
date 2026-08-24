@@ -422,6 +422,14 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr UnmergeCell(
+            long fileIdx,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sheet,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string topLeftCell,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string bottomRightCell
+        );
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr MoveSheet(
             long fileIdx,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string source,
@@ -6334,6 +6342,37 @@ namespace ExcelizeCs
         public void UngroupSheets()
         {
             string err = Marshal.PtrToStringUTF8(Lib.UngroupSheets(FileIdx));
+            if (!string.IsNullOrEmpty(err))
+                throw new RuntimeError(err);
+        }
+
+        /// <summary>
+        /// UnmergeCell provides a function to unmerge a given range reference.
+        /// <example>
+        /// For example unmerge range reference D3:E9 on Sheet1:
+        /// <code>
+        /// try
+        /// {
+        ///     f.UnmergeCell("Sheet1", "D3", "E9");
+        /// }
+        /// catch (RuntimeError err)
+        /// {
+        ///     Console.WriteLine(err.Message);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="sheet">The worksheet name</param>
+        /// <param name="topLeftCell">The top-left cell reference</param>
+        /// <param name="bottomRightCell">The bottom-right cell reference</param>
+        /// <remarks>Attention: overlapped range will also be unmerged</remarks>
+        /// <exception cref="RuntimeError">Return None if no error occurred,
+        /// otherwise raise a RuntimeError with the message.</exception>
+        public void UnmergeCell(string sheet, string topLeftCell, string bottomRightCell)
+        {
+            string err = Marshal.PtrToStringUTF8(
+                Lib.UnmergeCell(FileIdx, sheet, topLeftCell, bottomRightCell)
+            );
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
