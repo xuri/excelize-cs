@@ -1770,6 +1770,9 @@ public class UnitTest
             M = "text",
             N = true,
         };
+        Assert.Throws<OverflowException>(() =>
+            Lib.CsToC(expected with { J = uint.MaxValue }, new C1())
+        );
         C1 cT1 = (C1)Lib.CsToC(expected, new C1());
         CsT1 csT1 = (CsT1)Lib.CToCs(cT1, new CsT1());
         Assert.Equivalent(expected, csT1);
@@ -1782,6 +1785,10 @@ public class UnitTest
         Assert.Equal(42, Lib.CInterfaceToCsVal(new TypesC.Interface { Type = 1, Integer = 42 }));
         Assert.Equal("", Lib.CInterfaceToCsVal(new TypesC.Interface { Type = 3, String = null }));
         Assert.Null(Lib.CInterfaceToCsVal(new TypesC.Interface { Type = -1 }));
+        var input = new Lib.CsInput(Lib.CsToC(new CsT1 { M = "text" }, new C1()));
+        var result = new Lib.GoResult(new C1());
+        foreach (var guard in new IDisposable[] { input, input, result, result })
+            guard.Dispose();
     }
 
     [Fact]

@@ -306,6 +306,9 @@ namespace ExcelizeCs
         );
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void Free(IntPtr ptr);
+
+        [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern int GetActiveSheetIndex(long fileIdx);
 
         [DllImport(LibraryName, CallingConvention = CallingConvention.Cdecl)]
@@ -748,10 +751,165 @@ namespace ExcelizeCs
         internal static extern IntPtr UpdateLinkedValue(long fileIdx);
 
         /// <summary>
+        /// Copy a C string returned by the Go library to a C# string, then free
+        /// the C memory allocated by the Go library.
+        /// </summary>
+        /// <param name="ptr">Pointer to the C string returned by the Go library
+        /// </param>
+        /// <returns>The copied C# string, or null if the pointer is null
+        /// </returns>
+        public static string GoStringToCs(IntPtr ptr)
+        {
+            string str = Marshal.PtrToStringUTF8(ptr);
+            Free(ptr);
+            return str;
+        }
+
+        /// <summary>
+        /// Collect the pointers inside a C struct returned by the Go library
+        /// (strings, pointers and arrays allocated with C.CString or C.malloc),
+        /// recursively.
+        /// </summary>
+        /// <param name="cInstance">The C-compatible struct instance</param>
+        /// <param name="ptrs">The list to append the collected pointers to
+        /// </param>
+        public static unsafe void CollectCPointers(object cInstance, List<IntPtr> ptrs)
+        {
+            Type cType = cInstance.GetType();
+            foreach (var field in cType.GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!field.FieldType.IsPointer)
+                {
+                    if (!IsGoPrimitiveType(field.FieldType))
+                        CollectCPointers(field.GetValue(cInstance), ptrs);
+                    continue;
+                }
+                IntPtr ptr = (IntPtr)Pointer.Unbox(field.GetValue(cInstance));
+                if (ptr == IntPtr.Zero)
+                    continue;
+                var lenField = cType.GetField(field.Name + "Len");
+                int length = lenField != null ? Convert.ToInt32(lenField.GetValue(cInstance)) : 1;
+                Type eleType = field.FieldType.GetElementType();
+                if (eleType.IsPointer)
+                {
+                    for (int i = 0; i < length; i++)
+                    {
+                        IntPtr elePtr = Marshal.ReadIntPtr(ptr, i * IntPtr.Size);
+                        if (elePtr != IntPtr.Zero)
+                            ptrs.Add(elePtr);
+                    }
+                }
+                else if (!IsGoPrimitiveType(eleType))
+                {
+                    int size = Marshal.SizeOf(eleType);
+                    for (int i = 0; i < length; i++)
+                    {
+                        CollectCPointers(
+                            Marshal.PtrToStructure(IntPtr.Add(ptr, i * size), eleType),
+                            ptrs
+                        );
+                    }
+                }
+                ptrs.Add(ptr);
+            }
+        }
+
+        /// <summary>
+        /// Free the C memory referenced by a C struct, or by each element of a
+        /// C struct array.
+        /// </summary>
+        /// <param name="value">The C-compatible struct instance or struct array
+        /// </param>
+        /// <param name="free">The function used to free a collected pointer
+        /// </param>
+        private static void FreeCPointers(object value, Action<IntPtr> free)
+        {
+            var ptrs = new List<IntPtr>();
+            if (value is Array arr)
+            {
+                foreach (var ele in arr)
+                    CollectCPointers(ele, ptrs);
+            }
+            else
+            {
+                CollectCPointers(value, ptrs);
+            }
+            foreach (var ptr in ptrs)
+                free(ptr);
+        }
+
+        /// <summary>
+        /// Frees the C memory referenced by a C struct returned by the Go
+        /// library when it is disposed, so the struct can still be read until
+        /// the end of the scope of the using declaration.
+        /// </summary>
+        public sealed class GoResult : IDisposable
+        {
+            private readonly object result;
+            private bool disposed;
+
+            /// <summary>
+            /// Create a scope guard for a C struct returned by the Go library.
+            /// </summary>
+            /// <param name="result">The C-compatible struct instance</param>
+            public GoResult(object result)
+            {
+                this.result = result;
+            }
+
+            /// <summary>
+            /// Free the C memory referenced by the C struct with the Go
+            /// library, it takes effect only once.
+            /// </summary>
+            public void Dispose()
+            {
+                if (disposed)
+                    return;
+                disposed = true;
+                FreeCPointers(result, Free);
+            }
+        }
+
+        /// <summary>
+        /// Frees the C memory allocated by <c>CsToC</c> for the arguments
+        /// passed to the Go library when it is disposed. The memory is
+        /// allocated by C#, so it can't be freed by the Go library.
+        /// </summary>
+        public sealed class CsInput : IDisposable
+        {
+            private readonly object input;
+            private bool disposed;
+
+            /// <summary>
+            /// Create a scope guard for a C struct or a C struct array
+            /// converted from C# instances.
+            /// </summary>
+            /// <param name="input">The C-compatible struct instance or struct
+            /// array</param>
+            public CsInput(object input)
+            {
+                this.input = input;
+            }
+
+            /// <summary>
+            /// Free the C memory referenced by the C struct, it takes effect
+            /// only once.
+            /// </summary>
+            public void Dispose()
+            {
+                if (disposed)
+                    return;
+                disposed = true;
+                FreeCPointers(input, Marshal.FreeCoTaskMem);
+            }
+        }
+
+        /// <summary>
         /// Checks if is a nullable object reference type, for example: Class?.
         /// </summary>
         /// <param name="field"></param>
-        /// <returns></returns>
+        /// <returns>True if the field is a nullable reference type, otherwise
+        /// false</returns>
         internal static bool IsNullableRefType(FieldInfo field)
         {
             var n = new NullabilityInfoContext().Create(field);
@@ -820,6 +978,39 @@ namespace ExcelizeCs
         }
 
         /// <summary>
+        /// The C memory allocated by the running outermost <c>CsToC</c> call,
+        /// it is freed if the conversion fails.
+        /// </summary>
+        [ThreadStatic]
+        private static List<IntPtr> cAllocs;
+
+        /// <summary>
+        /// Allocate C memory and register it, so it can be freed if the
+        /// conversion fails.
+        /// </summary>
+        /// <param name="size">The number of bytes to allocate</param>
+        /// <returns>Pointer to the allocated memory</returns>
+        private static IntPtr AllocC(int size)
+        {
+            IntPtr ptr = Marshal.AllocCoTaskMem(size);
+            cAllocs.Add(ptr);
+            return ptr;
+        }
+
+        /// <summary>
+        /// Copy a C# string to newly allocated C memory as UTF-8 and register
+        /// it, so it can be freed if the conversion fails.
+        /// </summary>
+        /// <param name="str">The string to copy</param>
+        /// <returns>Pointer to the allocated C string</returns>
+        private static IntPtr StringToC(string str)
+        {
+            IntPtr ptr = Marshal.StringToCoTaskMemUTF8(str);
+            cAllocs.Add(ptr);
+            return ptr;
+        }
+
+        /// <summary>
         /// Marshal a C# primitive value to an pointer.
         /// </summary>
         /// <param name="value">The value to marshal</param>
@@ -827,7 +1018,7 @@ namespace ExcelizeCs
         private static IntPtr MarshalPrimitiveValue(object value)
         {
             Type valueType = value.GetType();
-            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(valueType));
+            IntPtr ptr = AllocC(Marshal.SizeOf(valueType));
             switch (Type.GetTypeCode(valueType))
             {
                 case TypeCode.Boolean:
@@ -1194,6 +1385,35 @@ namespace ExcelizeCs
         /// <returns>The populated C-compatible struct instance</returns>
         public static object CsToC(object csInstance, object cInstance)
         {
+            if (cAllocs != null)
+                return CsToCCore(csInstance, cInstance);
+            cAllocs = new List<IntPtr>();
+            try
+            {
+                return CsToCCore(csInstance, cInstance);
+            }
+            catch
+            {
+                foreach (var ptr in cAllocs)
+                    Marshal.FreeCoTaskMem(ptr);
+                throw;
+            }
+            finally
+            {
+                cAllocs = null;
+            }
+        }
+
+        /// <summary>
+        /// Convert the fields of a C# instance to the C-compatible struct
+        /// instance recursively, see <c>CsToC</c>.
+        /// </summary>
+        /// <param name="csInstance">The C# to be converted.</param>
+        /// <param name="cInstance">The C-compatible struct instance to which
+        /// the converted values will be assigned</param>
+        /// <returns>The populated C-compatible struct instance</returns>
+        private static object CsToCCore(object csInstance, object cInstance)
+        {
             if (csInstance == null)
                 return null;
             foreach (
@@ -1213,9 +1433,7 @@ namespace ExcelizeCs
                     {
                         if (csField.FieldType == typeof(string))
                         {
-                            IntPtr ptr = Marshal.StringToCoTaskMemUTF8(
-                                csField.GetValue(csInstance).ToString()
-                            );
+                            IntPtr ptr = StringToC(csField.GetValue(csInstance).ToString());
                             cField.SetValueDirect(__makeref(cInstance), ptr);
                         }
                         else
@@ -1249,10 +1467,8 @@ namespace ExcelizeCs
                             // Pointer of the Go basic data type, for example: *string
                             if (csField.FieldType == typeof(string))
                             {
-                                IntPtr ptr = Marshal.StringToCoTaskMemUTF8(
-                                    csField.GetValue(csInstance).ToString()
-                                );
-                                IntPtr ptrPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                                IntPtr ptr = StringToC(csField.GetValue(csInstance).ToString());
+                                IntPtr ptrPtr = AllocC(IntPtr.Size);
                                 Marshal.WriteIntPtr(ptrPtr, ptr);
                                 cField.SetValueDirect(__makeref(cInstance), ptrPtr);
                             }
@@ -1268,7 +1484,7 @@ namespace ExcelizeCs
                         {
                             // Pointer of the Go struct, for example: *excelize.Options
                             var cType = cField.FieldType.GetElementType();
-                            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(cType));
+                            IntPtr ptr = AllocC(Marshal.SizeOf(cType));
                             Marshal.StructureToPtr(
                                 CsToC(
                                     csField.GetValue(csInstance),
@@ -1303,7 +1519,7 @@ namespace ExcelizeCs
                                     // The Go basic data type array, for example: []string
                                     if (csEleType == typeof(string))
                                     {
-                                        arrPtr = Marshal.AllocHGlobal(IntPtr.Size * l);
+                                        arrPtr = AllocC(IntPtr.Size * l);
                                         for (int i = 0; i < l; i++)
                                         {
                                             var str = string.Empty;
@@ -1313,14 +1529,14 @@ namespace ExcelizeCs
                                             Marshal.WriteIntPtr(
                                                 arrPtr,
                                                 i * IntPtr.Size,
-                                                Marshal.StringToCoTaskMemUTF8(str)
+                                                StringToC(str)
                                             );
                                         }
                                     }
                                     else
                                     {
                                         int size = Marshal.SizeOf(cEleType);
-                                        arrPtr = Marshal.AllocHGlobal(size * l);
+                                        arrPtr = AllocC(size * l);
                                         for (int i = 0; i < l; i++)
                                         {
                                             Marshal.StructureToPtr(
@@ -1337,7 +1553,7 @@ namespace ExcelizeCs
                                     if (cEleType != null)
                                     {
                                         int size = Marshal.SizeOf(cEleType);
-                                        arrPtr = Marshal.AllocHGlobal(size * l);
+                                        arrPtr = AllocC(size * l);
                                         for (int i = 0; i < l; i++)
                                         {
                                             var ele = list.GetValue(i);
@@ -1374,7 +1590,7 @@ namespace ExcelizeCs
                                 ?? csField.FieldType.GetElementType();
                             if (l > 0)
                             {
-                                IntPtr arrPtr = Marshal.AllocHGlobal(IntPtr.Size * l);
+                                IntPtr arrPtr = AllocC(IntPtr.Size * l);
                                 if (IsGoPrimitiveType(underlyingType))
                                 {
                                     // Pointer array of the Go basic data type, for example: []*string
@@ -1386,9 +1602,7 @@ namespace ExcelizeCs
                                         {
                                             if (underlyingType == typeof(string))
                                             {
-                                                elePtr = Marshal.StringToCoTaskMemUTF8(
-                                                    ele.ToString()
-                                                );
+                                                elePtr = StringToC(ele.ToString());
                                             }
                                             else
                                             {
@@ -1414,9 +1628,7 @@ namespace ExcelizeCs
                                             {
                                                 object cEle = Activator.CreateInstance(cEleType);
                                                 object cVal = CsToC(ele, cEle);
-                                                structPtr = Marshal.AllocHGlobal(
-                                                    Marshal.SizeOf(cEleType)
-                                                );
+                                                structPtr = AllocC(Marshal.SizeOf(cEleType));
                                                 Marshal.StructureToPtr(cVal, structPtr, false);
                                                 Marshal.WriteIntPtr(
                                                     arrPtr,
@@ -1482,6 +1694,7 @@ namespace ExcelizeCs
         public static unsafe (int, int) CellNameToCoordinates(string cell)
         {
             TypesC.CellNameToCoordinatesResult res = Lib.CellNameToCoordinates(cell);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1499,6 +1712,7 @@ namespace ExcelizeCs
         public static unsafe int ColumnNameToNumber(string name)
         {
             TypesC.IntErrorResult res = Lib.ColumnNameToNumber(name);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1515,6 +1729,7 @@ namespace ExcelizeCs
         public static unsafe string ColumnNumberToName(int num)
         {
             TypesC.StringErrorResult res = Lib.ColumnNumberToName(num);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1537,6 +1752,7 @@ namespace ExcelizeCs
         public static unsafe string CoordinatesToCellName(int col, int row, bool? abs = false)
         {
             TypesC.StringErrorResult res = Lib.CoordinatesToCellName(col, row, abs ?? false);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1555,6 +1771,7 @@ namespace ExcelizeCs
         public static unsafe string JoinCellName(string col, int row)
         {
             TypesC.StringErrorResult res = Lib.JoinCellName(col, row);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1573,6 +1790,7 @@ namespace ExcelizeCs
         public static unsafe (string, int) SplitCellName(string cell)
         {
             TypesC.StringIntErrorResult res = Lib.SplitCellName(cell);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1599,7 +1817,9 @@ namespace ExcelizeCs
         public static unsafe File OpenFile(string filename, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
+            using var inScope = new Lib.CsInput(opts);
             var res = Lib.OpenFile(filename, ref opts);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1617,7 +1837,9 @@ namespace ExcelizeCs
         public static unsafe File OpenReader(byte[] buffer, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
+            using var inScope = new Lib.CsInput(opts);
             var res = Lib.OpenReader(buffer, buffer.Length, ref opts);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -1648,7 +1870,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public unsafe void Flush()
         {
-            string err = Marshal.PtrToStringUTF8(Lib.StreamFlush(StreamWriterIdx));
+            string err = Lib.GoStringToCs(Lib.StreamFlush(StreamWriterIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -1667,11 +1889,12 @@ namespace ExcelizeCs
             if (values == null || values.Count == 0)
                 return;
             var arr = new TypesC.Interface[values.Count];
+            using var inScope = new Lib.CsInput(arr);
             for (int i = 0; i < values.Count; i++)
             {
                 arr[i] = (TypesC.Interface)Lib.CsValToCInterface(values[i]);
             }
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.StreamSetRow(StreamWriterIdx, cell, arr, values.Count)
             );
             if (!string.IsNullOrEmpty(err))
@@ -2340,6 +2563,7 @@ namespace ExcelizeCs
                 l += combo.Length;
             }
             var arr = new TypesC.Chart[l];
+            using var inScope = new Lib.CsInput(arr);
             arr[0] = (TypesC.Chart)Lib.CsToC(chart, new TypesC.Chart());
             if (combo != null && combo.Length > 0)
             {
@@ -2348,9 +2572,7 @@ namespace ExcelizeCs
                     arr[i + 1] = (TypesC.Chart)Lib.CsToC(combo[i], new TypesC.Chart());
                 }
             }
-            string err = Marshal.PtrToStringUTF8(
-                Lib.AddChart(FileIdx, sheet, cell, arr, arr.Length)
-            );
+            string err = Lib.GoStringToCs(Lib.AddChart(FileIdx, sheet, cell, arr, arr.Length));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2373,6 +2595,7 @@ namespace ExcelizeCs
                 l += combo.Length;
             }
             var arr = new TypesC.Chart[l];
+            using var inScope = new Lib.CsInput(arr);
             arr[0] = (TypesC.Chart)Lib.CsToC(chart, new TypesC.Chart());
             if (combo != null && combo.Length > 0)
             {
@@ -2381,9 +2604,7 @@ namespace ExcelizeCs
                     arr[i + 1] = (TypesC.Chart)Lib.CsToC(combo[i], new TypesC.Chart());
                 }
             }
-            string err = Marshal.PtrToStringUTF8(
-                Lib.AddChartSheet(FileIdx, sheet, arr, arr.Length)
-            );
+            string err = Lib.GoStringToCs(Lib.AddChartSheet(FileIdx, sheet, arr, arr.Length));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2402,7 +2623,8 @@ namespace ExcelizeCs
             if (options == null)
                 return;
             var opts = (TypesC.Comment)Lib.CsToC(options, new TypesC.Comment());
-            string err = Marshal.PtrToStringUTF8(Lib.AddComment(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddComment(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2550,7 +2772,8 @@ namespace ExcelizeCs
             if (options == null)
                 return;
             var opts = (TypesC.FormControl)Lib.CsToC(options, new TypesC.FormControl());
-            string err = Marshal.PtrToStringUTF8(Lib.AddFormControl(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddFormControl(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2570,9 +2793,8 @@ namespace ExcelizeCs
                 return;
             var opts = (TypesC.HeaderFooterImageOptions)
                 Lib.CsToC(options, new TypesC.HeaderFooterImageOptions());
-            string err = Marshal.PtrToStringUTF8(
-                Lib.AddHeaderFooterImage(FileIdx, sheet, ref opts)
-            );
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddHeaderFooterImage(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2591,7 +2813,7 @@ namespace ExcelizeCs
             IgnoredErrorsType ignoredErrorsType
         )
         {
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.AddIgnoredErrors(FileIdx, sheet, rangeRef, (byte)ignoredErrorsType)
             );
             if (!string.IsNullOrEmpty(err))
@@ -2681,9 +2903,8 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.GraphicOptions)
                 Lib.CsToC(options ?? new GraphicOptions(), new TypesC.GraphicOptions());
-            string err = Marshal.PtrToStringUTF8(
-                Lib.AddPicture(FileIdx, sheet, cell, name, ref opts)
-            );
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddPicture(FileIdx, sheet, cell, name, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2750,9 +2971,8 @@ namespace ExcelizeCs
         public void AddPictureFromBytes(string sheet, string cell, Picture picture)
         {
             var pic = (TypesC.Picture)Lib.CsToC(picture, new TypesC.Picture());
-            string err = Marshal.PtrToStringUTF8(
-                Lib.AddPictureFromBytes(FileIdx, sheet, cell, ref pic)
-            );
+            using var inScope = new Lib.CsInput(pic);
+            string err = Lib.GoStringToCs(Lib.AddPictureFromBytes(FileIdx, sheet, cell, ref pic));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -2894,7 +3114,8 @@ namespace ExcelizeCs
         public void AddPivotTable(PivotTableOptions options)
         {
             var opts = (TypesC.PivotTableOptions)Lib.CsToC(options, new TypesC.PivotTableOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.AddPivotTable(FileIdx, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddPivotTable(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3194,7 +3415,8 @@ namespace ExcelizeCs
         public void AddShape(string sheet, Shape options)
         {
             var opts = (TypesC.Shape)Lib.CsToC(options, new TypesC.Shape());
-            string err = Marshal.PtrToStringUTF8(Lib.AddShape(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddShape(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3229,7 +3451,8 @@ namespace ExcelizeCs
         public void AddSlicer(string sheet, SlicerOptions options)
         {
             var opts = (TypesC.SlicerOptions)Lib.CsToC(options, new TypesC.SlicerOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.AddSlicer(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddSlicer(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3326,7 +3549,8 @@ namespace ExcelizeCs
         public void AddSparkline(string sheet, SparklineOptions options)
         {
             var opts = (TypesC.SparklineOptions)Lib.CsToC(options, new TypesC.SparklineOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.AddSparkline(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddSparkline(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3381,7 +3605,8 @@ namespace ExcelizeCs
         public void AddTable(string sheet, Table options)
         {
             var opts = (TypesC.Table)Lib.CsToC(options, new TypesC.Table());
-            string err = Marshal.PtrToStringUTF8(Lib.AddTable(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.AddTable(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3395,7 +3620,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void AddVBAProject(byte[] buffer)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.AddVBAProject(FileIdx, buffer, buffer.Length));
+            string err = Lib.GoStringToCs(Lib.AddVBAProject(FileIdx, buffer, buffer.Length));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3513,14 +3738,13 @@ namespace ExcelizeCs
         public void AutoFilter(string sheet, string range, AutoFilterOptions[] opts)
         {
             TypesC.AutoFilterOptions[] arr = new TypesC.AutoFilterOptions[opts.Length];
+            using var inScope = new Lib.CsInput(arr);
             for (int i = 0; i < opts.Length; i++)
             {
                 arr[i] = (TypesC.AutoFilterOptions)
                     Lib.CsToC(opts[i], new TypesC.AutoFilterOptions());
             }
-            string err = Marshal.PtrToStringUTF8(
-                Lib.AutoFilter(FileIdx, sheet, range, arr, arr.Length)
-            );
+            string err = Lib.GoStringToCs(Lib.AutoFilter(FileIdx, sheet, range, arr, arr.Length));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3569,7 +3793,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void AutoFitColWidth(string sheet, string columns)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.AutoFitColWidth(FileIdx, sheet, columns));
+            string err = Lib.GoStringToCs(Lib.AutoFitColWidth(FileIdx, sheet, columns));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3586,7 +3810,9 @@ namespace ExcelizeCs
         public unsafe string CalcCellValue(string sheet, string cell, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
+            using var inScope = new Lib.CsInput(opts);
             TypesC.StringErrorResult res = Lib.CalcCellValue(FileIdx, sheet, cell, ref opts);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -3600,7 +3826,7 @@ namespace ExcelizeCs
         /// returns an empty string.</returns>
         public string Close()
         {
-            return Marshal.PtrToStringUTF8(Lib.Close(FileIdx));
+            return Lib.GoStringToCs(Lib.Close(FileIdx));
         }
 
         /// <summary>
@@ -3614,7 +3840,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void CopySheet(int from, int to)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.CopySheet(FileIdx, from, to));
+            string err = Lib.GoStringToCs(Lib.CopySheet(FileIdx, from, to));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3629,7 +3855,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DeleteChart(string sheet, string cell)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DeleteChart(FileIdx, sheet, cell));
+            string err = Lib.GoStringToCs(Lib.DeleteChart(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3644,7 +3870,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DeleteComment(string sheet, string cell)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DeleteComment(FileIdx, sheet, cell));
+            string err = Lib.GoStringToCs(Lib.DeleteComment(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3719,9 +3945,7 @@ namespace ExcelizeCs
             {
                 for (int i = 0; i < l; i++)
                     ptrs[i] = Marshal.StringToCoTaskMemUTF8(sqref[i]);
-                string err = Marshal.PtrToStringUTF8(
-                    Lib.DeleteDataValidation(FileIdx, sheet, ptrs, l)
-                );
+                string err = Lib.GoStringToCs(Lib.DeleteDataValidation(FileIdx, sheet, ptrs, l));
                 if (!string.IsNullOrEmpty(err))
                     throw new RuntimeError(err);
             }
@@ -3756,7 +3980,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DeleteFormControl(string sheet, string cell)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DeleteFormControl(FileIdx, sheet, cell));
+            string err = Lib.GoStringToCs(Lib.DeleteFormControl(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3771,7 +3995,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DeletePicture(string sheet, string cell)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DeletePicture(FileIdx, sheet, cell));
+            string err = Lib.GoStringToCs(Lib.DeletePicture(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3788,7 +4012,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DeleteSheet(string sheet)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DeleteSheet(FileIdx, sheet));
+            string err = Lib.GoStringToCs(Lib.DeleteSheet(FileIdx, sheet));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3801,7 +4025,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DeleteSlicer(string name)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DeleteSlicer(FileIdx, name));
+            string err = Lib.GoStringToCs(Lib.DeleteSlicer(FileIdx, name));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3819,7 +4043,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DuplicateRow(string sheet, int row)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DuplicateRow(FileIdx, sheet, row));
+            string err = Lib.GoStringToCs(Lib.DuplicateRow(FileIdx, sheet, row));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3852,7 +4076,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void DuplicateRowTo(string sheet, int row, int row2)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.DuplicateRowTo(FileIdx, sheet, row, row2));
+            string err = Lib.GoStringToCs(Lib.DuplicateRowTo(FileIdx, sheet, row, row2));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -3879,6 +4103,7 @@ namespace ExcelizeCs
         public unsafe AppProperties GetAppProps()
         {
             TypesC.GetAppPropsResult res = Lib.GetAppProps(FileIdx);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -3895,6 +4120,7 @@ namespace ExcelizeCs
         public unsafe CalcPropsOptions GetCalcProps()
         {
             TypesC.GetCalcPropsResult res = Lib.GetCalcProps(FileIdx);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -3914,6 +4140,7 @@ namespace ExcelizeCs
         public unsafe string GetCellFormula(string sheet, string cell)
         {
             TypesC.StringErrorResult res = Lib.GetCellFormula(FileIdx, sheet, cell);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -3948,6 +4175,7 @@ namespace ExcelizeCs
         public unsafe (bool, string) GetCellHyperLink(string sheet, string cell)
         {
             TypesC.GetCellHyperLinkResult res = Lib.GetCellHyperLink(FileIdx, sheet, cell);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -3967,6 +4195,7 @@ namespace ExcelizeCs
         public unsafe List<RichTextRun> GetCellRichText(string sheet, string cell)
         {
             TypesC.GetCellRichTextResult res = Lib.GetCellRichText(FileIdx, sheet, cell);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.Err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -3994,6 +4223,7 @@ namespace ExcelizeCs
         public unsafe int GetCellStyle(string sheet, string cell)
         {
             TypesC.IntErrorResult res = Lib.GetCellStyle(FileIdx, sheet, cell);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4018,7 +4248,9 @@ namespace ExcelizeCs
         public unsafe string GetCellValue(string sheet, string cell, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
+            using var inScope = new Lib.CsInput(opts);
             TypesC.StringErrorResult res = Lib.GetCellValue(FileIdx, sheet, cell, ref opts);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4038,6 +4270,7 @@ namespace ExcelizeCs
         public unsafe int GetColOutlineLevel(string sheet, string col)
         {
             TypesC.IntErrorResult res = Lib.GetColOutlineLevel(FileIdx, sheet, col);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4056,6 +4289,7 @@ namespace ExcelizeCs
         public unsafe int GetColStyle(string sheet, string col)
         {
             TypesC.IntErrorResult res = Lib.GetColStyle(FileIdx, sheet, col);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4073,6 +4307,7 @@ namespace ExcelizeCs
         public unsafe List<CustomProperty> GetCustomProps()
         {
             TypesC.GetCustomPropsResult res = Lib.GetCustomProps(FileIdx);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.Err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4104,6 +4339,7 @@ namespace ExcelizeCs
         public unsafe string GetDefaultFont()
         {
             TypesC.StringErrorResult res = Lib.GetDefaultFont(FileIdx);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4123,6 +4359,7 @@ namespace ExcelizeCs
         public unsafe int GetRowOutlineLevel(string sheet, int row)
         {
             TypesC.IntErrorResult res = Lib.GetRowOutlineLevel(FileIdx, sheet, row);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4163,7 +4400,9 @@ namespace ExcelizeCs
         public unsafe List<List<string>> GetRows(string sheet, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
+            using var inScope = new Lib.CsInput(opts);
             TypesC.StringMatrixErrorResult res = Lib.GetRows(FileIdx, sheet, ref opts);
+            using var scope = new Lib.GoResult(res);
             var rows = new List<List<string>>();
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
@@ -4195,6 +4434,7 @@ namespace ExcelizeCs
         public unsafe Style GetStyle(long styleId)
         {
             TypesC.GetStyleResult res = Lib.GetStyle(FileIdx, styleId);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4218,7 +4458,7 @@ namespace ExcelizeCs
             {
                 for (int i = 0; i < sheets.Count; i++)
                     ptrs[i] = Marshal.StringToCoTaskMemUTF8(sheets[i]);
-                string err = Marshal.PtrToStringUTF8(Lib.GroupSheets(FileIdx, ptrs, sheets.Count));
+                string err = Lib.GoStringToCs(Lib.GroupSheets(FileIdx, ptrs, sheets.Count));
                 if (!string.IsNullOrEmpty(err))
                     throw new RuntimeError(err);
             }
@@ -4261,7 +4501,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void InsertCols(string sheet, string col, int n)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.InsertCols(FileIdx, sheet, col, n));
+            string err = Lib.GoStringToCs(Lib.InsertCols(FileIdx, sheet, col, n));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4278,7 +4518,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void InsertPageBreak(string sheet, string cell)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.InsertPageBreak(FileIdx, sheet, cell));
+            string err = Lib.GoStringToCs(Lib.InsertPageBreak(FileIdx, sheet, cell));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4314,7 +4554,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void InsertRows(string sheet, long row, long n)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.InsertRows(FileIdx, sheet, row, n));
+            string err = Lib.GoStringToCs(Lib.InsertRows(FileIdx, sheet, row, n));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4363,7 +4603,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void MergeCell(string sheet, string topLeftCell, string bottomRightCell)
         {
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.MergeCell(FileIdx, sheet, topLeftCell, bottomRightCell)
             );
             if (!string.IsNullOrEmpty(err))
@@ -4397,7 +4637,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void MoveSheet(string source, string target)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.MoveSheet(FileIdx, source, target));
+            string err = Lib.GoStringToCs(Lib.MoveSheet(FileIdx, source, target));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4415,7 +4655,9 @@ namespace ExcelizeCs
         public unsafe int NewConditionalStyle(Style style)
         {
             var options = (TypesC.Style)Lib.CsToC(style, new TypesC.Style());
+            using var inScope = new Lib.CsInput(options);
             var res = Lib.NewConditionalStyle(FileIdx, ref options);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4436,6 +4678,7 @@ namespace ExcelizeCs
         public unsafe int NewSheet(string sheet)
         {
             var res = Lib.NewSheet(FileIdx, sheet);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4463,6 +4706,7 @@ namespace ExcelizeCs
         public unsafe StreamWriter NewStreamWriter(string sheet)
         {
             var res = Lib.NewStreamWriter(FileIdx, sheet);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4483,7 +4727,9 @@ namespace ExcelizeCs
         public unsafe int NewStyle(Style style)
         {
             var options = (TypesC.Style)Lib.CsToC(style, new TypesC.Style());
+            using var inScope = new Lib.CsInput(options);
             var res = Lib.NewStyle(FileIdx, ref options);
+            using var scope = new Lib.GoResult(res);
             string err = new(res.err);
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
@@ -4529,7 +4775,8 @@ namespace ExcelizeCs
         {
             var options = (TypesC.SheetProtectionOptions)
                 Lib.CsToC(opts, new TypesC.SheetProtectionOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.ProtectSheet(FileIdx, sheet, ref options));
+            using var inScope = new Lib.CsInput(options);
+            string err = Lib.GoStringToCs(Lib.ProtectSheet(FileIdx, sheet, ref options));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4569,7 +4816,8 @@ namespace ExcelizeCs
         {
             var options = (TypesC.WorkbookProtectionOptions)
                 Lib.CsToC(opts, new TypesC.WorkbookProtectionOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.ProtectWorkbook(FileIdx, ref options));
+            using var inScope = new Lib.CsInput(options);
+            string err = Lib.GoStringToCs(Lib.ProtectWorkbook(FileIdx, ref options));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4583,7 +4831,8 @@ namespace ExcelizeCs
         public void Save(Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
-            string err = Marshal.PtrToStringUTF8(Lib.Save(FileIdx, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.Save(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4598,7 +4847,8 @@ namespace ExcelizeCs
         public void SaveAs(string filename, Options? options = null)
         {
             var opts = (TypesC.Options)Lib.CsToC(options ?? new Options(), new TypesC.Options());
-            string err = Marshal.PtrToStringUTF8(Lib.SaveAs(FileIdx, filename, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.SaveAs(FileIdx, filename, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4615,7 +4865,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetActiveSheet(int index)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetActiveSheet(FileIdx, index));
+            string err = Lib.GoStringToCs(Lib.SetActiveSheet(FileIdx, index));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4715,7 +4965,8 @@ namespace ExcelizeCs
         public void SetAppProps(AppProperties appProperties)
         {
             var opts = (TypesC.AppProperties)Lib.CsToC(appProperties, new TypesC.AppProperties());
-            string err = Marshal.PtrToStringUTF8(Lib.SetAppProps(FileIdx, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.SetAppProps(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4732,7 +4983,8 @@ namespace ExcelizeCs
         public void SetCalcProps(CalcPropsOptions opts)
         {
             var options = (TypesC.CalcPropsOptions)Lib.CsToC(opts, new TypesC.CalcPropsOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.SetCalcProps(FileIdx, ref options));
+            using var inScope = new Lib.CsInput(options);
+            string err = Lib.GoStringToCs(Lib.SetCalcProps(FileIdx, ref options));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4748,7 +5000,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetCellBool(string sheet, string cell, bool value)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetCellBool(FileIdx, sheet, cell, value));
+            string err = Lib.GoStringToCs(Lib.SetCellBool(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4764,7 +5016,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetCellDefault(string sheet, string cell, string value)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetCellDefault(FileIdx, sheet, cell, value));
+            string err = Lib.GoStringToCs(Lib.SetCellDefault(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -4791,7 +5043,7 @@ namespace ExcelizeCs
             int bitSize
         )
         {
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.SetCellFloat(FileIdx, sheet, cell, value, precision, bitSize)
             );
             if (!string.IsNullOrEmpty(err))
@@ -4968,7 +5220,8 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.FormulaOpts)
                 Lib.CsToC(options ?? new FormulaOpts(), new TypesC.FormulaOpts());
-            string err = Marshal.PtrToStringUTF8(
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(
                 Lib.SetCellFormula(FileIdx, sheet, cell, formula, ref opts)
             );
             if (!string.IsNullOrEmpty(err))
@@ -5043,7 +5296,8 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.HyperlinkOpts)
                 Lib.CsToC(options ?? new HyperlinkOpts(), new TypesC.HyperlinkOpts());
-            string err = Marshal.PtrToStringUTF8(
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(
                 Lib.SetCellHyperLink(FileIdx, sheet, cell, link, linkType, ref opts)
             );
             if (!string.IsNullOrEmpty(err))
@@ -5061,7 +5315,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetCellInt(string sheet, string cell, long value)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetCellInt(FileIdx, sheet, cell, value));
+            string err = Lib.GoStringToCs(Lib.SetCellInt(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -5215,11 +5469,12 @@ namespace ExcelizeCs
         public void SetCellRichText(string sheet, string cell, RichTextRun[] runs)
         {
             TypesC.RichTextRun[] arr = new TypesC.RichTextRun[runs.Length];
+            using var inScope = new Lib.CsInput(arr);
             for (int i = 0; i < runs.Length; i++)
             {
                 arr[i] = (TypesC.RichTextRun)Lib.CsToC(runs[i], new TypesC.RichTextRun());
             }
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.SetCellRichText(FileIdx, sheet, cell, arr, arr.Length)
             );
             if (!string.IsNullOrEmpty(err))
@@ -5237,7 +5492,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetCellStr(string sheet, string cell, string value)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetCellStr(FileIdx, sheet, cell, value));
+            string err = Lib.GoStringToCs(Lib.SetCellStr(FileIdx, sheet, cell, value));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -5259,7 +5514,7 @@ namespace ExcelizeCs
             long styleID
         )
         {
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.SetCellStyle(FileIdx, sheet, topLeftCell, bottomRightCell, styleID)
             );
             if (!string.IsNullOrEmpty(err))
@@ -5278,7 +5533,8 @@ namespace ExcelizeCs
         public void SetCellValue(string sheet, string cell, object value)
         {
             var val = (TypesC.Interface)Lib.CsValToCInterface(value);
-            string err = Marshal.PtrToStringUTF8(Lib.SetCellValue(FileIdx, sheet, cell, ref val));
+            using var inScope = new Lib.CsInput(val);
+            string err = Lib.GoStringToCs(Lib.SetCellValue(FileIdx, sheet, cell, ref val));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -5308,9 +5564,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetColOutlineLevel(string sheet, string col, int level)
         {
-            string err = Marshal.PtrToStringUTF8(
-                Lib.SetColOutlineLevel(FileIdx, sheet, col, level)
-            );
+            string err = Lib.GoStringToCs(Lib.SetColOutlineLevel(FileIdx, sheet, col, level));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -5352,7 +5606,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetColStyle(string sheet, string columns, int styleID)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetColStyle(FileIdx, sheet, columns, styleID));
+            string err = Lib.GoStringToCs(Lib.SetColStyle(FileIdx, sheet, columns, styleID));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -5392,9 +5646,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetColVisible(string sheet, string columns, bool visible)
         {
-            string err = Marshal.PtrToStringUTF8(
-                Lib.SetColVisible(FileIdx, sheet, columns, visible)
-            );
+            string err = Lib.GoStringToCs(Lib.SetColVisible(FileIdx, sheet, columns, visible));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -5424,9 +5676,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetColWidth(string sheet, string startCol, string endCol, double width)
         {
-            string err = Marshal.PtrToStringUTF8(
-                Lib.SetColWidth(FileIdx, sheet, startCol, endCol, width)
-            );
+            string err = Lib.GoStringToCs(Lib.SetColWidth(FileIdx, sheet, startCol, endCol, width));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -5981,12 +6231,13 @@ namespace ExcelizeCs
             TypesC.ConditionalFormatOptions[] arr = new TypesC.ConditionalFormatOptions[
                 opts.Length
             ];
+            using var inScope = new Lib.CsInput(arr);
             for (int i = 0; i < opts.Length; i++)
             {
                 arr[i] = (TypesC.ConditionalFormatOptions)
                     Lib.CsToC(opts[i], new TypesC.ConditionalFormatOptions());
             }
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.SetConditionalFormat(FileIdx, sheet, rangeRef, arr, arr.Length)
             );
             if (!string.IsNullOrEmpty(err))
@@ -6011,7 +6262,8 @@ namespace ExcelizeCs
                 Value = (TypesC.Interface)Lib.CsValToCInterface(prop.Value),
                 Name = (sbyte*)Marshal.StringToCoTaskMemUTF8(prop.Name).ToPointer(),
             };
-            string err = Marshal.PtrToStringUTF8(Lib.SetCustomProps(FileIdx, options));
+            using var inScope = new Lib.CsInput(options);
+            string err = Lib.GoStringToCs(Lib.SetCustomProps(FileIdx, options));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6025,7 +6277,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetDefaultFont(string fontName)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetDefaultFont(FileIdx, fontName));
+            string err = Lib.GoStringToCs(Lib.SetDefaultFont(FileIdx, fontName));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6067,7 +6319,8 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.HeaderFooterOptions)
                 Lib.CsToC(options ?? new HeaderFooterOptions(), new TypesC.HeaderFooterOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.SetHeaderFooter(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6097,7 +6350,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetRowHeight(string sheet, long row, double height)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetRowHeight(FileIdx, sheet, row, height));
+            string err = Lib.GoStringToCs(Lib.SetRowHeight(FileIdx, sheet, row, height));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6127,9 +6380,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetRowOutlineLevel(string sheet, long row, int level)
         {
-            string err = Marshal.PtrToStringUTF8(
-                Lib.SetRowOutlineLevel(FileIdx, sheet, row, level)
-            );
+            string err = Lib.GoStringToCs(Lib.SetRowOutlineLevel(FileIdx, sheet, row, level));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6160,9 +6411,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetRowStyle(string sheet, long start, long end, int styleID)
         {
-            string err = Marshal.PtrToStringUTF8(
-                Lib.SetRowStyle(FileIdx, sheet, start, end, styleID)
-            );
+            string err = Lib.GoStringToCs(Lib.SetRowStyle(FileIdx, sheet, start, end, styleID));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6180,7 +6429,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetSheetName(string source, string target)
         {
-            string err = Marshal.PtrToStringUTF8(Lib.SetSheetName(FileIdx, source, target));
+            string err = Lib.GoStringToCs(Lib.SetSheetName(FileIdx, source, target));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6250,7 +6499,8 @@ namespace ExcelizeCs
         public void SetSheetProps(string sheet, SheetPropsOptions options)
         {
             var opts = (TypesC.SheetPropsOptions)Lib.CsToC(options, new TypesC.SheetPropsOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.SetSheetProps(FileIdx, sheet, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.SetSheetProps(FileIdx, sheet, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6269,13 +6519,12 @@ namespace ExcelizeCs
             if (values == null || values.Count == 0)
                 return;
             var arr = new TypesC.Interface[values.Count];
+            using var inScope = new Lib.CsInput(arr);
             for (int i = 0; i < values.Count; i++)
             {
                 arr[i] = (TypesC.Interface)Lib.CsValToCInterface(values[i]);
             }
-            string err = Marshal.PtrToStringUTF8(
-                Lib.SetSheetRow(FileIdx, sheet, cell, arr, values.Count)
-            );
+            string err = Lib.GoStringToCs(Lib.SetSheetRow(FileIdx, sheet, cell, arr, values.Count));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6293,9 +6542,8 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.ViewOptions)
                 Lib.CsToC(options ?? new ViewOptions(), new TypesC.ViewOptions());
-            string err = Marshal.PtrToStringUTF8(
-                Lib.SetSheetView(FileIdx, sheet, viewIndex, ref opts)
-            );
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.SetSheetView(FileIdx, sheet, viewIndex, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6314,7 +6562,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void SetSheetVisible(string sheet, bool visible, bool? veryHidden = false)
         {
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.SetSheetVisible(FileIdx, sheet, visible, veryHidden ?? false)
             );
             if (!string.IsNullOrEmpty(err))
@@ -6330,7 +6578,8 @@ namespace ExcelizeCs
         {
             var opts = (TypesC.WorkbookPropsOptions)
                 Lib.CsToC(options, new TypesC.WorkbookPropsOptions());
-            string err = Marshal.PtrToStringUTF8(Lib.SetWorkbookProps(FileIdx, ref opts));
+            using var inScope = new Lib.CsInput(opts);
+            string err = Lib.GoStringToCs(Lib.SetWorkbookProps(FileIdx, ref opts));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6341,7 +6590,7 @@ namespace ExcelizeCs
         /// <exception cref="RuntimeError">Return None if no error occur
         public void UngroupSheets()
         {
-            string err = Marshal.PtrToStringUTF8(Lib.UngroupSheets(FileIdx));
+            string err = Lib.GoStringToCs(Lib.UngroupSheets(FileIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6370,7 +6619,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void UnmergeCell(string sheet, string topLeftCell, string bottomRightCell)
         {
-            string err = Marshal.PtrToStringUTF8(
+            string err = Lib.GoStringToCs(
                 Lib.UnmergeCell(FileIdx, sheet, topLeftCell, bottomRightCell)
             );
             if (!string.IsNullOrEmpty(err))
@@ -6388,9 +6637,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void UnsetConditionalFormat(string sheet, string rangeRef)
         {
-            string err = Marshal.PtrToStringUTF8(
-                Lib.UnsetConditionalFormat(FileIdx, sheet, rangeRef)
-            );
+            string err = Lib.GoStringToCs(Lib.UnsetConditionalFormat(FileIdx, sheet, rangeRef));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
@@ -6407,7 +6654,7 @@ namespace ExcelizeCs
         /// otherwise raise a RuntimeError with the message.</exception>
         public void UpdateLinkedValue()
         {
-            string err = Marshal.PtrToStringUTF8(Lib.UpdateLinkedValue(FileIdx));
+            string err = Lib.GoStringToCs(Lib.UpdateLinkedValue(FileIdx));
             if (!string.IsNullOrEmpty(err))
                 throw new RuntimeError(err);
         }
