@@ -202,9 +202,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: [build]
+    environment: nuget
     permissions:
+      id-token: write
       packages: write
-
+      contents: read
     if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - name: Checkout code
@@ -229,10 +231,30 @@ jobs:
       - name: Install dotnet-validate
         run: dotnet tool install --global dotnet-validate --version 0.0.1-preview.537
 
-      - name: Pack and Publish Package
+      - name: Pack Package
         run: |
           cd Excelize
           dotnet build -c Release && dotnet pack -c Release
           dotnet-validate package local ./bin/ExcelizeCs*.nupkg
-          dotnet nuget push ./bin/ExcelizeCs*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
-          dotnet nuget push ./bin/ExcelizeCs*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
+
+      - name: NuGet login (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet.org
+        run: |
+          cd Excelize
+          dotnet nuget push ./bin/ExcelizeCs*.nupkg \
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate
+
+      - name: Push to GitHub Packages
+        run: |
+          cd Excelize
+          dotnet nuget push ./bin/ExcelizeCs*.nupkg \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --skip-duplicate

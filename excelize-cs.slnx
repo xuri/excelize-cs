@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Excelize.Tests/Excelize.Tests.csproj" />
+  <Project Path="Excelize/Excelize.csproj" />
+</Solution>
